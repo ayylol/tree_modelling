@@ -20,4 +20,6 @@ public:
 
 	void use();
 	void cleanup();
+private:
+  void compile_errors(unsigned int shader, const char* type);
 };
