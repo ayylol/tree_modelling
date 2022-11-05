@@ -23,6 +23,12 @@ set(LIBRARIES ${LIBRARIES} glfw)
 
 file(GLOB sources src/*.cpp src/*.h src/*.hpp src/*.tpp libs/*.h libs/*.hpp libs/*.cpp libs/*.c libs/imgui/*.h libs/imgui/*.cpp)
 
+# Copy all the shaders and tell the build system to re-run CMAKE if one of them changes
+file(GLOB_RECURSE resources RELATIVE ${CMAKE_SOURCE_DIR} resources/*)
+foreach(file ${resources})
+    configure_file(${file} ${file} COPYONLY)
+endforeach(file)
+
 add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})
