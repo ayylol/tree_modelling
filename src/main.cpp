@@ -1,19 +1,13 @@
 #include <iostream>
+#include <cmath>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main()\n"
-"{\n"
-"  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"  FragColor = vec4(0.8f,0.3f,0.02f,1.0f);\n"
-"}\0";
+#include "shader.h"
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -53,48 +47,43 @@ int main(void)
   }
 
   // TODO: remove this later, just for test
-  GLfloat verts[] = 
-  {
-    -0.5f, -0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    0.0, 0.5f, 0.0f
-  };
+  // Vertices coordinates
+	GLfloat verts[] =
+	{
+		-0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower left corner
+		0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower right corner
+		0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Upper corner
+		-0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner left
+		0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner right
+		0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Inner down
+	};
+
+	// Indices for vertices order
+	GLuint indices[] =
+	{
+		0, 3, 5, // Lower left triangle
+		3, 2, 4, // Lower right triangle
+		5, 4, 1 // Upper triangle
+	};
 
   // readying viewport
   glViewport(0,0,SCR_WIDTH,SCR_HEIGHT);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-  // Readying Shaders TODO: move this to special file
-  GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-  glCompileShader(vertexShader);
+  // Readying Shaders 
+  Shader default_shader("resources/shaders/default.vert", "resources/shaders/default.frag");
 
-  GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-  glCompileShader(fragmentShader);
+  VAO VAO1;
+  VAO1.bind();
 
-  GLuint shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
-  glLinkProgram(shaderProgram);
+  VBO VBO1(verts, sizeof(verts));
+  EBO EBO1(indices, sizeof(indices));
 
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
+  VAO1.linkVBO(VBO1, 0);
 
-  // Readying buffers TODO: move this to special file
-  GLuint VAO, VBO;
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-
-  glBindVertexArray(VAO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-  glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
+  VAO1.unbind();
+  VBO1.unbind();
+  EBO1.unbind();
 
   // Render loop
   while (!glfwWindowShouldClose(window))
@@ -105,19 +94,23 @@ int main(void)
     glClearColor(0.2f,0.1f,0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Drawing Triangle TODO: set actual object being rendered
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // Drawing Triangle 
+    default_shader.use();
+
+    //glBindVertexArray(VAO);
+    VAO1.bind();
+
+    glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
   // Cleanup
-  glDeleteVertexArrays(1, &VAO);
-  glDeleteBuffers(1, &VBO);
-  glDeleteProgram(shaderProgram);
+  VAO1.cleanup();
+  VBO1.cleanup();
+  EBO1.cleanup();
+  default_shader.cleanup();
 
   glfwTerminate();
   return 0;
