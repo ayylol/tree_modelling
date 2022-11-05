@@ -21,9 +21,9 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(libs/glfw)
 set(LIBRARIES ${LIBRARIES} glfw)
 
-file(GLOB sources src/*.cpp src/*.h src/*.hpp src/*.tpp libs/*.h libs/*.hpp libs/*.cpp libs/*.c libs/imgui/*.h libs/imgui/*.cpp)
+file(GLOB sources src/*.cpp src/*.h libs/*.h libs/*.hpp libs/*.cpp libs/*.c libs/imgui/*.h libs/imgui/*.cpp)
 
-# Copy all the shaders and tell the build system to re-run CMAKE if one of them changes
+# Copy all the resources and tell the build system to re-run CMAKE if one of them changes
 file(GLOB_RECURSE resources RELATIVE ${CMAKE_SOURCE_DIR} resources/*)
 foreach(file ${resources})
     configure_file(${file} ${file} COPYONLY)
