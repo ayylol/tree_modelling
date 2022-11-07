@@ -11,6 +11,7 @@
 #include "VAO.h"
 #include "VBO.h"
 #include "EBO.h"
+#include "camera.h"
 
 // Default screen dimensions
 const unsigned int DEFAULT_WIDTH = 800;
@@ -21,6 +22,9 @@ unsigned int height = DEFAULT_HEIGHT;
 
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 void processInput(GLFWwindow* window);
+
+// Camera !
+Camera camera(glm::vec3(0,0,0),20.f,0.0f,0.0f);
 
 int main(void) 
 {
@@ -65,10 +69,10 @@ int main(void)
     -1.f, -1.f, 1.f, 0.f,0.f,1.f,
     -1.f,  1.f, 1.f, 0.5f,0.f,0.5f,
     // BACK FACE (TR, BR, BL, TL)
-     1.f,  1.f, -1.f, 0.f,0.5f,0.5f, 
+     1.f,  1.f, -1.f, 0.f,0.f,1.f, 
      1.f, -1.f, -1.f, 0.5f,0.f,0.5f,
-    -1.f, -1.f, -1.f, 0.f,0.f,0.f,
-    -1.f,  1.f, -1.f, 1.0f,1.0f,0.5f
+    -1.f, -1.f, -1.f, 1.f,0.f,0.f,
+    -1.f,  1.f, -1.f, 0.f,1.f,0.f
 	};
 
 	// Indices for vertices order
@@ -101,6 +105,7 @@ int main(void)
   // Readying Shaders 
   Shader default_shader("resources/shaders/default.vert", "resources/shaders/default.frag");
 
+  // TODO: clean the buffer stuff up
   VAO VAO1;
   VAO1.bind();
 
@@ -114,43 +119,22 @@ int main(void)
   VBO1.unbind();
   EBO1.unbind();
 
-  // Render loop
-
-
-  float rotation = 0.0f;
-  double prevTime = glfwGetTime();
   glEnable(GL_DEPTH_TEST);
+  // Render loop
   while (!glfwWindowShouldClose(window))
   {
     processInput(window);
 
     // Render here
-    glClearColor(0.2f,0.1f,0.5f, 1.0f);
+    glClearColor(0.75f,1.f,1.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     default_shader.use();
 
-    // TODO: clean this up
-		double crntTime = glfwGetTime();
-		if (crntTime - prevTime >= 1 / 60)
-		{
-			rotation += 0.5f;
-			prevTime = crntTime;
-		}
-    // matrices for 3d TODO: Clean this up
-    glm::mat4 model = glm::mat4(1.0f);  
-    glm::mat4 view = glm::mat4(1.0f);  
-    glm::mat4 proj = glm::mat4(1.0f);  
-    model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.f,1.f,0.f));
-    view = glm::translate(view, glm::vec3(0.0f,-0.5f,-10.0f));
-    proj = glm::perspective(glm::radians(60.0f), (float)width/height, 0.1f, 100.0f);
-
-    GLuint modelLoc = glGetUniformLocation(default_shader.ID, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-    int viewLoc = glGetUniformLocation(default_shader.ID, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    int projLoc = glGetUniformLocation(default_shader.ID, "proj");
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+    // TODO: TEST GETTING IT TO WORK 
+    glm::mat4 cam = camera.get_matrix((float)width/height);
+    GLuint camLoc = glGetUniformLocation(default_shader.ID, "cam");
+    glUniformMatrix4fv(camLoc, 1, GL_FALSE, glm::value_ptr(cam));
 
     VAO1.bind();
     glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0);
@@ -180,4 +164,38 @@ void processInput(GLFWwindow* window)
 {
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
+  // Camera Movement
+  // RESET
+  if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)  // RESET VIEW
+    camera.reset();
+  // ROTATE AROUND FOCUS
+  if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)  // ROTATE UP
+    camera.rotate_vert(0.1f);
+  if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)  // ROTATE DOWN
+    camera.rotate_vert(-0.1f);
+  if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)  // ROTATE LEFT
+    camera.rotate_horz(-0.1f);
+  if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)  // ROTATE RIGHT
+    camera.rotate_horz(0.1f);
+  // ZOOM BOOM ARM
+  if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)  // ZOOM OUT
+    camera.move_distance(0.5f);
+  if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)  // ZOOM IN
+    camera.move_distance(-0.5f);
+  // PAN FOCUS
+  if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)  // PAN UP
+    camera.move_focus(glm::vec3(0.f,0.1f,0.f));
+  if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)  // PAN DOWN
+    camera.move_focus(glm::vec3(0.f,-0.1f,0.f));
+  // Not that good since its tied to axis
+  /*
+  if(glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)  // PAN FORWARD
+    camera.move_focus(glm::vec3(0.f,0.f,0.1f));
+  if(glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)  // PAN BACK
+    camera.move_focus(glm::vec3(0.f,0.f,-0.1f));
+  if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)  // PAN LEFT
+    camera.move_focus(glm::vec3(0.1f,0.f,0.f));
+  if(glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)  // PAN RIGHT
+    camera.move_focus(glm::vec3(-0.1f,0.f,0.f));
+  */
 }
