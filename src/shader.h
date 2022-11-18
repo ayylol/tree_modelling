@@ -18,7 +18,7 @@ public:
 
 	Shader(const char* vertexPath, const char* fragmentPath);
 
-	void use();
+	void use() const;
 	void cleanup();
 private:
   void compile_errors(unsigned int shader, const char* type);

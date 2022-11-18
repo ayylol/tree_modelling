@@ -16,7 +16,7 @@ std::string get_file_contents(const char* filename)
   throw(errno);
 }
 
-void Shader::use() { glUseProgram(ID); }
+void Shader::use() const { glUseProgram(ID); }
 void Shader::cleanup() { glDeleteProgram(ID); }
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath)

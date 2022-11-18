@@ -4,12 +4,12 @@
 
 class VBO
 {
-public:
-  GLuint ID;
+    public:
+        GLuint ID;
 
-  VBO(GLfloat* vertices, GLsizeiptr size);
+        VBO(GLfloat* vertices, GLsizeiptr size);
 
-  void bind();
-  void unbind();
-  void cleanup();
+        void bind();
+        void unbind();
+        void cleanup();
 };
