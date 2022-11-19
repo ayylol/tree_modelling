@@ -13,13 +13,13 @@ std::string get_file_contents(const char* filename);
 
 class Shader 
 {
-public:
-	GLuint ID;
+    public:
+        GLuint ID;
 
-	Shader(const char* vertexPath, const char* fragmentPath);
+        Shader(const char* vertexPath, const char* fragmentPath);
 
-	void use() const;
-	void cleanup();
-private:
-  void compile_errors(unsigned int shader, const char* type);
+        void use() const;
+        void cleanup();
+    private:
+        void compile_errors(unsigned int shader, const char* type);
 };
