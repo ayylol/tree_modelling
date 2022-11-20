@@ -26,7 +26,7 @@ void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 void processInput(GLFWwindow* window);
 
 // Camera !
-Camera camera(glm::vec3(0,0,0),20.f,0.0f,0.0f);
+Camera camera(glm::vec3(0,0,0),20.f,0.0f,0.0f, width, height);
 
 int main(void) 
 {
@@ -67,14 +67,14 @@ int main(void)
         // X      Y                         Z     R     G       B
         // FRONT FACE (TR, BR, BL, TL)
         1.f,  1.f, 1.f, 1.f,0.f,0.f,
-            1.f, -1.f, 1.f, 0.f,1.f,0.f,
-            -1.f, -1.f, 1.f, 0.f,0.f,1.f,
-            -1.f,  1.f, 1.f, 0.5f,0.f,0.5f,
-            // BACK FACE (TR, BR, BL, TL)
-            1.f,  1.f, -1.f, 0.f,0.f,1.f, 
-            1.f, -1.f, -1.f, 0.5f,0.f,0.5f,
-            -1.f, -1.f, -1.f, 1.f,0.f,0.f,
-            -1.f,  1.f, -1.f, 0.f,1.f,0.f
+        1.f, -1.f, 1.f, 0.f,1.f,0.f,
+        -1.f, -1.f, 1.f, 0.f,0.f,1.f,
+        -1.f,  1.f, 1.f, 0.5f,0.f,0.5f,
+        // BACK FACE (TR, BR, BL, TL)
+        1.f,  1.f, -1.f, 0.f,0.f,1.f, 
+        1.f, -1.f, -1.f, 0.5f,0.f,0.5f,
+        -1.f, -1.f, -1.f, 1.f,0.f,0.f,
+        -1.f,  1.f, -1.f, 0.f,1.f,0.f
     };
 
     // Indices for vertices order
@@ -82,22 +82,22 @@ int main(void)
     {
         // Front
         0,1,2,
-            2,3,0,
-            // Back
-            7,6,5,
-            5,4,7,
-            // Top
-            4,0,3,
-            3,7,4,
-            // Bottom
-            5,1,2,
-            2,6,5,
-            // Left
-            3,2,6,
-            6,7,3,
-            // Right
-            4,5,1,
-            1,0,4
+        2,3,0,
+        // Back
+        7,6,5,
+        5,4,7,
+        // Top
+        4,0,3,
+        3,7,4,
+        // Bottom
+        5,1,2,
+        2,6,5,
+        // Left
+        3,2,6,
+        6,7,3,
+        // Right
+        4,5,1,
+        1,0,4
     };
     Mesh mesh(verts, indices);
 
@@ -107,20 +107,6 @@ int main(void)
 
     // Readying Shaders 
     Shader default_shader("resources/shaders/default.vert", "resources/shaders/default.frag");
-
-    // TODO: clean the buffer stuff up
-    VAO VAO1;
-    VAO1.bind();
-
-    VBO VBO1(&verts[0], verts.size()*sizeof(float));
-    EBO EBO1(&indices[0], indices.size()*sizeof(unsigned int));
-
-    VAO1.link_attrib(VBO1, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
-    VAO1.link_attrib(VBO1, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3*sizeof(float)));
-
-    VAO1.unbind();
-    VBO1.unbind();
-    EBO1.unbind();
 
     glEnable(GL_DEPTH_TEST);
     // Render loop
@@ -132,25 +118,11 @@ int main(void)
         glClearColor(0.75f,1.f,1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        default_shader.use();
-
-        // TODO: TEST GETTING IT TO WORK 
-        glm::mat4 cam = camera.get_matrix((float)width/height);
-        GLuint camLoc = glGetUniformLocation(default_shader.ID, "cam");
-        glUniformMatrix4fv(camLoc, 1, GL_FALSE, glm::value_ptr(cam));
-
-        VAO1.bind();
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-        mesh.draw(default_shader);
+        mesh.draw(default_shader, camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // Cleanup
-    VAO1.cleanup();
-    VBO1.cleanup();
-    EBO1.cleanup();
     default_shader.cleanup();
 
     glfwTerminate();
@@ -162,6 +134,7 @@ void framebuffer_size_callback(GLFWwindow* window, int w, int h)
     width = w;
     height = h;
     glViewport(0,0,width,height);
+    camera.set_aspect_ratio(width,height);
 }
 
 void processInput(GLFWwindow* window)

@@ -2,12 +2,14 @@
 #include <iostream>
 
 //
-Camera::Camera(glm::vec3 start_focus, float start_distance, float start_theta, float start_phi) :
+Camera::Camera(glm::vec3 start_focus, float start_distance, float start_theta, float start_phi, int start_width, int start_height) :
     default_focus(start_focus),
     default_distance(start_distance),
     default_theta(start_theta),
-    default_phi(start_phi) 
+    default_phi(start_phi),
+    aspect_ratio(aspect_ratio)
 {
+    set_aspect_ratio(start_width, start_height);
     reset();
 }
 
@@ -18,6 +20,11 @@ void Camera::reset()
     distance = default_distance; 
     theta = default_theta;
     phi = default_phi;
+}
+
+void Camera::set_aspect_ratio(int width, int height)
+{
+    aspect_ratio = (float)width/height;
 }
 
 void Camera::move_focus(glm::vec3 move)
@@ -38,7 +45,7 @@ void Camera::rotate_horz(float amount)
 }
 
 // Get camera transform matrix
-glm::mat4 Camera::get_matrix(float aspect_ratio)
+glm::mat4 Camera::get_matrix() const
 {
     glm::quat rot_mat(glm::vec3(phi,theta,0.f));
     glm::vec3 camera_loc = glm::vec3(rot_mat*glm::vec4(0.f,0.f,-distance,1.f))+focus;
