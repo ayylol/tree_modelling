@@ -62,19 +62,19 @@ int main(void)
 
     // TODO: remove this later, just for test
     // Vertices coordinates
-    std::vector<GLfloat> verts
+    std::vector<Vertex> verts
     {
         // X      Y                         Z     R     G       B
         // FRONT FACE (TR, BR, BL, TL)
-        1.f,  1.f, 1.f, 1.f,0.f,0.f,
-        1.f, -1.f, 1.f, 0.f,1.f,0.f,
-        -1.f, -1.f, 1.f, 0.f,0.f,1.f,
-        -1.f,  1.f, 1.f, 0.5f,0.f,0.5f,
+        Vertex{glm::vec3(1.f,  1.f, 1.f), glm::vec3(1.f,0.f,0.f)},
+        Vertex{glm::vec3(1.f, -1.f, 1.f), glm::vec3(0.f,1.f,0.f)},
+        Vertex{glm::vec3(-1.f, -1.f, 1.f), glm::vec3(0.f,0.f,1.f)},
+        Vertex{glm::vec3(-1.f,  1.f, 1.f), glm::vec3(0.5f,0.f,0.5f)},
         // BACK FACE (TR, BR, BL, TL)
-        1.f,  1.f, -1.f, 0.f,0.f,1.f, 
-        1.f, -1.f, -1.f, 0.5f,0.f,0.5f,
-        -1.f, -1.f, -1.f, 1.f,0.f,0.f,
-        -1.f,  1.f, -1.f, 0.f,1.f,0.f
+        Vertex{glm::vec3(1.f,  1.f, -1.f), glm::vec3(0.f,0.f,1.f)},
+        Vertex{glm::vec3(1.f, -1.f, -1.f), glm::vec3(0.5f,0.f,0.5f)},
+        Vertex{glm::vec3(-1.f, -1.f, -1.f), glm::vec3(1.f,0.f,0.f)},
+        Vertex{glm::vec3(-1.f,  1.f, -1.f), glm::vec3(0.f,1.f,0.f)}
     };
 
     // Indices for vertices order
@@ -106,7 +106,7 @@ int main(void)
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Readying Shaders 
-    Shader default_shader("resources/shaders/default.vert", "resources/shaders/default.frag");
+    Shader shader("resources/shaders/default.vert", "resources/shaders/default.frag");
 
     glEnable(GL_DEPTH_TEST);
     // Render loop
@@ -118,12 +118,12 @@ int main(void)
         glClearColor(0.75f,1.f,1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        mesh.draw(default_shader, camera);
+        mesh.draw(shader, camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    default_shader.cleanup();
+    shader.cleanup();
 
     glfwTerminate();
     return 0;
