@@ -15,11 +15,11 @@
 class Mesh
 {
     public:
-        Mesh(std::vector<GLfloat> vertices, std::vector<GLuint> indices);
+        Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices);
 
         void draw(const Shader& shader, const Camera& cam);
 
-        std::vector<GLfloat> vertices;
+        std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
     private:
         VAO vao;

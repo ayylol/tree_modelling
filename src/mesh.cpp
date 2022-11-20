@@ -1,14 +1,14 @@
 #include "mesh.h"
 #include <iostream>
 
-Mesh::Mesh(std::vector<GLfloat> vertices, std::vector<GLuint> indices)
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices)
 {
     this->vertices = vertices;
     this->indices = indices;
     vao.bind();
 
-    VBO vbo(&vertices[0], vertices.size()*sizeof(float));
-    EBO ebo(&indices[0], indices.size()*sizeof(unsigned int));
+    VBO vbo(vertices);
+    EBO ebo(indices);
 
     vao.link_attrib(vbo, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
     vao.link_attrib(vbo, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3*sizeof(float)));
