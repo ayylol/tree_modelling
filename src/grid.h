@@ -19,7 +19,13 @@ public:
         glm::vec3 center = {0.f,0.f,0.f}
         );
     
+    void occupy(glm::vec3 pos, unsigned int val);
+    unsigned int get_in_grid(glm::ivec3 index);
 
+    bool is_in_grid(glm::ivec3 grid_cell);
+    glm::ivec3 pos_to_grid(glm::vec3 pos);
+
+    //TODO: make private with draw method
     Mesh grid_geom;
     Mesh occupied_geom;
 private:
