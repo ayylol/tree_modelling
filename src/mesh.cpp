@@ -18,7 +18,7 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices)
     ebo.unbind();
 }
 
-void Mesh::draw(const Shader& shader, const Camera& camera)
+void Mesh::draw(const Shader& shader, const Camera& camera, GLenum mode)
 {
     shader.use();
     glm::mat4 cam_mat = camera.get_matrix();
@@ -26,5 +26,5 @@ void Mesh::draw(const Shader& shader, const Camera& camera)
     glUniformMatrix4fv(camLoc, 1, GL_FALSE, glm::value_ptr(cam_mat));
 
     vao.bind();
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(mode, indices.size(), GL_UNSIGNED_INT, 0);
 }

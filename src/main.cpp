@@ -109,6 +109,7 @@ int main(void)
     Shader shader("resources/shaders/default.vert", "resources/shaders/default.frag");
 
     glEnable(GL_DEPTH_TEST);
+    glPointSize(8.f);
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -118,7 +119,7 @@ int main(void)
         glClearColor(0.75f,1.f,1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        mesh.draw(shader, camera);
+        mesh.draw(shader, camera, GL_POINTS);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
