@@ -60,7 +60,14 @@ int main(void)
         return -1;
     }
 
-    Grid gr(glm::ivec3(10,10,10));
+    Grid gr(glm::ivec3(5,5,5),2.f);
+    
+    // TODO: DELETE
+    // Test Point
+    std::vector<Vertex> verts{Vertex{glm::vec3(0.f,  0.f, 0.f), glm::vec3(1.f,0.f,0.f)}};
+    std::vector<GLuint> indices{0};
+    Mesh test(verts,indices);
+    //
 
     // readying viewport
     glViewport(0,0,width,height);
@@ -80,9 +87,8 @@ int main(void)
         glClearColor(0.75f,1.f,1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //mesh.draw(shader, camera, GL_POINTS);
         gr.grid_geom.draw(shader, camera,GL_LINES);
-        gr.occupied_geom.draw(shader, camera,GL_POINTS);
+        test.draw(shader,camera,GL_POINTS);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
