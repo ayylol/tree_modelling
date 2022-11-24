@@ -14,6 +14,7 @@
 #include "EBO.h"
 #include "camera.h"
 #include "mesh.h"
+#include "grid.h"
 
 // Default screen dimensions
 const unsigned int DEFAULT_WIDTH = 800;
@@ -59,47 +60,7 @@ int main(void)
         return -1;
     }
 
-
-    // TODO: remove this later, just for test
-    // Vertices coordinates
-    std::vector<Vertex> verts
-    {
-        // X      Y                         Z     R     G       B
-        // FRONT FACE (TR, BR, BL, TL)
-        Vertex{glm::vec3(1.f,  1.f, 1.f), glm::vec3(1.f,0.f,0.f)},
-        Vertex{glm::vec3(1.f, -1.f, 1.f), glm::vec3(0.f,1.f,0.f)},
-        Vertex{glm::vec3(-1.f, -1.f, 1.f), glm::vec3(0.f,0.f,1.f)},
-        Vertex{glm::vec3(-1.f,  1.f, 1.f), glm::vec3(0.5f,0.f,0.5f)},
-        // BACK FACE (TR, BR, BL, TL)
-        Vertex{glm::vec3(1.f,  1.f, -1.f), glm::vec3(0.f,0.f,1.f)},
-        Vertex{glm::vec3(1.f, -1.f, -1.f), glm::vec3(0.5f,0.f,0.5f)},
-        Vertex{glm::vec3(-1.f, -1.f, -1.f), glm::vec3(1.f,0.f,0.f)},
-        Vertex{glm::vec3(-1.f,  1.f, -1.f), glm::vec3(0.f,1.f,0.f)}
-    };
-
-    // Indices for vertices order
-    std::vector<GLuint> indices
-    {
-        // Front
-        0,1,2,
-        2,3,0,
-        // Back
-        7,6,5,
-        5,4,7,
-        // Top
-        4,0,3,
-        3,7,4,
-        // Bottom
-        5,1,2,
-        2,6,5,
-        // Left
-        3,2,6,
-        6,7,3,
-        // Right
-        4,5,1,
-        1,0,4
-    };
-    Mesh mesh(verts, indices);
+    Grid gr(glm::ivec3(10,10,10));
 
     // readying viewport
     glViewport(0,0,width,height);
@@ -119,7 +80,9 @@ int main(void)
         glClearColor(0.75f,1.f,1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        mesh.draw(shader, camera, GL_POINTS);
+        //mesh.draw(shader, camera, GL_POINTS);
+        gr.grid_geom.draw(shader, camera,GL_LINES);
+        gr.occupied_geom.draw(shader, camera,GL_POINTS);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

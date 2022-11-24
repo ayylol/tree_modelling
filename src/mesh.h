@@ -17,6 +17,7 @@ class Mesh
     public:
         Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices);
 
+        void update();
         void draw(const Shader& shader, const Camera& cam, GLenum mode);
 
         std::vector<Vertex> vertices;
