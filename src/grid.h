@@ -18,12 +18,13 @@ public:
         float scale = 1.f, 
         glm::vec3 center = {0.f,0.f,0.f}
         );
-
-    std::vector<std::vector<std::vector<unsigned int>>> grid;
+    
 
     Mesh grid_geom;
     Mesh occupied_geom;
 private:
+    std::vector<std::vector<std::vector<unsigned int>>> grid;
+
     glm::ivec3 dimensions;
     float scale;
     glm::vec3 center;
