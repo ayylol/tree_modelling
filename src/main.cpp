@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include "shader.h"
 #include "VAO.h"
@@ -27,7 +28,7 @@ void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 void processInput(GLFWwindow* window);
 
 // Camera !
-Camera camera(glm::vec3(0,0,0),20.f,0.0f,0.0f, width, height);
+Camera camera(glm::vec3(0,0,0),20.f,glm::pi<float>(),0.0f, width, height);
 
 int main(void) 
 {
@@ -60,14 +61,18 @@ int main(void)
         return -1;
     }
 
-    Grid gr(glm::ivec3(5,5,5),2.f);
+    Grid gr(glm::ivec3(5,5,5),1.f);
     
     // TODO: DELETE
     // Test Point
-    std::vector<Vertex> verts{Vertex{glm::vec3(0.f,  0.f, 0.f), glm::vec3(1.f,0.f,0.f)}};
+    std::vector<Vertex> verts{Vertex{glm::vec3(0.2, 1.f, 0.f), glm::vec3(1.f,0.f,0.f)}};
     std::vector<GLuint> indices{0};
     Mesh test(verts,indices);
     //
+    auto gridcell = gr.pos_to_grid(verts[0].position);
+    gr.occupy(verts[0].position, 1);
+    std::cout<<gridcell.x<<" "<<gridcell.y<<" "<<gridcell.z<<std::endl;
+    std::cout<<gr.get_in_grid(gridcell)<<std::endl;
 
     // readying viewport
     glViewport(0,0,width,height);
