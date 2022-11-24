@@ -9,8 +9,9 @@ class EBO
     public:
         GLuint ID;
 
-        EBO(std::vector<GLuint> indices);
+        EBO(const std::vector<GLuint> &indices);
 
+        void update(const std::vector<GLuint> &indices);
         void bind();
         void unbind();
         void cleanup();

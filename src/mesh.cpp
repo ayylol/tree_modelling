@@ -5,6 +5,10 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices)
 {
     this->vertices = vertices;
     this->indices = indices;
+    this->update();
+}
+
+void Mesh::update(){
     vao.bind();
 
     VBO vbo(vertices);
