@@ -36,23 +36,38 @@ unsigned int Grid::get_in_pos(glm::vec3 pos){
     return get_in_grid(pos_to_grid(pos));
 }
 
-void Grid::occupy(glm::vec3 pos, unsigned int val){
-    glm::ivec3 grid_cell = pos_to_grid(pos); 
-
-    if(!is_in_grid(grid_cell)) {std::cout<<"outside of grid"<<std::endl; return;}
-    grid[grid_cell.x][grid_cell.y][grid_cell.z] = val;
+void Grid::occupy_pos(glm::vec3 pos, unsigned int val){
+    glm::ivec3 slot = pos_to_grid(pos); 
+    occupy_slot(slot, val);
+}
+void Grid::occupy_slot(glm::ivec3 slot, unsigned int val){
+    if(!is_in_grid(slot)) {std::cout<<"outside of grid"<<std::endl; return;}
+    grid[slot.x][slot.y][slot.z] = val;
 }
     
-void Grid::occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val){
+void Grid::occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val)
+{
+    // fill voxel
+    std::vector<glm::ivec3> voxel_list = get_voxels_line(start,end);
+    for (auto voxel : voxel_list){
+        occupy_slot(voxel, val);
+    }
+}
+std::vector<glm::ivec3> Grid::get_voxels_line(glm::vec3 start, glm::vec3 end)
+{
+    std::vector<glm::ivec3> voxel_list;
+    voxel_list.push_back(pos_to_grid(start));
+    voxel_list.push_back(pos_to_grid(end));
     // Initialize Cursor
     // Enumerate faces
     // loop while position is on line
     // Iterate through sides
     // Get component of direction
     // Find how far to travel before boundary is reached
-    // compare to m to min_m
-    // update cursor and position
-    // fill voxel
+    // Compare to m to min_m
+    // Update cursor and position
+    // Add voxel to return list
+    return voxel_list;
 }
 
 void Grid::gen_occupied_geom()
