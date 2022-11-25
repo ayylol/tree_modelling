@@ -76,6 +76,7 @@ int main(void)
     Mesh test(verts,indices);
 
     gr.occupy_line(pos0, pos1, 1);
+    //gr.occupy_pos(pos0, 1);
     gr.gen_occupied_geom();
 
     // TODO TEST STUFF

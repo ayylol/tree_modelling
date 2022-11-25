@@ -20,10 +20,13 @@ public:
         glm::vec3 center = {0.f,0.f,0.f}
         );
     
-    void occupy(glm::vec3 pos, unsigned int val);
+    void occupy_pos(glm::vec3 pos, unsigned int val);
+    void occupy_slot(glm::ivec3 pos, unsigned int val);
     void occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val);
     unsigned int get_in_grid(glm::ivec3 index);
     unsigned int get_in_pos(glm::vec3 pos);
+
+    std::vector<glm::ivec3> get_voxels_line(glm::vec3 start, glm::vec3 end);
 
     bool is_in_grid(glm::ivec3 grid_cell);
     glm::ivec3 pos_to_grid(glm::vec3 pos);
