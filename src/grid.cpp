@@ -56,8 +56,9 @@ void Grid::occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val)
 std::vector<glm::ivec3> Grid::get_voxels_line(glm::vec3 start, glm::vec3 end)
 {
     std::vector<glm::ivec3> voxel_list;
-    voxel_list.push_back(pos_to_grid(start));
-    voxel_list.push_back(pos_to_grid(end));
+    // Credit to: tlonny for this algo
+    // https://gamedev.stackexchange.com/questions/72120/how-do-i-find-voxels-along-a-ray
+    
     // Initialize Cursor
     // Enumerate faces
     // loop while position is on line
