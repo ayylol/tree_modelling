@@ -61,16 +61,22 @@ int main(void)
         return -1;
     }
 
-    Grid gr(glm::ivec3(5,5,5),.5f);
+    Grid gr(glm::ivec3(5,5,5),1.f);
     
     // TODO: TEST STUFF
     // Test Point
-    std::vector<Vertex> verts{Vertex{glm::vec3(0.2, 1.f, 0.f), glm::vec3(1.f,0.f,0.f)}};
-    std::vector<GLuint> indices{0};
+    glm::vec3 point_col = glm::vec3(1.f,0.f,0.f);
+    glm::vec3 pos0 = glm::vec3(0.2f,1.f,0.f);
+    glm::vec3 pos1 = glm::vec3(2.f,1.f,0.f);
+    std::vector<Vertex> verts{
+        Vertex{pos0,point_col},
+        Vertex{pos1,point_col}
+        };
+    std::vector<GLuint> indices{0,1};
     Mesh test(verts,indices);
 
-    auto gridcell = gr.pos_to_grid(verts[0].position);
-    gr.occupy(verts[0].position, 1);
+    gr.occupy(pos0, 1);
+    gr.occupy(pos1, 1);
 
     //std::cout<<gridcell.x<<" "<<gridcell.y<<" "<<gridcell.z<<std::endl;
     //std::cout<<gr.get_in_grid(gridcell)<<std::endl;
@@ -94,7 +100,8 @@ int main(void)
         glClearColor(0.75f,1.f,1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        gr.grid_geom.draw(shader, camera,GL_LINES);
+        gr.grid_geom.draw(shader, camera, GL_LINES);
+        gr.occupied_geom.draw(shader, camera, GL_TRIANGLES);
         test.draw(shader,camera,GL_POINTS);
 
         glfwSwapBuffers(window);
