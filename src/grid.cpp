@@ -39,19 +39,65 @@ void Grid::occupy(glm::vec3 pos, unsigned int val){
     grid[grid_cell.x][grid_cell.y][grid_cell.z] = val;
 
     // for visualization
-    gen_grid_geom();
+    gen_occupied_geom();
 }
 
 void Grid::gen_occupied_geom()
 {
-    std::cout<<"thing"<<std::endl;
+    std::vector<Vertex>& vertices = occupied_geom.vertices;
+    std::vector<GLuint>& indices = occupied_geom.indices;
+
+    std::vector<GLuint> cube_indices{
+        // Back
+        1,0,3,
+        1,3,2,
+        // Left
+        0,4,6,
+        0,6,2,
+        // Front
+        4,5,7,
+        4,7,6,
+        // Right
+        5,1,3,
+        5,3,7,
+        // Top
+        6,7,3,
+        6,3,2,
+        // Bottom
+        4,5,1,
+        4,1,0
+    };
+
+    glm::vec3 vert_col = glm::vec3(0.f,0.f,1.f);
+    int current_index=0;
     for(int k=0;k<grid[0][0].size();k++){
         for(int j=0;j<grid[0].size();j++){
             for(int i=0;i<grid.size();i++){
-                std::cout<<grid[i][j][k]<<std::endl;
+                if(grid[i][j][k]){
+                    // Add cube at the position
+                    // Generate vertices
+                    // TODO: could be made into a function 
+                    glm::vec3 curr = back_bottom_left + glm::vec3(i,j,k)*scale;
+                    for (int k_ = 0; k_<=1;k_++){
+                        for (int j_ = 0; j_<=1;j_++){
+                            for (int i_ = 0; i_<=1;i_++){
+                                vertices.push_back(Vertex{curr+glm::vec3(i_,j_,k_)*scale,vert_col});
+                            }
+                        }
+                    }
+                    std::vector<GLuint> new_indices = cube_indices;
+                    std::for_each(new_indices.begin(), new_indices.end(),[&current_index](GLuint &n){n+=current_index;}); 
+                    indices.insert(indices.end(),new_indices.begin(),new_indices.end());
+                    current_index=vertices.size();
+                    //std::cout<<i<<" "<<j<<" "<<k<<std::endl;
+                }
             }
         }
     }
+    //indices = cube_indices;
+    //for (int i=0; i<vertices.size();i++){
+        //indices.push_back(i);
+    //}
     occupied_geom.update();
 }
 
