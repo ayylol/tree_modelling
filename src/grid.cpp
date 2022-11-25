@@ -22,8 +22,8 @@ glm::ivec3 Grid::pos_to_grid(glm::vec3 pos){ return glm::ivec3((pos-back_bottom_
 bool Grid::is_in_grid(glm::ivec3 grid_cell)
 {
     return  grid_cell.x>=0  && grid_cell.x<grid.size()&&
-        grid_cell.y>=0  && grid_cell.y<grid[0].size()&&
-        grid_cell.z>=0  && grid_cell.z<grid[0][0].size();
+            grid_cell.y>=0  && grid_cell.y<grid[0].size()&&
+            grid_cell.z>=0  && grid_cell.z<grid[0][0].size();
 }
 
 unsigned int Grid::get_in_grid(glm::ivec3 index)
@@ -32,14 +32,27 @@ unsigned int Grid::get_in_grid(glm::ivec3 index)
     return grid[index.x][index.y][index.z];
 }
 
+unsigned int Grid::get_in_pos(glm::vec3 pos){
+    return get_in_grid(pos_to_grid(pos));
+}
+
 void Grid::occupy(glm::vec3 pos, unsigned int val){
     glm::ivec3 grid_cell = pos_to_grid(pos); 
 
     if(!is_in_grid(grid_cell)) {std::cout<<"outside of grid"<<std::endl; return;}
     grid[grid_cell.x][grid_cell.y][grid_cell.z] = val;
-
-    // for visualization
-    gen_occupied_geom();
+}
+    
+void Grid::occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val){
+    // Initialize Cursor
+    // Enumerate faces
+    // loop while position is on line
+    // Iterate through sides
+    // Get component of direction
+    // Find how far to travel before boundary is reached
+    // compare to m to min_m
+    // update cursor and position
+    // fill voxel
 }
 
 void Grid::gen_occupied_geom()

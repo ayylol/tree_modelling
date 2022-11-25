@@ -75,11 +75,9 @@ int main(void)
     std::vector<GLuint> indices{0,1};
     Mesh test(verts,indices);
 
-    gr.occupy(pos0, 1);
-    gr.occupy(pos1, 1);
+    gr.occupy_line(pos0, pos1, 1);
+    gr.gen_occupied_geom();
 
-    //std::cout<<gridcell.x<<" "<<gridcell.y<<" "<<gridcell.z<<std::endl;
-    //std::cout<<gr.get_in_grid(gridcell)<<std::endl;
     // TODO TEST STUFF
 
     // readying viewport
@@ -91,6 +89,8 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
     glPointSize(8.f);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -100,9 +100,9 @@ int main(void)
         glClearColor(0.75f,1.f,1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        gr.grid_geom.draw(shader, camera, GL_LINES);
+        //gr.grid_geom.draw(shader, camera, GL_LINES);
         gr.occupied_geom.draw(shader, camera, GL_TRIANGLES);
-        test.draw(shader,camera,GL_POINTS);
+        test.draw(shader,camera,GL_LINES);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

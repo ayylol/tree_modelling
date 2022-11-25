@@ -21,10 +21,15 @@ public:
         );
     
     void occupy(glm::vec3 pos, unsigned int val);
+    void occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val);
     unsigned int get_in_grid(glm::ivec3 index);
+    unsigned int get_in_pos(glm::vec3 pos);
 
     bool is_in_grid(glm::ivec3 grid_cell);
     glm::ivec3 pos_to_grid(glm::vec3 pos);
+
+    void gen_grid_geom();
+    void gen_occupied_geom();
 
     //TODO: make private with draw method
     Mesh grid_geom;
@@ -37,6 +42,4 @@ private:
     glm::vec3 center;
 
     glm::vec3 back_bottom_left;
-    void gen_grid_geom();
-    void gen_occupied_geom();
 };
