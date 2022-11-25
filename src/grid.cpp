@@ -5,7 +5,7 @@ Grid::Grid(
         glm::ivec3 dimensions, 
         float scale, 
         glm::vec3 center
-    ):
+        ):
     dimensions(dimensions),
     grid(dimensions.x, std::vector<std::vector<unsigned int>>(dimensions.y, std::vector<unsigned int>(dimensions.z,0))),
     scale(scale),
@@ -22,8 +22,8 @@ glm::ivec3 Grid::pos_to_grid(glm::vec3 pos){ return glm::ivec3((pos-back_bottom_
 bool Grid::is_in_grid(glm::ivec3 grid_cell)
 {
     return  grid_cell.x>=0  && grid_cell.x<grid.size()&&
-            grid_cell.y>=0  && grid_cell.y<grid[0].size()&&
-            grid_cell.z>=0  && grid_cell.z<grid[0][0].size();
+        grid_cell.y>=0  && grid_cell.y<grid[0].size()&&
+        grid_cell.z>=0  && grid_cell.z<grid[0][0].size();
 }
 
 unsigned int Grid::get_in_grid(glm::ivec3 index)
@@ -37,6 +37,22 @@ void Grid::occupy(glm::vec3 pos, unsigned int val){
 
     if(!is_in_grid(grid_cell)) {std::cout<<"outside of grid"<<std::endl; return;}
     grid[grid_cell.x][grid_cell.y][grid_cell.z] = val;
+
+    // for visualization
+    gen_grid_geom();
+}
+
+void Grid::gen_occupied_geom()
+{
+    std::cout<<"thing"<<std::endl;
+    for(int k=0;k<grid[0][0].size();k++){
+        for(int j=0;j<grid[0].size();j++){
+            for(int i=0;i<grid.size();i++){
+                std::cout<<grid[i][j][k]<<std::endl;
+            }
+        }
+    }
+    occupied_geom.update();
 }
 
 void Grid::gen_grid_geom()
@@ -83,7 +99,7 @@ void Grid::gen_grid_geom()
             curr+=2;
         }
     }
-    
+
     // Z grid lines
     for (int j=0;j<=dimensions.y; j++){
         int curr = (j>0) ? verts_first_layer+(j-1)*verts_in_layer : 0;
@@ -100,16 +116,16 @@ void Grid::gen_grid_geom()
     /*
     // Y grid lines
     for (int i = 0; i < verts_first_layer; i++){
-        indices.push_back(i);
-        indices.push_back(i+(verts_in_layer)*(dimensions.y-1)+verts_first_layer);
+    indices.push_back(i);
+    indices.push_back(i+(verts_in_layer)*(dimensions.y-1)+verts_first_layer);
     }
     */
 
     /*
-    for (int i=0; i<vertices.size();i++){
-        indices.push_back(i);
-    }
-    */
+       for (int i=0; i<vertices.size();i++){
+       indices.push_back(i);
+       }
+       */
     grid_geom.update();
 
 }

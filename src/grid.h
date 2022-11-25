@@ -37,4 +37,5 @@ private:
 
     glm::vec3 back_bottom_left;
     void gen_grid_geom();
+    void gen_occupied_geom();
 };
