@@ -61,18 +61,20 @@ int main(void)
         return -1;
     }
 
-    Grid gr(glm::ivec3(5,5,5),1.f);
+    Grid gr(glm::ivec3(5,5,5),.5f);
     
-    // TODO: DELETE
+    // TODO: TEST STUFF
     // Test Point
     std::vector<Vertex> verts{Vertex{glm::vec3(0.2, 1.f, 0.f), glm::vec3(1.f,0.f,0.f)}};
     std::vector<GLuint> indices{0};
     Mesh test(verts,indices);
-    //
+
     auto gridcell = gr.pos_to_grid(verts[0].position);
     gr.occupy(verts[0].position, 1);
-    std::cout<<gridcell.x<<" "<<gridcell.y<<" "<<gridcell.z<<std::endl;
-    std::cout<<gr.get_in_grid(gridcell)<<std::endl;
+
+    //std::cout<<gridcell.x<<" "<<gridcell.y<<" "<<gridcell.z<<std::endl;
+    //std::cout<<gr.get_in_grid(gridcell)<<std::endl;
+    // TODO TEST STUFF
 
     // readying viewport
     glViewport(0,0,width,height);
