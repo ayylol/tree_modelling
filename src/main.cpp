@@ -61,13 +61,15 @@ int main(void)
         return -1;
     }
 
-    Grid gr(glm::ivec3(5,5,5),1.f);
+    //Grid gr(glm::ivec3(100,100,100),.05f);
+    Grid gr(glm::ivec3(500,500,500),.01f);
+    //Grid gr(glm::ivec3(10,10,10),.5f);
     
     // TODO: TEST STUFF
     // Test Point
     glm::vec3 point_col = glm::vec3(1.f,0.f,0.f);
-    glm::vec3 pos0 = glm::vec3(0.2f,1.f,0.f);
-    glm::vec3 pos1 = glm::vec3(2.f,1.f,0.f);
+    glm::vec3 pos0 = glm::vec3(0.22f,-1.1f,0.03f);
+    glm::vec3 pos1 = glm::vec3(2.2f,1.33f,2.2f);
     std::vector<Vertex> verts{
         Vertex{pos0,point_col},
         Vertex{pos1,point_col}
@@ -90,7 +92,7 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
     glPointSize(8.f);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
     // Render loop
     while (!glfwWindowShouldClose(window))

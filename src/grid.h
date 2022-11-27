@@ -1,12 +1,15 @@
 #pragma once 
 
 #include <vector>
+#include <tuple>
+#include <limits>
 #include <algorithm>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/norm.hpp>
 
 #include "mesh.h"
 #include "VBO.h"
@@ -30,6 +33,7 @@ public:
 
     bool is_in_grid(glm::ivec3 grid_cell);
     glm::ivec3 pos_to_grid(glm::vec3 pos);
+    glm::vec3 grid_to_pos(glm::ivec3 voxel);
 
     void gen_grid_geom();
     void gen_occupied_geom();
