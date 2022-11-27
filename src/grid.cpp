@@ -64,18 +64,9 @@ std::vector<glm::ivec3> Grid::get_voxels_line(glm::vec3 start, glm::vec3 end)
 {
     std::vector<glm::ivec3> voxel_list;
     voxel_list.push_back(pos_to_grid(start));
-
     // Credit to: tlonny for this algo
     // https://gamedev.stackexchange.com/questions/72120/how-do-i-find-voxels-along-a-ray    
     // Enumerate faces
-    std::vector<glm::vec3> face_norms {
-        glm::vec3(0,0,-1),  // Back
-        glm::vec3(-1,0,0),  // Left
-        glm::vec3(0,0,1),   // Front
-        glm::vec3(1,0,0),   // Right
-        glm::vec3(0,1,0),   // Top
-        glm::vec3(0,-1,0)   // Bottom
-    };
 
     // Initialize Position/Voxel Cursor and Direction vector
     glm::vec3 pos_cursor = start;
@@ -89,7 +80,7 @@ std::vector<glm::ivec3> Grid::get_voxels_line(glm::vec3 start, glm::vec3 end)
     // tuple = (face normal index, component of direction, sign of face)
     std::vector<std::tuple<unsigned int, float, int>> dir_components;
     for(int i = 0; i < face_norms.size(); i++){
-        float dir_comp = glm::dot(dir, face_norms[i]);
+        float dir_comp = glm::dot(dir, glm::vec3(face_norms[i]));
         if (dir_comp > 0){  // Only add components going in direction of normal
             int face_sign = face_norms[i].x + face_norms[i].y + face_norms[i].z;
             dir_components.push_back(std::make_tuple(i,dir_comp,face_sign));
@@ -99,17 +90,17 @@ std::vector<glm::ivec3> Grid::get_voxels_line(glm::vec3 start, glm::vec3 end)
     // loop while position is on line
     while(glm::distance2(start,pos_cursor)<length2&&is_in_grid(voxel_cursor)){
         float min_m = FLT_MAX;
-        glm::vec3 min_norm;
+        glm::ivec3 min_norm;
 
         // Iterate through positive direction components
         for (int i = 0; i<dir_components.size(); i++){
 
             
-            glm::vec3 norm = face_norms[std::get<0>(dir_components[i])];
+            glm::ivec3 norm = face_norms[std::get<0>(dir_components[i])];
             int norm_sign = std::get<2>(dir_components[i]);
  
             // Get position of next voxel boundary according to normal
-            glm::ivec3 next_voxel = voxel_cursor + glm::ivec3(norm);
+            glm::ivec3 next_voxel = voxel_cursor + norm;
             glm::vec3 next_voxel_pos = grid_to_pos(next_voxel);
             if(norm_sign < 0) next_voxel_pos += glm::vec3(scale,scale,scale)*0.9999f; 
             
@@ -124,7 +115,7 @@ std::vector<glm::ivec3> Grid::get_voxels_line(glm::vec3 start, glm::vec3 end)
             float m = component_diff/std::get<1>(dir_components[i]);
 
             if (m < min_m){
-                if (m==0.f) m = FLT_MIN;
+                if (m==0.f) m = FLT_MIN; // Fixes already being on border
                 min_m = m;
                 min_norm = norm;
             }
@@ -132,10 +123,9 @@ std::vector<glm::ivec3> Grid::get_voxels_line(glm::vec3 start, glm::vec3 end)
 
         // Update cursor and position
         pos_cursor += dir * min_m; //scale to not land right on border
-        voxel_cursor += glm::ivec3(min_norm);
+        voxel_cursor += min_norm;
 
         voxel_list.push_back(voxel_cursor);
-        //break;
     }
     // Preventing overshoot
     if (!glm::all(glm::equal(pos_to_grid(end),voxel_list.back()))||!is_in_grid(voxel_list.back())) voxel_list.pop_back(); 
@@ -174,10 +164,8 @@ void Grid::gen_occupied_geom()
     for(int k=0;k<grid[0][0].size();k++){
         for(int j=0;j<grid[0].size();j++){
             for(int i=0;i<grid.size();i++){
-                if(grid[i][j][k]){
-                    // Add cube at the position
+                if(grid[i][j][k]){ // Grid space is occupied
                     // Generate vertices
-                    // TODO: could be made into a function 
                     glm::vec3 curr = back_bottom_left + glm::vec3(i,j,k)*scale;
                     for (int k_ = 0; k_<=1;k_++){
                         for (int j_ = 0; j_<=1;j_++){
@@ -186,6 +174,8 @@ void Grid::gen_occupied_geom()
                             }
                         }
                     }
+
+                    // Generate Indices
                     std::vector<GLuint> new_indices = cube_indices;
                     std::for_each(new_indices.begin(), new_indices.end(),[&current_index](GLuint &n){n+=current_index;}); 
                     indices.insert(indices.end(),new_indices.begin(),new_indices.end());
