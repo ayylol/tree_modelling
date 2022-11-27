@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <vector>
+#include <array>
 #include <tuple>
 #include <limits>
 #include <algorithm>
@@ -49,4 +50,15 @@ private:
     glm::vec3 center;
 
     glm::vec3 back_bottom_left;
+
+    // List of face normals for a voxel
+    static constexpr std::array<glm::ivec3,6>face_norms = {
+        glm::ivec3(1,0,0),  // Right
+        glm::ivec3(-1,0,0), // Left
+        glm::ivec3(0,1,0),  // Top
+        glm::ivec3(0,-1,0), // Bottom
+        glm::ivec3(0,0,1),  // Front
+        glm::ivec3(0,0,-1)  // Back
+    };
+
 };

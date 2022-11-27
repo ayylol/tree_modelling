@@ -62,8 +62,8 @@ int main(void)
     }
 
     //Grid gr(glm::ivec3(100,100,100),.05f);
-    Grid gr(glm::ivec3(500,500,500),.01f);
-    //Grid gr(glm::ivec3(10,10,10),.5f);
+    //Grid gr(glm::ivec3(500,500,500),.01f);
+    Grid gr(glm::ivec3(10,10,10),.5f);
     
     // TODO: TEST STUFF
     // Test Point
@@ -92,7 +92,7 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
     glPointSize(8.f);
-    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
     // Render loop
     while (!glfwWindowShouldClose(window))
