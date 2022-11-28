@@ -5,4 +5,4 @@ TODO:
 - Rendering
 
 less important:
-- better folder structure
+- cleaner CMAKE
