@@ -3,6 +3,8 @@
 
 // Commonly used names
 using std::vector;
+using std::array;
+using std::tuple;
 using glm::vec3;
 using glm::ivec3;
 
@@ -83,7 +85,7 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end)
     
     // Precompute direction components
     // tuple = (face normal index, component of direction, sign of face)
-    vector<std::tuple<unsigned int, float, int>> dir_components;
+    vector<tuple<unsigned int, float, int>> dir_components;
     for(int i = 0; i < face_norms.size(); i++){
         float dir_comp = glm::dot(dir, vec3(face_norms[i]));
         if (dir_comp > 0){  // Only add components going in direction of normal
@@ -141,47 +143,79 @@ void Grid::gen_occupied_geom()
     vector<Vertex>& vertices = occupied_geom.vertices;
     vector<GLuint>& indices = occupied_geom.indices;
 
-    vector<GLuint> cube_indices{
-        // Back
-        1,0,3,
-        1,3,2,
-        // Left
-        0,4,6,
-        0,6,2,
-        // Front
-        4,5,7,
-        4,7,6,
-        // Right
-        5,1,3,
-        5,3,7,
-        // Top
-        6,7,3,
-        6,3,2,
-        // Bottom
-        4,5,1,
-        4,1,0
+    // Needs to be in same order as normals
+    const array<array<GLuint, 6>,6> cube_indices= {{
+        {5,1,3, 5,3,7}, // Right
+        {0,4,6, 0,6,2}, // Left
+        {6,7,3, 6,3,2}, // Top
+        {4,5,1, 4,1,0}, // Bottom
+        {4,5,7, 4,7,6}, // Front
+        {1,0,3, 1,3,2}  // Back
+    }};
+
+    // Set up default vertex info array and adjacent vertex array
+    struct Info{
+        unsigned int index;
+        bool vert_included=true;
     };
+    const array<Info,8> default_verts_info = {{{0},{1},{2},{3},{4},{5},{6},{7}}};
+    const array<array<unsigned int,3>,8> adj_norms = {{
+        {1,3,5},
+        {0,3,5},
+        {1,2,5},
+        {0,2,5},
+        {1,3,4},
+        {0,3,4},
+        {1,2,4},
+        {0,2,4}
+    }};
 
     vec3 vert_col = vec3(0.f,0.f,1.f);
     int current_index=0;
+
+    // Loop Through all grid slots
     for(int k=0;k<grid[0][0].size();k++){
         for(int j=0;j<grid[0].size();j++){
             for(int i=0;i<grid.size();i++){
-                if(grid[i][j][k]){ // Grid space is occupied
-                    // Generate vertices
-                    vec3 curr = back_bottom_left + vec3(i,j,k)*scale;
+                ivec3 current_voxel(i,j,k);
+
+                // Grid space is occupied
+                if(get_in_grid(current_voxel)){ 
+                    auto verts_info = default_verts_info;
+
+                    // Get adjacent voxel contents
+                    vector<unsigned int> adj_content;
+                    for ( auto norm : face_norms)
+                        adj_content.push_back(get_in_grid(current_voxel+norm));
+
+                    // Loop through and generate vertices
+                    vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale;
+                    int curr_vert_index = 0;
                     for (int k_ = 0; k_<=1;k_++){
                         for (int j_ = 0; j_<=1;j_++){
                             for (int i_ = 0; i_<=1;i_++){
-                                vertices.push_back(Vertex{curr+vec3(i_,j_,k_)*scale,vert_col});
+                                // TODO: remove vert if all 3 adjacent faces are occupies
+                                const array<unsigned int,3>& curr_adj_norms = adj_norms[curr_vert_index];
+                                bool keep_vert = true;
+
+                                if(keep_vert){
+                                    vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,vert_col});
+                                }else{
+
+                                }
+                                curr_vert_index++;
                             }
                         }
                     }
 
                     // Generate Indices
-                    vector<GLuint> new_indices = cube_indices;
-                    std::for_each(new_indices.begin(), new_indices.end(),[&current_index](GLuint &n){n+=current_index;}); 
-                    indices.insert(indices.end(),new_indices.begin(),new_indices.end());
+                    // TODO: remove faces that are adjacent to occupied side
+                    // TODO: account for removed vertices by using vert info array
+                    std::for_each(cube_indices.begin(),cube_indices.end(),
+                        [=, &indices](const array<GLuint,6> face){
+                            std::for_each(face.begin(),face.end(),
+                                    [=, &indices](const GLuint &index){indices.push_back(index+current_index);});
+                        });
                     current_index=vertices.size();
                 }
             }
