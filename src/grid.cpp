@@ -137,7 +137,8 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end)
     return voxel_list;
 }
 
-
+// TODO: IMPLEMENT WITH INSTANCING INSTEAD
+// Generates all the geometry
 void Grid::gen_occupied_geom()
 {
     vector<Vertex>& vertices = occupied_geom.vertices;
@@ -154,6 +155,7 @@ void Grid::gen_occupied_geom()
     }};
 
     // Set up default vertex info array and adjacent vertex array
+    // TODO: no need for structure, an int array is just fine
     struct Info{
         unsigned int index;
         bool vert_included=true;
@@ -195,27 +197,21 @@ void Grid::gen_occupied_geom()
                         for (int j_ = 0; j_<=1;j_++){
                             for (int i_ = 0; i_<=1;i_++){
                                 // TODO: remove vert if all 3 adjacent faces are occupies
-                                const array<unsigned int,3>& curr_adj_norms = adj_norms[curr_vert_index];
-                                bool keep_vert = true;
-
-                                if(keep_vert){
-                                    vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,vert_col});
-                                }else{
-
-                                }
+                                vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,vert_col}); 
                                 curr_vert_index++;
                             }
                         }
                     }
 
                     // Generate Indices
-                    // TODO: remove faces that are adjacent to occupied side
-                    // TODO: account for removed vertices by using vert info array
-                    std::for_each(cube_indices.begin(),cube_indices.end(),
-                        [=, &indices](const array<GLuint,6> face){
-                            std::for_each(face.begin(),face.end(),
-                                    [=, &indices](const GLuint &index){indices.push_back(index+current_index);});
-                        });
+                    for (int face_i=0; face_i<cube_indices.size(); face_i++){
+                        if (!adj_content[face_i]){
+                            for (int index=0; index<cube_indices[face_i].size(); index++){
+                                indices.push_back(cube_indices[face_i][index]+current_index);
+                            }
+                        }
+                    }
+
                     current_index=vertices.size();
                 }
             }
