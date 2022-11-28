@@ -156,11 +156,13 @@ void Grid::gen_occupied_geom()
 
     // Set up default vertex info array and adjacent vertex array
     // TODO: no need for structure, an int array is just fine
+    /*
     struct Info{
         unsigned int index;
         bool vert_included=true;
     };
     const array<Info,8> default_verts_info = {{{0},{1},{2},{3},{4},{5},{6},{7}}};
+    */
     const array<array<unsigned int,3>,8> adj_norms = {{
         {1,3,5},
         {0,3,5},
@@ -183,8 +185,6 @@ void Grid::gen_occupied_geom()
 
                 // Grid space is occupied
                 if(get_in_grid(current_voxel)){ 
-                    auto verts_info = default_verts_info;
-
                     // Get adjacent voxel contents
                     vector<unsigned int> adj_content;
                     for ( auto norm : face_norms)
