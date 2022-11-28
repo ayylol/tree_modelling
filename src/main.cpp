@@ -66,8 +66,9 @@ int main(void)
     Grid gr(glm::ivec3(10,10,10),.5f);
     
     // TODO: TEST STUFF
-    // Test Point
     glm::vec3 point_col = glm::vec3(1.f,0.f,0.f);
+    // Test Line intersect
+    /*
     glm::vec3 pos0 = glm::vec3(0.22f,-1.1f,0.03f);
     glm::vec3 pos1 = glm::vec3(2.2f,1.33f,2.2f);
     std::vector<Vertex> verts{
@@ -76,9 +77,35 @@ int main(void)
         };
     std::vector<GLuint> indices{0,1};
     Mesh test(verts,indices);
-
     gr.occupy_line(pos0, pos1, 1);
-    //gr.occupy_pos(pos0, 1);
+    */
+    // Test voxel vert/face occlusion
+    glm::vec3 pos0 = glm::vec3(0.5f,0.5f,0.5f);
+    glm::vec3 pos1 = glm::vec3(0.f,0.5f,0.5f);
+    glm::vec3 pos2 = glm::vec3(1.f,0.5f,0.5f);
+    glm::vec3 pos3 = glm::vec3(0.5f,0.f,0.5f);
+    glm::vec3 pos4 = glm::vec3(0.5f,1.f,0.5f);
+    glm::vec3 pos5 = glm::vec3(0.5f,0.5f,0.f);
+    glm::vec3 pos6 = glm::vec3(0.5f,0.5f,1.f);
+    std::vector<Vertex> verts{
+        Vertex{pos0,point_col},
+        Vertex{pos1,point_col},
+        Vertex{pos2,point_col},
+        Vertex{pos3,point_col},
+        Vertex{pos4,point_col},
+        Vertex{pos5,point_col},
+        Vertex{pos6,point_col}
+        };
+    std::vector<GLuint> indices{0,1,2,3,4,5,6};
+    Mesh test(verts,indices);
+
+    gr.occupy_pos(pos0, 1);
+    gr.occupy_pos(pos1, 1);
+    gr.occupy_pos(pos2, 1);
+    gr.occupy_pos(pos3, 1);
+    gr.occupy_pos(pos4, 1);
+    gr.occupy_pos(pos5, 1);
+    gr.occupy_pos(pos6, 1);
     gr.gen_occupied_geom();
 
     // TODO TEST STUFF
@@ -105,7 +132,8 @@ int main(void)
 
         //gr.grid_geom.draw(shader, camera, GL_LINES);
         gr.occupied_geom.draw(shader, camera, GL_TRIANGLES);
-        test.draw(shader,camera,GL_LINES);
+        //gr.occupied_geom.draw(shader, camera, GL_POINTS);
+        test.draw(shader,camera,GL_POINTS); // Test line drawing
 
         glfwSwapBuffers(window);
         glfwPollEvents();
