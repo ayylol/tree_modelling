@@ -1,4 +1,4 @@
-#include "grid.h"
+#include "tree/grid.h"
 #include <iostream>
 
 // Commonly used names

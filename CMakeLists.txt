@@ -8,6 +8,7 @@ SET(CMAKE_CXX_EXTENSIONS OFF)
 
 include_directories("${PROJECT_BINARY_DIR}" libs src)
 
+# Libraries
 set(DEFINITIONS _USE_MATH_DEFINES=1 GLM_FORCE_CXX14=1
     IMGUI_IMPL_OPENGL_LOADER_CUSTOM="glad/glad.h")
 
@@ -21,13 +22,22 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(libs/glfw)
 set(LIBRARIES ${LIBRARIES} glfw)
 
-file(GLOB sources src/*.cpp src/*.h libs/*.h libs/*.hpp libs/*.cpp libs/*.c libs/imgui/*.h libs/imgui/*.cpp)
-
 # Copy all the resources and tell the build system to re-run CMAKE if one of them changes
 file(GLOB_RECURSE resources RELATIVE ${CMAKE_SOURCE_DIR} resources/*)
 foreach(file ${resources})
     configure_file(${file} ${file} COPYONLY)
 endforeach(file)
+
+# Making executable
+# Original sources glob 
+# file(GLOB sources src/*.cpp src/*.h libs/*.h libs/*.hpp libs/*.cpp libs/*.c libs/imgui/*.h libs/imgui/*.cpp)
+# TODO: Make cleaner more inclusive regex
+file(GLOB_RECURSE source
+    ${CMAKE_CURRENT_LIST_DIR}/src/*\.[ch]
+    ${CMAKE_CURRENT_LIST_DIR}/src/*\.[ch]pp
+    )
+file(GLOB libs libs/*.h libs/*.hpp libs/*.cpp libs/*.c libs/imgui/*.h libs/imgui/*.cpp)
+file(GLOB sources ${source} ${libs})
 
 add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})

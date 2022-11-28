@@ -12,8 +12,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 
-#include "mesh.h"
-#include "VBO.h"
+#include "rendering/mesh.h"
+#include "rendering/VBO.h"
 
 class Grid
 {

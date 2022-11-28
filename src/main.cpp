@@ -9,13 +9,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/constants.hpp>
 
-#include "shader.h"
-#include "VAO.h"
-#include "VBO.h"
-#include "EBO.h"
-#include "camera.h"
-#include "mesh.h"
-#include "grid.h"
+#include "rendering/shader.h"
+#include "rendering/VAO.h"
+#include "rendering/VBO.h"
+#include "rendering/EBO.h"
+#include "rendering/camera.h"
+#include "rendering/mesh.h"
+
+#include "tree/grid.h"
+#include "tree/skeleton.h"
 
 // Default screen dimensions
 const unsigned int DEFAULT_WIDTH = 800;
@@ -79,6 +81,7 @@ int main(void)
     Mesh test(verts,indices);
     gr.occupy_line(pos0, pos1, 1);
     */
+
     // Test voxel vert/face occlusion
     glm::vec3 pos0 = glm::vec3(0.5f,0.5f,0.5f);
     glm::vec3 pos1 = glm::vec3(0.f,0.5f,0.5f);
@@ -132,7 +135,7 @@ int main(void)
 
         //gr.grid_geom.draw(shader, camera, GL_LINES);
         gr.occupied_geom.draw(shader, camera, GL_TRIANGLES);
-        //gr.occupied_geom.draw(shader, camera, GL_POINTS);
+        gr.occupied_geom.draw(shader, camera, GL_POINTS);
         test.draw(shader,camera,GL_POINTS); // Test line drawing
 
         glfwSwapBuffers(window);
