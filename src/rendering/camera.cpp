@@ -1,4 +1,4 @@
-#include "camera.h"
+#include "rendering/camera.h"
 #include <iostream>
 
 //

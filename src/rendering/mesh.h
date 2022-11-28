@@ -6,11 +6,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
-#include <camera.h>
-#include <VAO.h>
-#include <VBO.h>
-#include <EBO.h>
+#include "rendering/shader.h"
+#include "rendering/camera.h"
+#include "rendering/VAO.h"
+#include "rendering/VBO.h"
+#include "rendering/EBO.h"
 
 class Mesh
 {

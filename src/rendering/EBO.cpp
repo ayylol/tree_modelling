@@ -1,4 +1,4 @@
-#include "EBO.h"
+#include "rendering/EBO.h"
 
 EBO::EBO(const std::vector<GLuint> &indices)
 {
