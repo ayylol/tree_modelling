@@ -83,6 +83,7 @@ int main(void)
     */
 
     // Test voxel vert/face occlusion
+    /*
     glm::vec3 pos0 = glm::vec3(0.5f,0.5f,0.5f);
     glm::vec3 pos1 = glm::vec3(0.f,0.5f,0.5f);
     glm::vec3 pos2 = glm::vec3(1.f,0.5f,0.5f);
@@ -110,6 +111,11 @@ int main(void)
     gr.occupy_pos(pos5, 1);
     gr.occupy_pos(pos6, 1);
     gr.gen_occupied_geom();
+    */
+    
+    // Skeleton testing
+    Skeleton tree("resources/tree_data/test.data");
+    tree.shitpiss();
 
     // TODO TEST STUFF
 
@@ -133,10 +139,8 @@ int main(void)
         glClearColor(0.75f,1.f,1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //gr.grid_geom.draw(shader, camera, GL_LINES);
-        gr.occupied_geom.draw(shader, camera, GL_TRIANGLES);
-        gr.occupied_geom.draw(shader, camera, GL_POINTS);
-        test.draw(shader,camera,GL_POINTS); // Test line drawing
+        // Draw the meshes here
+        //test.draw(shader, camera, GL_LINES);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

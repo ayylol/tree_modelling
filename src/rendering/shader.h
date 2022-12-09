@@ -8,8 +8,9 @@
 
 #include<glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <util/fileContents.h>
 
-std::string get_file_contents(const char* filename);
+//std::string get_file_contents(const char* filename);
 
 class Shader 
 {
