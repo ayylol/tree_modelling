@@ -7,7 +7,7 @@
 
 #define PRINT(string) std::cout<<string<<std::endl
 
-size_t Skeleton::leafs_size() {return leafs.size();}
+size_t Skeleton::leafs_size() const {return leafs.size();}
 
 // TODO: I feel like this is messy
 Skeleton::Skeleton(const char* filename){
@@ -141,7 +141,8 @@ Mesh Skeleton::get_mesh(){
     return Mesh(vertices, indices); 
 }
 
-std::vector<glm::vec3> Skeleton::get_strand(size_t index){
+std::vector<glm::vec3> Skeleton::get_strand(size_t index) const
+{
     if ( index >= leafs.size() || index < 0) {
         std::cout<<"Not a valid strand"<<std::endl;
         return std::vector<glm::vec3>();

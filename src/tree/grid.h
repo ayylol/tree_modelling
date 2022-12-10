@@ -27,18 +27,19 @@ public:
     void occupy_pos(glm::vec3 pos, unsigned int val);
     void occupy_slot(glm::ivec3 pos, unsigned int val);
     void occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val);
-    unsigned int get_in_grid(glm::ivec3 index);
-    unsigned int get_in_pos(glm::vec3 pos);
 
-    std::vector<glm::ivec3> get_voxels_line(glm::vec3 start, glm::vec3 end);
+    unsigned int get_in_grid(glm::ivec3 index) const;
+    unsigned int get_in_pos(glm::vec3 pos) const;
 
-    bool is_in_grid(glm::ivec3 grid_cell);
-    glm::ivec3 pos_to_grid(glm::vec3 pos);
-    glm::vec3 grid_to_pos(glm::ivec3 voxel);
+    std::vector<glm::ivec3> get_voxels_line(glm::vec3 start, glm::vec3 end) const;
 
-    Mesh get_grid_geom();
-    Mesh get_bound_geom();
-    Mesh get_occupied_geom();
+    bool is_in_grid(glm::ivec3 grid_cell) const;
+    glm::ivec3 pos_to_grid(glm::vec3 pos) const;
+    glm::vec3 grid_to_pos(glm::ivec3 voxel) const;
+
+    Mesh get_grid_geom() const;
+    Mesh get_bound_geom() const;
+    Mesh get_occupied_geom() const;
 private:
     std::vector<std::vector<std::vector<unsigned int>>> grid;
 

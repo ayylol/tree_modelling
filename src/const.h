@@ -16,6 +16,13 @@
 #define CENTER glm::vec3(0.2,1.5,0)
 
 /*
+// For poplar
+#define FOCUS glm::vec3(0,1.5,0)
+#define DISTANCE 5.f
+#define DIMENSIONS glm::ivec3(500,500,500)
+#define SCALE .006f
+#define CENTER glm::vec3(0.2,1.5,0)
+
 // For malus baccata columnaris
 #define FOCUS glm::vec3(0,1.3,0)
 #define DISTANCE 5.f
