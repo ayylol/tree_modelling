@@ -65,7 +65,8 @@ int main(int argc, char* argv[])
 
     //Grid gr(glm::ivec3(100,100,100),.05f);
     //Grid gr(glm::ivec3(500,500,500),.01f);
-    Grid gr(glm::ivec3(10,10,10),.5f);
+    Grid gr(glm::ivec3(10,10,10),.5f, glm::vec3(0,2,0));
+    Mesh grid_geom = gr.get_grid_geom();
     
     // TODO TEST STUFF
     
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
 
         // Draw the meshes here
         tree_skelly.draw(shader,camera, GL_LINES);
-        //test.draw(shader, camera, GL_LINES);
+        grid_geom.draw(shader,camera,GL_LINES);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
