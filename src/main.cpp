@@ -19,6 +19,8 @@
 #include "tree/grid.h"
 #include "tree/skeleton.h"
 
+#include "const.h"  // TODO TEMPORARY SOLUTION
+
 // Default screen dimensions
 const unsigned int DEFAULT_WIDTH = 800;
 const unsigned int DEFAULT_HEIGHT = 600;
@@ -29,8 +31,7 @@ unsigned int height = DEFAULT_HEIGHT;
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 void processInput(GLFWwindow* window);
 
-// Camera !
-Camera camera(glm::vec3(0,1,0),5.f,glm::pi<float>(),0.0f, width, height);
+Camera camera(FOCUS,DISTANCE,glm::pi<float>(),0.0f, width, height);
 
 int main(int argc, char* argv[]) 
 {
@@ -62,24 +63,7 @@ int main(int argc, char* argv[])
         glfwTerminate();
         return -1;
     }
-
-    //Grid gr(glm::ivec3(100,100,100),.05f);
-    //Grid gr(glm::ivec3(500,500,500),.01f);
-    //Grid gr(glm::ivec3(10,10,10),.5f, glm::vec3(0,2,0));
-    Grid gr(glm::ivec3(10,10,10),.5f, glm::vec3(0,2.2,0));
-    Mesh bound_geom = gr.get_bound_geom();
     
-    // TODO TEST STUFF
-    // Skeleton testing
-    if (argc != 2 ){
-        std::cout<<"input a tree file"<<std::endl;
-        return -1;
-    }
-    Skeleton tree(argv[1]);
-    Mesh tree_skelly = tree.get_mesh();
-
-    // TODO TEST STUFF
-
     // readying viewport
     glViewport(0,0,width,height);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -91,13 +75,25 @@ int main(int argc, char* argv[])
     glPointSize(8.f);
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
+    // Readying Meshes
+    if (argc != 2 ){
+        std::cout<<"input a tree file"<<std::endl;
+        return -1;
+    }
+    Skeleton tree(argv[1]);
+    Mesh tree_skelly = tree.get_mesh();
+    std::vector<glm::vec3> strand = tree.get_strand(0);
+
+    Grid gr(DIMENSIONS, SCALE, CENTER);
+    Mesh bound_geom = gr.get_bound_geom();
+
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
 
         // Render here
-        glClearColor(0.75f,1.f,1.f, 1.0f);
+        glClearColor(SKY_COLOR[0],SKY_COLOR[1],SKY_COLOR[2],SKY_COLOR[3]);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here

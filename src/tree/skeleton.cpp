@@ -14,17 +14,6 @@ Skeleton::Skeleton(const char* filename){
     std::string token;
 
     #define GET_NEXT(token) std::getline(in,token, ' ')
-        
-    /*
-    #define PARSE_POINT(token, pos)     \
-        for (int i = 0; i<3; i++){      \
-            GET_NEXT(token);            \
-            pos[i] = std::stof(token);  \
-        }                               \
-        GET_NEXT(token);                \
-        if(token.find(")")==std::string::npos)    \
-            throw std::invalid_argument( "Incorrect file format: position parentheses not closed" )    \
-    */
     #define PARSE_POINT(token, pos)     \
         GET_NEXT(token);                \
         pos.x = std::stof(token);       \
@@ -43,13 +32,6 @@ Skeleton::Skeleton(const char* filename){
     if (token.find("(")==std::string::npos)
         throw std::invalid_argument( "Incorrect file format: Opening parentheses for position not found" );
     PARSE_POINT(token, root->position);
-    // Get root end
-    /*
-    GET_NEXT(token);
-    if (token.find("(")==std::string::npos)
-        throw std::invalid_argument( "Incorrect file format: Opening parentheses for position not found" );
-    PARSE_POINT(token, root->end);
-    */
 
     std::stack<std::shared_ptr<Node>> last_split;
     last_split.push(root);
@@ -84,9 +66,19 @@ Skeleton::Skeleton(const char* filename){
         }
     }
     leafs.push_back(last_node);
+    in.close();
 }
 
 Mesh Skeleton::get_mesh(){
+    const std::array<glm::vec3,7> palette {{
+        glm::vec3(0.58,0,0.83),
+        glm::vec3(0.29,0,0.51),
+        glm::vec3(0,0,1),
+        glm::vec3(0,1,0),
+        glm::vec3(1,1,0),
+        glm::vec3(1,0.5,0),
+        glm::vec3(1,0,0)
+    }};
     // Initialize mesh verts and indices
     glm::vec3 col(0.6,0,0.8);
     std::vector<Vertex> vertices;
@@ -103,11 +95,12 @@ Mesh Skeleton::get_mesh(){
     bool done = false;
     int debug_counter=0;
     while (!done){
+        //std::cout<<"run: "<<debug_counter++<<std::endl;
         unsigned int num_children = last_node.node->children.size();
         unsigned int explored = last_node.children_explored;
         // Add node to vertices (first time node is reached)
         if (explored==0){
-            vertices.push_back(Vertex{last_node.node->position,col});
+            vertices.push_back(Vertex{last_node.node->position,palette[(int)rand()%palette.size()]});
             indices.push_back(last_node.parent_index);
             indices.push_back(last_node.index);
         }
@@ -115,22 +108,26 @@ Mesh Skeleton::get_mesh(){
         // See how to continue
         if(num_children==0){
             // Reached leaf go back to last split
-            last_split.top().children_explored++;
-            if ( last_split.empty() ) done = true;
-            else last_node=last_split.top();
+            if ( last_split.empty() ) {
+                done = true;
+            }
+            else {
+                last_split.top().children_explored++;
+                last_node=last_split.top();
+            }
         } else if(num_children==1){
             // Straight path
             last_node = {last_node.node->children[0],(GLuint)vertices.size(), last_node.index};
         }else{
             if (explored<num_children){
                 // Children left to explore
-                if (last_split.top().index!=last_node.index){
+                if (last_split.empty() || last_split.top().index!=last_node.index){
                     last_split.push(last_node);
                 }
                 last_node = {last_node.node->children[last_node.children_explored],(GLuint)vertices.size(), last_node.index};
             }else{
                 // Children all explored
-                last_split.pop();
+                if(!last_split.empty()) last_split.pop();
                 if(!last_split.empty()){
                     last_split.top().children_explored++;
                     last_node = last_split.top();
@@ -140,4 +137,13 @@ Mesh Skeleton::get_mesh(){
         //if (debug_counter++>10) break;
     }
     return Mesh(vertices, indices); 
+}
+
+std::vector<glm::vec3> Skeleton::get_strand(size_t index){
+    if ( index >= leafs.size()) {
+        std::cout<<"Not a valid strand"<<std::endl;
+        return std::vector<glm::vec3>();
+    }
+    std::vector<glm::vec3> strand;
+    return strand;
 }
