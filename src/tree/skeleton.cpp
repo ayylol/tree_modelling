@@ -7,6 +7,8 @@
 
 #define PRINT(string) std::cout<<string<<std::endl
 
+size_t Skeleton::leafs_size() {return leafs.size();}
+
 // TODO: I feel like this is messy
 Skeleton::Skeleton(const char* filename){
     // Initialize file stream, and string token
@@ -140,10 +142,15 @@ Mesh Skeleton::get_mesh(){
 }
 
 std::vector<glm::vec3> Skeleton::get_strand(size_t index){
-    if ( index >= leafs.size()) {
+    if ( index >= leafs.size() || index < 0) {
         std::cout<<"Not a valid strand"<<std::endl;
         return std::vector<glm::vec3>();
     }
     std::vector<glm::vec3> strand;
+    std::shared_ptr<Node> current = leafs[index];
+    while ( current != nullptr){
+        strand.push_back(current->position);
+        current = current->parent;
+    }
     return strand;
 }
