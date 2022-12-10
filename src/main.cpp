@@ -18,6 +18,7 @@
 
 #include "tree/grid.h"
 #include "tree/skeleton.h"
+#include "tree/strands.h"
 
 #include "const.h"  // TODO TEMPORARY SOLUTION
 
@@ -72,7 +73,7 @@ int main(int argc, char* argv[])
     Shader shader("resources/shaders/default.vert", "resources/shaders/default.frag");
 
     glEnable(GL_DEPTH_TEST);
-    glPointSize(4.f);
+    glPointSize(2.f);
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
     // Readying Meshes
@@ -98,6 +99,10 @@ int main(int argc, char* argv[])
     Grid gr(DIMENSIONS, SCALE, CENTER);
     Mesh bound_geom = gr.get_bound_geom();
 
+    // Tree detail
+    Strands detail(tree, gr);
+    Mesh detail_geom = detail.get_mesh();
+
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -108,9 +113,10 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        tree_skelly.draw(shader,camera, GL_LINES);
-        strand.draw(shader,camera,GL_POINTS);
+        //tree_skelly.draw(shader,camera, GL_LINES);
+        //strand.draw(shader,camera,GL_POINTS);
         bound_geom.draw(shader,camera, GL_LINES);
+        detail_geom.draw(shader,camera, GL_POINTS);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

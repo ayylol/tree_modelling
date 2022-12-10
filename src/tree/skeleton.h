@@ -23,8 +23,8 @@ class Skeleton{
 
        Mesh get_mesh();
 
-       std::vector<glm::vec3> get_strand(size_t index);
-       size_t leafs_size();
+       std::vector<glm::vec3> get_strand(size_t index) const;
+       size_t leafs_size() const;
 
     private:
         struct Node{

@@ -25,23 +25,31 @@ Grid::Grid(
 {
 }
 
-ivec3 Grid::pos_to_grid(vec3 pos){ return ivec3((pos-back_bottom_left)/scale); }
-vec3 Grid::grid_to_pos(ivec3 voxel){ return vec3(voxel)*scale+back_bottom_left;}
+ivec3 Grid::pos_to_grid(vec3 pos) const 
+{ 
+    return ivec3((pos-back_bottom_left)/scale); 
+}
 
-bool Grid::is_in_grid(ivec3 grid_cell)
+vec3 Grid::grid_to_pos(ivec3 voxel) const
+{ 
+    return vec3(voxel)*scale+back_bottom_left;
+}
+
+bool Grid::is_in_grid(ivec3 grid_cell) const
 {
     return  grid_cell.x>=0  && grid_cell.x<grid.size()&&
             grid_cell.y>=0  && grid_cell.y<grid[0].size()&&
             grid_cell.z>=0  && grid_cell.z<grid[0][0].size();
 }
 
-unsigned int Grid::get_in_grid(ivec3 index)
+unsigned int Grid::get_in_grid(ivec3 index) const
 {
     if(!is_in_grid(index)) {std::cout<<"outside of grid"<<std::endl; return 0;}
     return grid[index.x][index.y][index.z];
 }
 
-unsigned int Grid::get_in_pos(vec3 pos){
+unsigned int Grid::get_in_pos(vec3 pos) const
+{
     return get_in_grid(pos_to_grid(pos));
 }
 
@@ -64,7 +72,7 @@ void Grid::occupy_line(vec3 start, vec3 end, unsigned int val)
     }
 }
 
-vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end)
+vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const
 {
     // Initialize voxel list
     vector<ivec3> voxel_list;
@@ -134,7 +142,8 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end)
     return voxel_list;
 }
 
-Mesh Grid::get_occupied_geom(){
+Mesh Grid::get_occupied_geom() const
+{
     vector<Vertex> vertices;
     vector<GLuint> indices;
 
@@ -206,7 +215,7 @@ Mesh Grid::get_occupied_geom(){
     }
     return Mesh(vertices, indices);
 }
-Mesh Grid::get_bound_geom()
+Mesh Grid::get_bound_geom() const
 {
     vector<Vertex> vertices;
     vector<GLuint> indices = {
@@ -228,7 +237,7 @@ Mesh Grid::get_bound_geom()
     return Mesh(vertices,indices);
 }
 
-Mesh Grid::get_grid_geom()
+Mesh Grid::get_grid_geom() const
 {
     vector<Vertex> vertices;
     vector<GLuint> indices;
