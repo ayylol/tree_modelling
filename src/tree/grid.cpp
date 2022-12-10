@@ -8,10 +8,6 @@ using std::tuple;
 using glm::vec3;
 using glm::ivec3;
 
-// TODO DELETE FOR DEBUG
-void print_vec3(vec3 pos){std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;}
-// TODO DELETE FOR DEBUG
-
 Grid::Grid(
         ivec3 dimensions, 
         float scale, 
@@ -69,6 +65,13 @@ void Grid::occupy_line(vec3 start, vec3 end, unsigned int val)
     vector<ivec3> voxel_list = get_voxels_line(start,end);
     for (auto voxel : voxel_list){
         occupy_slot(voxel, val);
+    }
+}
+
+void Grid::occupy_path(std::vector<glm::vec3> path, unsigned int val)
+{
+    for (int i = 0; i < path.size()-1; i++){
+        occupy_line(path[i],path[i+1],val);
     }
 }
 
@@ -140,6 +143,28 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const
     // Preventing overshoot
     if (!glm::all(glm::equal(pos_to_grid(end),voxel_list.back()))||!is_in_grid(voxel_list.back())) voxel_list.pop_back(); 
     return voxel_list;
+}
+Mesh Grid::get_occupied_geom_points() const
+{
+    vector<Vertex> vertices;
+    vector<GLuint> indices;
+    const vec3 color(1,0,0);
+    for(int k=0;k<grid[0][0].size();k++){
+        for(int j=0;j<grid[0].size();j++){
+            for(int i=0;i<grid.size();i++){
+                ivec3 current_voxel(i,j,k);
+                if(get_in_grid(current_voxel)){ 
+                    vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale + vec3(1,1,1)*(scale/2);
+                    vertices.push_back(Vertex{current_pos,color});
+                    
+                }
+            }
+        }
+    }
+    for (size_t i = 0; i < vertices.size(); i++){
+        indices.push_back(i);
+    }
+    return Mesh(vertices,indices);
 }
 
 Mesh Grid::get_occupied_geom() const

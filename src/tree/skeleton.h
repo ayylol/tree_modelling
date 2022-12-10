@@ -14,8 +14,12 @@
 
 #include <glm/glm.hpp>
 
-#include "util/fileContents.h"
+//#include "util/fileContents.h"
 #include "rendering/mesh.h"
+
+#include "util/color.h"
+
+glm::vec3 random_color();
 
 class Skeleton{
     public:

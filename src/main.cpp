@@ -36,6 +36,13 @@ Camera camera(FOCUS,DISTANCE,glm::pi<float>(),0.0f, width, height);
 
 int main(int argc, char* argv[]) 
 {
+    // Validating input
+    if (argc != 2 ){
+        std::cout<<"input a tree file"<<std::endl;
+        return -1;
+    }
+    // TODO: move this to a function
+    // OpenGL initialization
     //GLFW init
     if(!glfwInit())
     {
@@ -75,33 +82,22 @@ int main(int argc, char* argv[])
     glEnable(GL_DEPTH_TEST);
     glPointSize(2.f);
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    // Done OpenGL initialization
 
-    // Readying Meshes
-    if (argc != 2 ){
-        std::cout<<"input a tree file"<<std::endl;
-        return -1;
-    }
-    Skeleton tree(argv[1]);
-    Mesh tree_skelly = tree.get_mesh();
-
-    // STRAND TESTING
-    glm::vec3 col(1,0,0);
-    std::vector<glm::vec3> strand_pos = tree.get_strand(tree.leafs_size()-1);
-    std::vector<Vertex> strand_verts;
-    std::vector<GLuint> strand_indices;
-    for ( GLuint i = 0; i < strand_pos.size(); i++){
-        strand_verts.push_back(Vertex{strand_pos[i],col});
-        strand_indices.push_back(i);
-    }
-    Mesh strand(strand_verts,strand_indices);
-    // STRAND TESTING
-
+    // Grid
     Grid gr(DIMENSIONS, SCALE, CENTER);
-    Mesh bound_geom = gr.get_bound_geom();
+
+    // Creating tree
+    Skeleton tree(argv[1]);
 
     // Tree detail
     Strands detail(tree, gr);
+
+    //Mesh tree_skelly = tree.get_mesh();
     Mesh detail_geom = detail.get_mesh();
+    Mesh bound_geom = gr.get_bound_geom();
+    //Mesh occupy_geom = gr.get_occupied_geom();
+    Mesh occupy_dots = gr.get_occupied_geom_points();
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -114,9 +110,10 @@ int main(int argc, char* argv[])
 
         // Draw the meshes here
         //tree_skelly.draw(shader,camera, GL_LINES);
-        //strand.draw(shader,camera,GL_POINTS);
+        //detail_geom.draw(shader,camera, GL_POINTS);
         bound_geom.draw(shader,camera, GL_LINES);
-        detail_geom.draw(shader,camera, GL_POINTS);
+        //occupy_geom.draw(shader,camera, GL_LINES);
+        occupy_dots.draw(shader,camera, GL_POINTS);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

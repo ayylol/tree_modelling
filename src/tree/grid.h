@@ -27,6 +27,7 @@ public:
     void occupy_pos(glm::vec3 pos, unsigned int val);
     void occupy_slot(glm::ivec3 pos, unsigned int val);
     void occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val);
+    void occupy_path(std::vector<glm::vec3> path, unsigned int val);
 
     unsigned int get_in_grid(glm::ivec3 index) const;
     unsigned int get_in_pos(glm::vec3 pos) const;
@@ -40,6 +41,7 @@ public:
     Mesh get_grid_geom() const;
     Mesh get_bound_geom() const;
     Mesh get_occupied_geom() const;
+    Mesh get_occupied_geom_points() const;
 private:
     std::vector<std::vector<std::vector<unsigned int>>> grid;
 
