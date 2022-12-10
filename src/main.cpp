@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     Shader shader("resources/shaders/default.vert", "resources/shaders/default.frag");
 
     glEnable(GL_DEPTH_TEST);
-    glPointSize(8.f);
+    glPointSize(4.f);
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
     // Readying Meshes
@@ -82,7 +82,18 @@ int main(int argc, char* argv[])
     }
     Skeleton tree(argv[1]);
     Mesh tree_skelly = tree.get_mesh();
-    std::vector<glm::vec3> strand = tree.get_strand(0);
+
+    // STRAND TESTING
+    glm::vec3 col(1,0,0);
+    std::vector<glm::vec3> strand_pos = tree.get_strand(tree.leafs_size()-1);
+    std::vector<Vertex> strand_verts;
+    std::vector<GLuint> strand_indices;
+    for ( GLuint i = 0; i < strand_pos.size(); i++){
+        strand_verts.push_back(Vertex{strand_pos[i],col});
+        strand_indices.push_back(i);
+    }
+    Mesh strand(strand_verts,strand_indices);
+    // STRAND TESTING
 
     Grid gr(DIMENSIONS, SCALE, CENTER);
     Mesh bound_geom = gr.get_bound_geom();
@@ -98,6 +109,7 @@ int main(int argc, char* argv[])
 
         // Draw the meshes here
         tree_skelly.draw(shader,camera, GL_LINES);
+        strand.draw(shader,camera,GL_POINTS);
         bound_geom.draw(shader,camera, GL_LINES);
 
         glfwSwapBuffers(window);
