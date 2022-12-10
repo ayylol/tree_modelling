@@ -30,7 +30,7 @@ void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 void processInput(GLFWwindow* window);
 
 // Camera !
-Camera camera(glm::vec3(0,0,0),20.f,glm::pi<float>(),0.0f, width, height);
+Camera camera(glm::vec3(0,1,0),5.f,glm::pi<float>(),0.0f, width, height);
 
 int main(int argc, char* argv[]) 
 {
@@ -65,13 +65,12 @@ int main(int argc, char* argv[])
 
     //Grid gr(glm::ivec3(100,100,100),.05f);
     //Grid gr(glm::ivec3(500,500,500),.01f);
-    Grid gr(glm::ivec3(10,10,10),.5f, glm::vec3(0,2,0));
+    //Grid gr(glm::ivec3(10,10,10),.5f, glm::vec3(0,2,0));
+    Grid gr(glm::ivec3(10,10,10),.5f);
     Mesh grid_geom = gr.get_grid_geom();
     
     // TODO TEST STUFF
-    
     // Skeleton testing
-    
     if (argc != 2 ){
         std::cout<<"input a tree file"<<std::endl;
         return -1;
@@ -103,7 +102,6 @@ int main(int argc, char* argv[])
 
         // Draw the meshes here
         tree_skelly.draw(shader,camera, GL_LINES);
-        grid_geom.draw(shader,camera,GL_LINES);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
