@@ -32,7 +32,7 @@ void processInput(GLFWwindow* window);
 // Camera !
 Camera camera(glm::vec3(0,0,0),20.f,glm::pi<float>(),0.0f, width, height);
 
-int main(void) 
+int main(int argc, char* argv[]) 
 {
     //GLFW init
     if(!glfwInit())
@@ -67,55 +67,16 @@ int main(void)
     //Grid gr(glm::ivec3(500,500,500),.01f);
     Grid gr(glm::ivec3(10,10,10),.5f);
     
-    // TODO: TEST STUFF
-    glm::vec3 point_col = glm::vec3(1.f,0.f,0.f);
-    // Test Line intersect
-    /*
-    glm::vec3 pos0 = glm::vec3(0.22f,-1.1f,0.03f);
-    glm::vec3 pos1 = glm::vec3(2.2f,1.33f,2.2f);
-    std::vector<Vertex> verts{
-        Vertex{pos0,point_col},
-        Vertex{pos1,point_col}
-        };
-    std::vector<GLuint> indices{0,1};
-    Mesh test(verts,indices);
-    gr.occupy_line(pos0, pos1, 1);
-    */
-
-    // Test voxel vert/face occlusion
-    /*
-    glm::vec3 pos0 = glm::vec3(0.5f,0.5f,0.5f);
-    glm::vec3 pos1 = glm::vec3(0.f,0.5f,0.5f);
-    glm::vec3 pos2 = glm::vec3(1.f,0.5f,0.5f);
-    glm::vec3 pos3 = glm::vec3(0.5f,0.f,0.5f);
-    glm::vec3 pos4 = glm::vec3(0.5f,1.f,0.5f);
-    glm::vec3 pos5 = glm::vec3(0.5f,0.5f,0.f);
-    glm::vec3 pos6 = glm::vec3(0.5f,0.5f,1.f);
-    std::vector<Vertex> verts{
-        Vertex{pos0,point_col},
-        Vertex{pos1,point_col},
-        Vertex{pos2,point_col},
-        Vertex{pos3,point_col},
-        Vertex{pos4,point_col},
-        Vertex{pos5,point_col},
-        Vertex{pos6,point_col}
-        };
-    std::vector<GLuint> indices{0,1,2,3,4,5,6};
-    Mesh test(verts,indices);
-
-    gr.occupy_pos(pos0, 1);
-    gr.occupy_pos(pos1, 1);
-    gr.occupy_pos(pos2, 1);
-    gr.occupy_pos(pos3, 1);
-    gr.occupy_pos(pos4, 1);
-    gr.occupy_pos(pos5, 1);
-    gr.occupy_pos(pos6, 1);
-    gr.gen_occupied_geom();
-    */
+    // TODO TEST STUFF
     
     // Skeleton testing
-    Skeleton tree("resources/tree_data/test.data");
-    tree.shitpiss();
+    
+    if (argc != 2 ){
+        std::cout<<"input a tree file"<<std::endl;
+        return -1;
+    }
+    Skeleton tree(argv[1]);
+    Mesh tree_skelly = tree.get_mesh();
 
     // TODO TEST STUFF
 
@@ -140,6 +101,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
+        tree_skelly.draw(shader,camera, GL_LINES);
         //test.draw(shader, camera, GL_LINES);
 
         glfwSwapBuffers(window);

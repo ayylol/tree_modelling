@@ -14,20 +14,18 @@
 #include <glm/glm.hpp>
 
 #include "util/fileContents.h"
+#include "rendering/mesh.h"
 
 class Skeleton{
     public:
        Skeleton(const char* filename); 
-       void shitpiss();
+       Mesh get_mesh();
 
     private:
         struct Node{
-            // Defined if parent is null, otherwise equals parent->end
-            glm::vec3 start; 
-            // Defined
-            glm::vec3 end;
+            glm::vec3 position; 
             // Relation to other nodes
-            std::shared_ptr<Node> parent; 
+            std::shared_ptr<Node> parent; // If no parent then this node is root
             std::vector<std::shared_ptr<Node>>children;
         }; 
         std::shared_ptr<Node> root;
