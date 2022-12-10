@@ -206,6 +206,27 @@ Mesh Grid::get_occupied_geom(){
     }
     return Mesh(vertices, indices);
 }
+Mesh Grid::get_bound_geom()
+{
+    vector<Vertex> vertices;
+    vector<GLuint> indices = {
+        0,1,2,3,4,5,6,7,
+        0,2,1,3,4,6,5,7,
+        0,4,1,5,2,6,3,7
+        };
+    float width=dimensions.x*scale;
+    float height=dimensions.y*scale;
+    float depth=dimensions.z*scale;
+    glm::vec3 col(0,1,0);
+    for (int k = 0; k<=1;k++){
+        for (int j = 0; j<=1;j++){
+            for (int i = 0; i<=1;i++){
+                vertices.push_back(Vertex{back_bottom_left+vec3(i*width,j*height,k*depth),col}); 
+            }
+        }
+    }
+    return Mesh(vertices,indices);
+}
 
 Mesh Grid::get_grid_geom()
 {
