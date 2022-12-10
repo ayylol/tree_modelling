@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <stack>
+#include <array>
 #include <memory>
 #include <string>
 #include <fstream>
@@ -19,7 +20,10 @@
 class Skeleton{
     public:
        Skeleton(const char* filename); 
+
        Mesh get_mesh();
+
+       std::vector<glm::vec3> get_strand(size_t index);
 
     private:
         struct Node{
