@@ -22,10 +22,8 @@ Grid::Grid(
     scale(scale),
     center(center),
     back_bottom_left(center-vec3(dimensions)*(scale/2.f)),
-    grid_geom(vector<Vertex>(),vector<GLuint>()),
     occupied_geom(vector<Vertex>(),vector<GLuint>())
 {
-    gen_grid_geom();
 }
 
 ivec3 Grid::pos_to_grid(vec3 pos){ return ivec3((pos-back_bottom_left)/scale); }
@@ -137,7 +135,73 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end)
     return voxel_list;
 }
 
-// TODO: IMPLEMENT WITH INSTANCING INSTEAD
+Mesh Grid::get_occupied_geom(){
+    vector<Vertex> vertices;
+    vector<GLuint> indices;
+
+    // Needs to be in same order as normals
+    const array<array<GLuint, 6>,6> cube_indices= {{
+        {5,1,3, 5,3,7}, // Right
+        {0,4,6, 0,6,2}, // Left
+        {6,7,3, 6,3,2}, // Top
+        {4,5,1, 4,1,0}, // Bottom
+        {4,5,7, 4,7,6}, // Front
+        {1,0,3, 1,3,2}  // Back
+    }};
+    const array<array<unsigned int,3>,8> adj_norms = {{
+        {1,3,5},
+        {0,3,5},
+        {1,2,5},
+        {0,2,5},
+        {1,3,4},
+        {0,3,4},
+        {1,2,4},
+        {0,2,4}
+    }};
+
+    vec3 vert_col = vec3(0.f,0.f,1.f);
+    int current_index=0;
+
+    // Loop Through all grid slots
+    for(int k=0;k<grid[0][0].size();k++){
+        for(int j=0;j<grid[0].size();j++){
+            for(int i=0;i<grid.size();i++){
+                ivec3 current_voxel(i,j,k);
+
+                // Grid space is occupied
+                if(get_in_grid(current_voxel)){ 
+                    // Get adjacent voxel contents
+                    vector<unsigned int> adj_content;
+                    for ( auto norm : face_norms)
+                        adj_content.push_back(get_in_grid(current_voxel+norm));
+
+                    // Loop through and generate vertices
+                    vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale;
+                    int curr_vert_index = 0;
+                    for (int k_ = 0; k_<=1;k_++){
+                        for (int j_ = 0; j_<=1;j_++){
+                            for (int i_ = 0; i_<=1;i_++){
+                                vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,vert_col}); 
+                                curr_vert_index++;
+                            }
+                        }
+                    }
+                    // Generate Indices
+                    for (int face_i=0; face_i<cube_indices.size(); face_i++){
+                        if (!adj_content[face_i]){
+                            for (int index=0; index<cube_indices[face_i].size(); index++){
+                                indices.push_back(cube_indices[face_i][index]+current_index);
+                            }
+                        }
+                    }
+
+                    current_index=vertices.size();
+                }
+            }
+        }
+    }
+    return Mesh(vertices, indices);
+}
 // Generates all the geometry
 void Grid::gen_occupied_geom()
 {
@@ -224,10 +288,10 @@ void Grid::gen_occupied_geom()
     occupied_geom.update();
 }
 
-void Grid::gen_grid_geom()
+Mesh Grid::get_grid_geom()
 {
-    vector<Vertex>& vertices = grid_geom.vertices;
-    vector<GLuint>& indices = grid_geom.indices;
+    vector<Vertex> vertices;
+    vector<GLuint> indices;
 
     //Vertex 
     float depth = center.z + dimensions.z*scale/2.f;
@@ -282,19 +346,5 @@ void Grid::gen_grid_geom()
             curr++; 
         }
     }
-    /*
-    // Y grid lines
-    for (int i = 0; i < verts_first_layer; i++){
-        indices.push_back(i);
-        indices.push_back(i+(verts_in_layer)*(dimensions.y-1)+verts_first_layer);
-    }
-    */
-
-    /*
-    for (int i=0; i<vertices.size();i++){
-        indices.push_back(i);
-    }
-    */
-    grid_geom.update();
-
+    return Mesh(vertices, indices);
 }

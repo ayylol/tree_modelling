@@ -36,11 +36,11 @@ public:
     glm::ivec3 pos_to_grid(glm::vec3 pos);
     glm::vec3 grid_to_pos(glm::ivec3 voxel);
 
-    void gen_grid_geom();
     void gen_occupied_geom();
+    Mesh get_grid_geom();
+    Mesh get_occupied_geom();
 
     //TODO: make private with draw method
-    Mesh grid_geom;
     Mesh occupied_geom;
 private:
     std::vector<std::vector<std::vector<unsigned int>>> grid;
