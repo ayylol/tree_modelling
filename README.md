@@ -6,6 +6,7 @@ TODO:
 
 less important:
 - better folder structure
+- cleaner CMAKE
 
 NOTES:
 - I don't think that the parser is very flexible 
