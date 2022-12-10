@@ -72,17 +72,7 @@ Skeleton::Skeleton(const char* filename){
 }
 
 Mesh Skeleton::get_mesh(){
-    const std::array<glm::vec3,7> palette {{
-        glm::vec3(0.58,0,0.83),
-        glm::vec3(0.29,0,0.51),
-        glm::vec3(0,0,1),
-        glm::vec3(0,1,0),
-        glm::vec3(1,1,0),
-        glm::vec3(1,0.5,0),
-        glm::vec3(1,0,0)
-    }};
     // Initialize mesh verts and indices
-    glm::vec3 col(0.6,0,0.8);
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     struct Info{
@@ -102,7 +92,7 @@ Mesh Skeleton::get_mesh(){
         unsigned int explored = last_node.children_explored;
         // Add node to vertices (first time node is reached)
         if (explored==0){
-            vertices.push_back(Vertex{last_node.node->position,palette[(int)rand()%palette.size()]});
+            vertices.push_back(Vertex{last_node.node->position,random_color()});
             indices.push_back(last_node.parent_index);
             indices.push_back(last_node.index);
         }

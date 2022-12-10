@@ -5,6 +5,10 @@
 #include "tree/grid.h"
 #include "tree/skeleton.h"
 
+#include "util/color.h"
+
+glm::vec3 random_color();
+
 class Strands{
 public:
     Strands(const Skeleton& tree, Grid& grid);
