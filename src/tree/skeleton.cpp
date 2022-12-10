@@ -15,11 +15,23 @@ Skeleton::Skeleton(const char* filename){
 
     #define GET_NEXT(token) std::getline(in,token, ' ')
         
+    /*
     #define PARSE_POINT(token, pos)     \
         for (int i = 0; i<3; i++){      \
             GET_NEXT(token);            \
             pos[i] = std::stof(token);  \
         }                               \
+        GET_NEXT(token);                \
+        if(token.find(")")==std::string::npos)    \
+            throw std::invalid_argument( "Incorrect file format: position parentheses not closed" )    \
+    */
+    #define PARSE_POINT(token, pos)     \
+        GET_NEXT(token);                \
+        pos.x = std::stof(token);       \
+        GET_NEXT(token);                \
+        pos.z = std::stof(token);       \
+        GET_NEXT(token);                \
+        pos.y = std::stof(token);       \
         GET_NEXT(token);                \
         if(token.find(")")==std::string::npos)    \
             throw std::invalid_argument( "Incorrect file format: position parentheses not closed" )    \
