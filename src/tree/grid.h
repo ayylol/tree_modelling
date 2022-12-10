@@ -37,6 +37,7 @@ public:
     glm::vec3 grid_to_pos(glm::ivec3 voxel);
 
     Mesh get_grid_geom();
+    Mesh get_bound_geom();
     Mesh get_occupied_geom();
 private:
     std::vector<std::vector<std::vector<unsigned int>>> grid;

@@ -59,7 +59,6 @@ Skeleton::Skeleton(const char* filename){
     {
         // Branch starting
         if(token.find("[")!=std::string::npos){
-            //std::cout<<"branch starting"<<std::endl;
             last_split.push(last_node);
         }
         // Branch ending
@@ -69,7 +68,6 @@ Skeleton::Skeleton(const char* filename){
             // Go back to the branch split point
             last_node = last_split.top();
             last_split.pop();
-            //std::cout<<"branch ending"<<std::endl;
         }
 
         // Point being specified
@@ -131,7 +129,6 @@ Mesh Skeleton::get_mesh(){
                 }
                 last_node = {last_node.node->children[last_node.children_explored],(GLuint)vertices.size(), last_node.index};
             }else{
-                //PRINT("last child explored");
                 // Children all explored
                 last_split.pop();
                 if(!last_split.empty()){
