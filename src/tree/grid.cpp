@@ -192,7 +192,7 @@ Mesh Grid::get_occupied_geom() const
         {6,7,3, 6,3,2}, // Top
         {4,5,1, 4,1,0}, // Bottom
         {4,5,7, 4,7,6}, // Front
-        {1,0,3, 1,3,2}  // Back
+        {1,0,2, 1,2,3}  // Back
     }};
     const array<array<unsigned int,3>,8> adj_norms = {{
         {1,3,5},
