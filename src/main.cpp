@@ -135,7 +135,7 @@ void framebuffer_size_callback(GLFWwindow* window, int w, int h)
     camera.set_aspect_ratio(width,height);
 }
 
-#define SENS 0.1f
+#define SENS 0.5f
 void processInput(GLFWwindow* window)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -155,23 +155,12 @@ void processInput(GLFWwindow* window)
         camera.rotate_horz(0.1f*SENS);
     // ZOOM BOOM ARM
     if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)  // ZOOM OUT
-        camera.move_distance(0.5f*SENS);
+        camera.move_distance(0.2f*SENS);
     if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)  // ZOOM IN
-        camera.move_distance(-0.5f*SENS);
+        camera.move_distance(-0.2f*SENS);
     // PAN FOCUS
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)  // PAN UP
-        camera.move_focus(glm::vec3(0.f,0.1f,0.f)*SENS);
+        camera.move_focus(glm::vec3(0.f,0.05f,0.f)*SENS);
     if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)  // PAN DOWN
-        camera.move_focus(glm::vec3(0.f,-0.1f,0.f)*SENS);
-    // Not that good since its tied to axis
-    /*
-       if(glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)  // PAN FORWARD
-       camera.move_focus(glm::vec3(0.f,0.f,0.1f));
-       if(glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)  // PAN BACK
-       camera.move_focus(glm::vec3(0.f,0.f,-0.1f));
-       if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)  // PAN LEFT
-       camera.move_focus(glm::vec3(0.1f,0.f,0.f));
-       if(glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)  // PAN RIGHT
-       camera.move_focus(glm::vec3(-0.1f,0.f,0.f));
-       */
+        camera.move_focus(glm::vec3(0.f,-0.05f,0.f)*SENS);
 }
