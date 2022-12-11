@@ -3,12 +3,23 @@
 
 std::default_random_engine rng(std::chrono::system_clock::now().time_since_epoch().count());
 
+glm::vec3 random_vector(glm::vec3 axis, float angle);
+std::pair<size_t, glm::vec3> closest_on_path(
+        glm::vec3 point,
+        const std::vector<glm::vec3>& path,
+        size_t start_index,
+        int overshoot
+        );
+
 Strands::Strands(const Skeleton& tree, Grid& grid):
     grid(grid)
 {
    for ( size_t i = 0; i<tree.leafs_size(); i++){
         paths.push_back(tree.get_strand(i));
    }
+   // TESTING
+   //std::cout<<closest_on_path().second<<;
+   // TESTING
 }
 void Strands::add_strands(unsigned int amount){
     std::vector<size_t> indices;
@@ -21,27 +32,6 @@ void Strands::add_strands(unsigned int amount){
     }
 }
 
-glm::vec3 random_vector(glm::vec3 axis, float angle){
-    const glm::vec3 x_axis(1,0,0);
-    glm::quat rotation = glm::angleAxis(glm::angle(axis,x_axis),glm::normalize(glm::cross(x_axis,axis)));
-
-    // CODE CITED
-    // from https://community.khronos.org/t/random-vectors/41467/3 imported_jwatte
-    std::uniform_real_distribution<float> x_rand(glm::cos(angle),1);
-    std::uniform_real_distribution<float> a_rand(-glm::pi<float>(), glm::pi<float>());
-    float x=x_rand(rng);
-    float a=a_rand(rng);
-    float r=sqrtf(1-x*x);
-    float y=glm::sin(a)*r;
-    float z=glm::cos(a)*r;
-    return rotation*glm::vec3(x,y,z);
-    // CODE CITED
-}
-
-#define SEGMENT_LENGTH .05f
-#define NUM_TRIALS 100
-#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
-#define ALPHA 0.5f
 void Strands::add_strand(size_t path_index){
     if ( path_index >= paths.size()) return;
     const std::vector<glm::vec3>& path = paths[path_index];
@@ -110,6 +100,7 @@ void Strands::add_strand(size_t path_index){
             }else std::cout<<"REJECTED"<<std::endl;
         }
         if(trials.empty()) break;
+        //if(trials.empty()) return;
         // evaluate trial
         int best_trial = 0;
         float best_fitness = 0.f;
@@ -132,17 +123,54 @@ void Strands::add_strand(size_t path_index){
     grid.occupy_path(strand, 1);
 }
 
+
 Mesh Strands::get_mesh() const{
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     for ( auto path : strands ) {
-        glm::vec3 color = random_color();
+        glm::vec3 color = random_brown();
+        size_t start_index = vertices.size();
         for ( auto position : path ) {
             vertices.push_back(Vertex{position, color});
         }
+        size_t end_index = vertices.size();
+        for (int i = start_index; i < end_index-1; i++){
+            indices.push_back(i); 
+            indices.push_back(i+1); 
+        }
     }
+    /*
     for (size_t i = 0; i < vertices.size(); i++){
         indices.push_back(i);
     }
+    */
     return Mesh(vertices, indices);
+}
+
+std::pair<size_t, glm::vec3> closest_on_path(
+        glm::vec3 point,
+        const std::vector<glm::vec3>& path,
+        size_t start_index,
+        int overshoot
+        ){
+
+}
+
+// Non-member helper functions
+
+glm::vec3 random_vector(glm::vec3 axis, float angle){
+    const glm::vec3 x_axis(1,0,0);
+    glm::quat rotation = glm::angleAxis(glm::angle(axis,x_axis),glm::normalize(glm::cross(x_axis,axis)));
+
+    // CODE CITED
+    // from https://community.khronos.org/t/random-vectors/41467/3 imported_jwatte
+    std::uniform_real_distribution<float> x_rand(glm::cos(angle),1);
+    std::uniform_real_distribution<float> a_rand(-glm::pi<float>(), glm::pi<float>());
+    float x=x_rand(rng);
+    float a=a_rand(rng);
+    float r=sqrtf(1-x*x);
+    float y=glm::sin(a)*r;
+    float z=glm::cos(a)*r;
+    return rotation*glm::vec3(x,y,z);
+    // CODE CITED
 }

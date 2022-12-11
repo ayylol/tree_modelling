@@ -1,11 +1,10 @@
 #pragma once
 
-/*
 // Light blue
 #define SKY_COLOR glm::vec4(.75f,1.f,1.f, 1.f)
-*/
 // Darker blue
-#define SKY_COLOR glm::vec4(.2f,.2f,.5f, 1.f)
+//#define SKY_COLOR glm::vec4(.2f,.2f,.5f, 1.f)
+
 
 // Tree specific constants
 // For poplar
@@ -14,6 +13,11 @@
 #define DIMENSIONS glm::ivec3(500,500,500)
 #define SCALE .006f
 #define CENTER glm::vec3(0.2,1.5,0)
+// STRAND CONSTANTS
+#define SEGMENT_LENGTH .05f
+#define NUM_TRIALS 200
+#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define ALPHA 0.5f
 
 /*
 // For poplar
@@ -22,6 +26,11 @@
 #define DIMENSIONS glm::ivec3(500,500,500)
 #define SCALE .006f
 #define CENTER glm::vec3(0.2,1.5,0)
+// STRAND CONSTANTS
+#define SEGMENT_LENGTH .05f
+#define NUM_TRIALS 100
+#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define ALPHA 0.5f
 
 // For malus baccata columnaris
 #define FOCUS glm::vec3(0,1.3,0)
@@ -29,6 +38,11 @@
 #define DIMENSIONS glm::ivec3(375,1000,375)
 #define SCALE .0022f
 #define CENTER glm::vec3(0,1.05,0)
+// STRAND CONSTANTS
+#define SEGMENT_LENGTH .01f
+#define NUM_TRIALS 100
+#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define ALPHA 0.5f
 
 // For nice tree
 #define FOCUS glm::vec3(0,0.3,0)
@@ -36,6 +50,11 @@
 #define DIMENSIONS glm::ivec3(650,390,650)
 #define SCALE .0014f
 #define CENTER glm::vec3(0,0.25,0)
+// STRAND CONSTANTS
+#define SEGMENT_LENGTH .003f
+#define NUM_TRIALS 50
+#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define ALPHA 0.1f
 
 // For bush ra17
 #define FOCUS glm::vec3(0,0.5,0)
@@ -43,6 +62,11 @@
 #define DIMENSIONS glm::ivec3(500,480,480)
 #define SCALE .0022f
 #define CENTER glm::vec3(0.08,0.5,0)
+// STRAND CONSTANTS
+#define SEGMENT_LENGTH .001f
+#define NUM_TRIALS 30
+#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define ALPHA 0.5f
 
 // For tall ellipsoid tree
 #define FOCUS glm::vec3(0,0.8,0)
