@@ -12,6 +12,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 
+#include "util/color.h"
+
 #include "rendering/mesh.h"
 #include "rendering/VBO.h"
 
@@ -31,6 +33,8 @@ public:
 
     unsigned int get_in_grid(glm::ivec3 index) const;
     unsigned int get_in_pos(glm::vec3 pos) const;
+
+    bool line_occluded(glm::vec3 start, glm::vec3 end);
 
     std::vector<glm::ivec3> get_voxels_line(glm::vec3 start, glm::vec3 end) const;
 

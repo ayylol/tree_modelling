@@ -41,6 +41,7 @@ int main(int argc, char* argv[])
         std::cout<<"input a tree file"<<std::endl;
         return -1;
     }
+    srand(time(NULL));
     // TODO: move this to a function
     // OpenGL initialization
     //GLFW init
@@ -81,7 +82,7 @@ int main(int argc, char* argv[])
 
     glEnable(GL_DEPTH_TEST);
     glPointSize(2.f);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     // Done OpenGL initialization
 
     // Grid
@@ -92,12 +93,14 @@ int main(int argc, char* argv[])
 
     // Tree detail
     Strands detail(tree, gr);
+    //detail.add_strand(4);
+    detail.add_strands(526);
 
-    //Mesh tree_skelly = tree.get_mesh();
-    Mesh detail_geom = detail.get_mesh();
+    Mesh tree_skelly = tree.get_mesh();
+    //Mesh detail_geom = detail.get_mesh();
     Mesh bound_geom = gr.get_bound_geom();
-    //Mesh occupy_geom = gr.get_occupied_geom();
-    Mesh occupy_dots = gr.get_occupied_geom_points();
+    Mesh occupy_geom = gr.get_occupied_geom();
+    //Mesh occupy_dots = gr.get_occupied_geom_points();
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -109,11 +112,11 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        //tree_skelly.draw(shader,camera, GL_LINES);
+        tree_skelly.draw(shader,camera, GL_LINES);
         //detail_geom.draw(shader,camera, GL_POINTS);
         bound_geom.draw(shader,camera, GL_LINES);
-        //occupy_geom.draw(shader,camera, GL_LINES);
-        occupy_dots.draw(shader,camera, GL_POINTS);
+        occupy_geom.draw(shader,camera, GL_TRIANGLES);
+        //occupy_dots.draw(shader,camera, GL_POINTS);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -132,6 +135,7 @@ void framebuffer_size_callback(GLFWwindow* window, int w, int h)
     camera.set_aspect_ratio(width,height);
 }
 
+#define SENS 0.1f
 void processInput(GLFWwindow* window)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -142,23 +146,23 @@ void processInput(GLFWwindow* window)
         camera.reset();
     // ROTATE AROUND FOCUS
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)  // ROTATE UP
-        camera.rotate_vert(0.1f);
+        camera.rotate_vert(0.1f*SENS);
     if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)  // ROTATE DOWN
-        camera.rotate_vert(-0.1f);
+        camera.rotate_vert(-0.1f*SENS);
     if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)  // ROTATE LEFT
-        camera.rotate_horz(-0.1f);
+        camera.rotate_horz(-0.1f*SENS);
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)  // ROTATE RIGHT
-        camera.rotate_horz(0.1f);
+        camera.rotate_horz(0.1f*SENS);
     // ZOOM BOOM ARM
     if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)  // ZOOM OUT
-        camera.move_distance(0.5f);
+        camera.move_distance(0.5f*SENS);
     if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)  // ZOOM IN
-        camera.move_distance(-0.5f);
+        camera.move_distance(-0.5f*SENS);
     // PAN FOCUS
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)  // PAN UP
-        camera.move_focus(glm::vec3(0.f,0.1f,0.f));
+        camera.move_focus(glm::vec3(0.f,0.1f,0.f)*SENS);
     if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)  // PAN DOWN
-        camera.move_focus(glm::vec3(0.f,-0.1f,0.f));
+        camera.move_focus(glm::vec3(0.f,-0.1f,0.f)*SENS);
     // Not that good since its tied to axis
     /*
        if(glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)  // PAN FORWARD
