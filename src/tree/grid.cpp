@@ -1,5 +1,6 @@
 #include "tree/grid.h"
 #include <iostream>
+#include <glm/gtx/io.hpp>
 
 // Commonly used names
 using std::vector;
@@ -40,13 +41,25 @@ bool Grid::is_in_grid(ivec3 grid_cell) const
 
 unsigned int Grid::get_in_grid(ivec3 index) const
 {
-    if(!is_in_grid(index)) {std::cout<<"outside of grid"<<std::endl; return 0;}
+    if(!is_in_grid(index)) {
+        std::cout<<"outside of grid"<<index<<std::endl; 
+        return 0;
+    }
     return grid[index.x][index.y][index.z];
 }
 
 unsigned int Grid::get_in_pos(vec3 pos) const
 {
     return get_in_grid(pos_to_grid(pos));
+}
+
+    
+bool Grid::line_occluded(glm::vec3 start, glm::vec3 end){
+    std::vector<glm::ivec3> voxels = get_voxels_line(start,end);
+    for ( auto voxel : voxels ){
+        if ( get_in_grid(voxel)==0 ) return false;
+    }
+    return true;
 }
 
 void Grid::occupy_pos(vec3 pos, unsigned int val){
@@ -70,6 +83,7 @@ void Grid::occupy_line(vec3 start, vec3 end, unsigned int val)
 
 void Grid::occupy_path(std::vector<glm::vec3> path, unsigned int val)
 {
+    if (path.size()<2) return;
     for (int i = 0; i < path.size()-1; i++){
         occupy_line(path[i],path[i+1],val);
     }
@@ -148,14 +162,13 @@ Mesh Grid::get_occupied_geom_points() const
 {
     vector<Vertex> vertices;
     vector<GLuint> indices;
-    const vec3 color(1,0,0);
     for(int k=0;k<grid[0][0].size();k++){
         for(int j=0;j<grid[0].size();j++){
             for(int i=0;i<grid.size();i++){
                 ivec3 current_voxel(i,j,k);
                 if(get_in_grid(current_voxel)){ 
                     vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale + vec3(1,1,1)*(scale/2);
-                    vertices.push_back(Vertex{current_pos,color});
+                    vertices.push_back(Vertex{current_pos,random_color()});
                     
                 }
             }
@@ -192,7 +205,6 @@ Mesh Grid::get_occupied_geom() const
         {0,2,4}
     }};
 
-    vec3 vert_col = vec3(0.f,0.f,1.f);
     int current_index=0;
 
     // Loop Through all grid slots
@@ -216,10 +228,11 @@ Mesh Grid::get_occupied_geom() const
                     // Loop through and generate vertices
                     vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale;
                     int curr_vert_index = 0;
+                    glm::vec3 color = random_color();
                     for (int k_ = 0; k_<=1;k_++){
                         for (int j_ = 0; j_<=1;j_++){
                             for (int i_ = 0; i_<=1;i_++){
-                                vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,vert_col}); 
+                                vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,color}); 
                                 curr_vert_index++;
                             }
                         }
