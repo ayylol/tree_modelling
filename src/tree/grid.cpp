@@ -20,6 +20,9 @@ Grid::Grid(
     center(center),
     back_bottom_left(center-vec3(dimensions)*(scale/2.f))
 {
+    // TESTING
+    
+    // TESTING
 }
 
 ivec3 Grid::pos_to_grid(vec3 pos) const 
@@ -42,7 +45,7 @@ bool Grid::is_in_grid(ivec3 grid_cell) const
 unsigned int Grid::get_in_grid(ivec3 index) const
 {
     if(!is_in_grid(index)) {
-        std::cout<<"outside of grid"<<index<<std::endl; 
+        std::cout<<"outside of grid "<<index<<std::endl; 
         return 0;
     }
     return grid[index.x][index.y][index.z];
@@ -68,7 +71,10 @@ void Grid::occupy_pos(vec3 pos, unsigned int val){
 }
 
 void Grid::occupy_slot(ivec3 slot, unsigned int val){
-    if(!is_in_grid(slot)) {std::cout<<"outside of grid"<<std::endl; return;}
+    if(!is_in_grid(slot)) {
+        std::cout<<"outside of grid "<<slot<<std::endl;
+        return;
+    }
     grid[slot.x][slot.y][slot.z] = val;
 }
 
@@ -228,7 +234,8 @@ Mesh Grid::get_occupied_geom() const
                     // Loop through and generate vertices
                     vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale;
                     int curr_vert_index = 0;
-                    glm::vec3 color = random_color();
+                    //glm::vec3 color = random_color();
+                    glm::vec3 color = random_brown();
                     for (int k_ = 0; k_<=1;k_++){
                         for (int j_ = 0; j_<=1;j_++){
                             for (int i_ = 0; i_<=1;i_++){

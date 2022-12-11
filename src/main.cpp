@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
 
     glEnable(GL_DEPTH_TEST);
     glPointSize(2.f);
+    //glLineWidth(4.f);
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     // Done OpenGL initialization
 
@@ -94,13 +95,26 @@ int main(int argc, char* argv[])
     // Tree detail
     Strands detail(tree, gr);
     //detail.add_strand(4);
-    detail.add_strands(526);
+    detail.add_strands(1024);
 
-    Mesh tree_skelly = tree.get_mesh();
+    //Mesh tree_skelly = tree.get_mesh();
     //Mesh detail_geom = detail.get_mesh();
-    Mesh bound_geom = gr.get_bound_geom();
+    //Mesh bound_geom = gr.get_bound_geom();
     Mesh occupy_geom = gr.get_occupied_geom();
     //Mesh occupy_dots = gr.get_occupied_geom_points();
+
+    // GROUND PLANE
+    glm::vec3 ground_color = glm::vec3(0.1,0.45,0.12);
+    std::vector<Vertex> ground_verts{
+        Vertex{glm::vec3(50,0,50),ground_color+glm::vec3(-0.05,0.3,0.02)},
+        Vertex{glm::vec3(50,0,-50),ground_color+glm::vec3(-0.05,0.3,0.02)},
+        Vertex{glm::vec3(-50,0,50),ground_color},
+        Vertex{glm::vec3(-50,0,-50),ground_color}
+    };
+    std::vector<GLuint> ground_indices{
+        0,1,3, 0,3,2
+    };
+    Mesh ground(ground_verts,ground_indices);
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -112,11 +126,13 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        tree_skelly.draw(shader,camera, GL_LINES);
-        //detail_geom.draw(shader,camera, GL_POINTS);
-        bound_geom.draw(shader,camera, GL_LINES);
+        //tree_skelly.draw(shader,camera, GL_LINES);
+        //detail_geom.draw(shader,camera, GL_LINES);
+        //bound_geom.draw(shader,camera, GL_LINES);
         occupy_geom.draw(shader,camera, GL_TRIANGLES);
         //occupy_dots.draw(shader,camera, GL_POINTS);
+        ground.draw(shader,camera, GL_TRIANGLES);
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
