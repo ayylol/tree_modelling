@@ -1,5 +1,6 @@
 TODO:
-- fix occupied cube grid geometry
+- Fix closest point to path algorithm
+- Programmatically calculate parameters given skeleton
 - Rendering
 
 less important:
