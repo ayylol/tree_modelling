@@ -1,6 +1,6 @@
 # Implementation of Ned Greene's Voxel Automata Tree Detailing Algorithm
 
-[!cover](poplar.png)
+![cover](poplar.png)
 
 TODO:
 - Fix closest point to path algorithm
