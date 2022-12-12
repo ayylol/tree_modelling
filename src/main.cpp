@@ -78,6 +78,7 @@ int main(int argc, char* argv[])
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Readying Shaders 
+    Shader flat_shader("resources/shaders/flat.vert", "resources/shaders/flat.frag");
     Shader shader("resources/shaders/default.vert", "resources/shaders/default.frag");
 
     glEnable(GL_DEPTH_TEST);
@@ -99,15 +100,15 @@ int main(int argc, char* argv[])
 
     //Mesh tree_skelly = tree.get_mesh();
     //Mesh detail_geom = detail.get_mesh();
-    //Mesh bound_geom = gr.get_bound_geom();
+    Mesh bound_geom = gr.get_bound_geom();
     Mesh occupy_geom = gr.get_occupied_geom();
     //Mesh occupy_dots = gr.get_occupied_geom_points();
 
     // GROUND PLANE
-    glm::vec3 ground_color = glm::vec3(0.1,0.45,0.12);
+    glm::vec3 ground_color = glm::vec3(0,1,0);
     std::vector<Vertex> ground_verts{
-        Vertex{glm::vec3(50,0,50),ground_color+glm::vec3(-0.05,0.3,0.02)},
-        Vertex{glm::vec3(50,0,-50),ground_color+glm::vec3(-0.05,0.3,0.02)},
+        Vertex{glm::vec3(50,0,50),ground_color},
+        Vertex{glm::vec3(50,0,-50),ground_color},
         Vertex{glm::vec3(-50,0,50),ground_color},
         Vertex{glm::vec3(-50,0,-50),ground_color}
     };
@@ -126,12 +127,13 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        //tree_skelly.draw(shader,camera, GL_LINES);
-        //detail_geom.draw(shader,camera, GL_LINES);
-        //bound_geom.draw(shader,camera, GL_LINES);
+        //tree_skelly.draw(flat_shader,camera, GL_LINES);
+        //detail_geom.draw(flat_shader,camera, GL_LINES);
+        bound_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader,camera, GL_TRIANGLES);
-        //occupy_dots.draw(shader,camera, GL_POINTS);
+        //occupy_dots.draw(flat_shader,camera, GL_POINTS);
         ground.draw(shader,camera, GL_TRIANGLES);
+        //test_cube.draw(shader,camera,GL_TRIANGLES);
 
 
         glfwSwapBuffers(window);

@@ -24,6 +24,7 @@ class Camera
         void rotate_horz(float amount);
 
         // Get camera transform matrix
+        glm::vec3 get_position() const;
         glm::mat4 get_matrix() const;
     private:
         float aspect_ratio;

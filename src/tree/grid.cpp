@@ -191,15 +191,38 @@ Mesh Grid::get_occupied_geom() const
     vector<Vertex> vertices;
     vector<GLuint> indices;
 
-    // Needs to be in same order as normals
-    const array<array<GLuint, 6>,6> cube_indices= {{
-        {5,1,3, 5,3,7}, // Right
-        {0,4,6, 0,6,2}, // Left
-        {6,7,3, 6,3,2}, // Top
-        {4,5,1, 4,1,0}, // Bottom
-        {4,5,7, 4,7,6}, // Front
-        {1,0,2, 1,2,3}  // Back
-    }};
+    glm::vec3 col(0,0,1);
+    std::vector<std::pair<glm::vec3,glm::vec3>> cube_verts{
+        // Right
+        {glm::vec3(scale,scale,0),glm::vec3(1,0,0)}, {glm::vec3(scale,scale,scale),glm::vec3(1,0,0)}, 
+        {glm::vec3(scale,0,0),glm::vec3(scale,0,0)}, {glm::vec3(scale,0,scale),glm::vec3(1,0,0)},
+        // Left
+        {glm::vec3(0,scale,0),glm::vec3(-1,0,0)}, {glm::vec3(0,scale,scale),glm::vec3(-1,0,0)}, 
+        {glm::vec3(0,0,0),glm::vec3(-1,0,0)}, {glm::vec3(0,0,scale),glm::vec3(-1,0,0)},
+
+        // Top
+        {glm::vec3(0,scale,0),glm::vec3(0,1,0)}, {glm::vec3(scale,scale,0),glm::vec3(0,1,0)}, 
+        {glm::vec3(0,scale,scale),glm::vec3(0,1,0)}, {glm::vec3(scale,scale,scale),glm::vec3(0,1,0)},
+        // Bottom
+        {glm::vec3(0,0,0),glm::vec3(0,-1,0)}, {glm::vec3(scale,0,0),glm::vec3(0,-1,0)}, 
+        {glm::vec3(0,0,scale),glm::vec3(0,-1,0)}, {glm::vec3(scale,0,scale),glm::vec3(0,-1,0)},
+
+        // Front
+        {glm::vec3(0,scale,scale),glm::vec3(0,0,1)}, {glm::vec3(scale,scale,scale),glm::vec3(0,0,1)}, 
+        {glm::vec3(0,0,scale),glm::vec3(0,0,1)}, {glm::vec3(scale,0,scale),glm::vec3(0,0,1)},
+        // Back
+        {glm::vec3(0,scale,0),glm::vec3(0,0,-1)}, {glm::vec3(scale,scale,0),glm::vec3(0,0,-1)}, 
+        {glm::vec3(0,0,0),glm::vec3(0,0,-1)}, {glm::vec3(scale,0,0),glm::vec3(0,0,-1)},
+
+    };
+    std::vector<std::vector<GLuint>> cube_indices{
+        {0,2,3, 0,3,1},         // Right
+        {4,6,7, 4,7,5},         // Left
+        {8,10,11, 8,11,9},      // Top
+        {12,14,15, 12,15,13},   // Bottom
+        {16,18,19, 16,19,17},   // Front
+        {20,22,23, 20,23,21}    // Back
+    };
     const array<array<unsigned int,3>,8> adj_norms = {{
         {1,3,5},
         {0,3,5},
@@ -235,16 +258,21 @@ Mesh Grid::get_occupied_geom() const
                     vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale;
                     int curr_vert_index = 0;
                     //glm::vec3 color = random_color();
-                    //glm::vec3 color = random_brown();
+                    glm::vec3 color = random_brown();
+                    for ( int i_ = 0; i_<=cube_verts.size(); i_++){
+                        vertices.push_back(Vertex{current_pos+cube_verts[i_].first, color, cube_verts[i_].second});
+                    }
+                    /*
                     for (int k_ = 0; k_<=1;k_++){
                         for (int j_ = 0; j_<=1;j_++){
                             for (int i_ = 0; i_<=1;i_++){
-                                //vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,color}); 
-                                vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,random_brown()}); 
+                                vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,color}); 
+                                //vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,random_brown()}); 
                                 curr_vert_index++;
                             }
                         }
                     }
+                    */
                     // Generate Indices
                     for (int face_i=0; face_i<cube_indices.size(); face_i++){
                         if (!adj_content[face_i]){

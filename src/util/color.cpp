@@ -15,9 +15,9 @@ glm::vec3 random_color()
 glm::vec3 random_brown()
 {
     const std::vector<glm::vec3> palette {
-        glm::vec3(0.2,0.1,0),
-        glm::vec3(0.2,0.1,0),
-        glm::vec3(0.2,0.1,0),
+        //glm::vec3(0.2,0.1,0),
+        //glm::vec3(0.2,0.1,0),
+        //glm::vec3(0.2,0.1,0),
         glm::vec3(0.2,0.1,0),
         glm::vec3(0.2,0.1,0),
         glm::vec3(0.4,0.3,0.18),
