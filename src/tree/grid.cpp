@@ -258,21 +258,10 @@ Mesh Grid::get_occupied_geom() const
                     vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale;
                     int curr_vert_index = 0;
                     //glm::vec3 color = random_color();
-                    glm::vec3 color = random_brown();
+                    //glm::vec3 color = random_brown();
                     for ( int i_ = 0; i_<=cube_verts.size(); i_++){
-                        vertices.push_back(Vertex{current_pos+cube_verts[i_].first, color, cube_verts[i_].second});
+                        vertices.push_back(Vertex{current_pos+cube_verts[i_].first, random_brown(), cube_verts[i_].second});
                     }
-                    /*
-                    for (int k_ = 0; k_<=1;k_++){
-                        for (int j_ = 0; j_<=1;j_++){
-                            for (int i_ = 0; i_<=1;i_++){
-                                vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,color}); 
-                                //vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,random_brown()}); 
-                                curr_vert_index++;
-                            }
-                        }
-                    }
-                    */
                     // Generate Indices
                     for (int face_i=0; face_i<cube_indices.size(); face_i++){
                         if (!adj_content[face_i]){
