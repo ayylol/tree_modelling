@@ -1,9 +1,11 @@
 #pragma once
 
 // Light blue
-#define SKY_COLOR glm::vec4(.75f,1.f,1.f, 1.f)
+//#define SKY_COLOR glm::vec4(.75f,1.f,1.f, 1.f)
 // Darker blue
 //#define SKY_COLOR glm::vec4(.2f,.2f,.5f, 1.f)
+// Foggy
+#define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)
 
 
 // Tree specific constants

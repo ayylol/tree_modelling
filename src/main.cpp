@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     //Mesh occupy_dots = gr.get_occupied_geom_points();
 
     // GROUND PLANE
-    glm::vec3 ground_color = glm::vec3(0,1,0);
+    glm::vec3 ground_color = glm::vec3(0,0.65,0);
     std::vector<Vertex> ground_verts{
         Vertex{glm::vec3(50,0,50),ground_color},
         Vertex{glm::vec3(50,0,-50),ground_color},
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
         // Draw the meshes here
         //tree_skelly.draw(flat_shader,camera, GL_LINES);
         //detail_geom.draw(flat_shader,camera, GL_LINES);
-        bound_geom.draw(flat_shader,camera, GL_LINES);
+        //bound_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader,camera, GL_TRIANGLES);
         //occupy_dots.draw(flat_shader,camera, GL_POINTS);
         ground.draw(shader,camera, GL_TRIANGLES);
