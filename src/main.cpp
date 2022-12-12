@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     //detail.add_strand(4);
     detail.add_strands(1024);
 
-    //Mesh tree_skelly = tree.get_mesh();
+    Mesh tree_skelly = tree.get_mesh();
     //Mesh detail_geom = detail.get_mesh();
     Mesh bound_geom = gr.get_bound_geom();
     Mesh occupy_geom = gr.get_occupied_geom();
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        //tree_skelly.draw(flat_shader,camera, GL_LINES);
+        tree_skelly.draw(flat_shader,camera, GL_LINES);
         //detail_geom.draw(flat_shader,camera, GL_LINES);
         //bound_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader,camera, GL_TRIANGLES);
