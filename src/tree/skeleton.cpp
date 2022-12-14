@@ -11,7 +11,7 @@ size_t Skeleton::leafs_size() const {return leafs.size();}
 
 // TODO: I feel like this is messy
 Skeleton::Skeleton(const char* filename){
-    std::cout<<"Generating Skeleton...";
+    std::cout<<"Parsing Skeleton...";
     std::cout.flush();
     // Initialize file stream, and string token
     std::ifstream in(filename);
