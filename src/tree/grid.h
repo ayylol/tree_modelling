@@ -26,13 +26,13 @@ public:
         glm::vec3 center = {0.f,0.f,0.f}
         );
     
-    void occupy_pos(glm::vec3 pos, unsigned int val);
-    void occupy_slot(glm::ivec3 pos, unsigned int val);
-    void occupy_line(glm::vec3 start, glm::vec3 end, unsigned int val);
-    void occupy_path(std::vector<glm::vec3> path, unsigned int val);
+    void occupy_pos(glm::vec3 pos, float val);
+    void occupy_slot(glm::ivec3 pos, float val);
+    void occupy_line(glm::vec3 start, glm::vec3 end, float val);
+    void occupy_path(std::vector<glm::vec3> path, float val);
 
-    unsigned int get_in_grid(glm::ivec3 index) const;
-    unsigned int get_in_pos(glm::vec3 pos) const;
+    float get_in_grid(glm::ivec3 index) const;
+    float get_in_pos(glm::vec3 pos) const;
 
     bool line_occluded(glm::vec3 start, glm::vec3 end);
 
@@ -44,10 +44,14 @@ public:
 
     Mesh get_grid_geom() const;
     Mesh get_bound_geom() const;
-    Mesh get_occupied_geom() const;
-    Mesh get_occupied_geom_points() const;
+    Mesh get_occupied_geom(float threshold) const;
+    Mesh get_occupied_geom_points(float threshold) const;
+
+    void smooth_grid();
+
+    void export_data(const char * filename);
 private:
-    std::vector<std::vector<std::vector<unsigned int>>> grid;
+    std::vector<std::vector<std::vector<float>>> grid;
 
     glm::ivec3 dimensions;
     float scale;

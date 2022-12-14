@@ -22,6 +22,8 @@ Strands::Strands(const Skeleton& tree, Grid& grid):
    // TESTING
 }
 void Strands::add_strands(unsigned int amount){
+    std::cout<<"Generating Strands...";
+    std::cout.flush();
     std::vector<size_t> indices;
     for (size_t i = 0; i < paths.size(); i++){
         indices.push_back(i);
@@ -30,6 +32,7 @@ void Strands::add_strands(unsigned int amount){
     for (size_t i = 0; i < amount; i++){
         add_strand(indices[i%(indices.size())]);
     }
+    std::cout<<" Done"<<std::endl;
 }
 
 void Strands::add_strand(size_t path_index){
@@ -40,7 +43,6 @@ void Strands::add_strand(size_t path_index){
     std::vector<glm::vec3> strand{path[closest_index]};
     // Loop until closest node is last node
     while ( closest_index != path.size()-1 ){
-        std::cout<<closest_index<<std::endl;
 
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size()-1]);
@@ -72,7 +74,6 @@ void Strands::add_strand(size_t path_index){
         }
         // use target point to calculate canonical direction
         glm::vec3 canonical_direction = glm::normalize(target_point-last_closest);
-        //std::cout<<canonical_direction<<std::endl;
 
         // Generate trials
         struct Trial{
@@ -97,7 +98,7 @@ void Strands::add_strand(size_t path_index){
                 max_distance = fmax(max_distance,distance);
                 min_distance = fmin(min_distance,distance);
                 max_angle = fmax(max_angle, angle);
-            }else std::cout<<"REJECTED"<<std::endl;
+            }//else std::cout<<"REJECTED"<<std::endl;
         }
         if(trials.empty()) break;
         //if(trials.empty()) return;
@@ -147,6 +148,8 @@ Mesh Strands::get_mesh() const{
     return Mesh(vertices, indices);
 }
 
+/*
+// TODO IMPLEMENT THIS METHOD
 std::pair<size_t, glm::vec3> closest_on_path(
         glm::vec3 point,
         const std::vector<glm::vec3>& path,
@@ -155,6 +158,7 @@ std::pair<size_t, glm::vec3> closest_on_path(
         ){
 
 }
+*/
 
 // Non-member helper functions
 
