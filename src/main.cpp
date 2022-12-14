@@ -95,13 +95,19 @@ int main(int argc, char* argv[])
 
     // Tree detail
     Strands detail(tree, gr);
-    //detail.add_strand(4);
+    //detail.add_strand(0);
     detail.add_strands(1024);
+
+    // TODO FIX THESE FUNCTIONS
+    /*
+    gr.smooth_grid();
+    gr.export_data("grid.txt");
+    */
 
     //Mesh tree_skelly = tree.get_mesh();
     //Mesh detail_geom = detail.get_mesh();
-    Mesh bound_geom = gr.get_bound_geom();
-    Mesh occupy_geom = gr.get_occupied_geom();
+    //Mesh bound_geom = gr.get_bound_geom();
+    Mesh occupy_geom = gr.get_occupied_geom(0.3);
     //Mesh occupy_dots = gr.get_occupied_geom_points();
 
     // GROUND PLANE
@@ -116,6 +122,7 @@ int main(int argc, char* argv[])
         0,1,3, 0,3,2
     };
     Mesh ground(ground_verts,ground_indices);
+
 
     // Render loop
     while (!glfwWindowShouldClose(window))

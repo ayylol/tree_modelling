@@ -15,7 +15,7 @@ Grid::Grid(
         vec3 center
         ):
     dimensions(dimensions),
-    grid(dimensions.x, vector<vector<unsigned int>>(dimensions.y, vector<unsigned int>(dimensions.z,0))),
+    grid(dimensions.x, vector<vector<float>>(dimensions.y, vector<float>(dimensions.z,0))),
     scale(scale),
     center(center),
     back_bottom_left(center-vec3(dimensions)*(scale/2.f))
@@ -42,16 +42,16 @@ bool Grid::is_in_grid(ivec3 grid_cell) const
             grid_cell.z>=0  && grid_cell.z<grid[0][0].size();
 }
 
-unsigned int Grid::get_in_grid(ivec3 index) const
+float Grid::get_in_grid(ivec3 index) const
 {
     if(!is_in_grid(index)) {
-        std::cout<<"outside of grid "<<index<<std::endl; 
+        //std::cout<<"outside of grid "<<index<<std::endl; 
         return 0;
     }
     return grid[index.x][index.y][index.z];
 }
 
-unsigned int Grid::get_in_pos(vec3 pos) const
+float Grid::get_in_pos(vec3 pos) const
 {
     return get_in_grid(pos_to_grid(pos));
 }
@@ -65,20 +65,20 @@ bool Grid::line_occluded(glm::vec3 start, glm::vec3 end){
     return true;
 }
 
-void Grid::occupy_pos(vec3 pos, unsigned int val){
+void Grid::occupy_pos(vec3 pos, float val){
     ivec3 slot = pos_to_grid(pos); 
     occupy_slot(slot, val);
 }
 
-void Grid::occupy_slot(ivec3 slot, unsigned int val){
+void Grid::occupy_slot(ivec3 slot, float val){
     if(!is_in_grid(slot)) {
-        std::cout<<"outside of grid "<<slot<<std::endl;
+        //std::cout<<"outside of grid "<<slot<<std::endl;
         return;
     }
     grid[slot.x][slot.y][slot.z] = val;
 }
 
-void Grid::occupy_line(vec3 start, vec3 end, unsigned int val)
+void Grid::occupy_line(vec3 start, vec3 end, float val)
 {
     // fill voxel
     vector<ivec3> voxel_list = get_voxels_line(start,end);
@@ -87,7 +87,7 @@ void Grid::occupy_line(vec3 start, vec3 end, unsigned int val)
     }
 }
 
-void Grid::occupy_path(std::vector<glm::vec3> path, unsigned int val)
+void Grid::occupy_path(std::vector<glm::vec3> path, float val)
 {
     if (path.size()<2) return;
     for (int i = 0; i < path.size()-1; i++){
@@ -164,7 +164,9 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const
     if (!glm::all(glm::equal(pos_to_grid(end),voxel_list.back()))||!is_in_grid(voxel_list.back())) voxel_list.pop_back(); 
     return voxel_list;
 }
-Mesh Grid::get_occupied_geom_points() const
+
+
+Mesh Grid::get_occupied_geom_points( float threshold ) const
 {
     vector<Vertex> vertices;
     vector<GLuint> indices;
@@ -172,7 +174,7 @@ Mesh Grid::get_occupied_geom_points() const
         for(int j=0;j<grid[0].size();j++){
             for(int i=0;i<grid.size();i++){
                 ivec3 current_voxel(i,j,k);
-                if(get_in_grid(current_voxel)){ 
+                if(get_in_grid(current_voxel) > threshold){ 
                     vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale + vec3(1,1,1)*(scale/2);
                     vertices.push_back(Vertex{current_pos,random_color()});
                     
@@ -186,8 +188,10 @@ Mesh Grid::get_occupied_geom_points() const
     return Mesh(vertices,indices);
 }
 
-Mesh Grid::get_occupied_geom() const
+Mesh Grid::get_occupied_geom( float threshold ) const
 {
+    std::cout<<"Generating Occupied Geometry...";
+    std::cout.flush();
     vector<Vertex> vertices;
     vector<GLuint> indices;
 
@@ -243,12 +247,12 @@ Mesh Grid::get_occupied_geom() const
                 ivec3 current_voxel(i,j,k);
 
                 // Grid space is occupied
-                if(get_in_grid(current_voxel)){ 
+                if(get_in_grid(current_voxel) > threshold){ 
                     // Get adjacent voxel contents
-                    vector<unsigned int> adj_content;
+                    vector<float> adj_content;
                     bool visible = false;
                     for ( auto norm : face_norms){
-                        unsigned int content = get_in_grid(current_voxel+norm);
+                        float content = get_in_grid(current_voxel+norm);
                         adj_content.push_back(content);
                         if( content == 0 ) visible = true;
                     }
@@ -262,17 +266,6 @@ Mesh Grid::get_occupied_geom() const
                     for ( int i_ = 0; i_<=cube_verts.size(); i_++){
                         vertices.push_back(Vertex{current_pos+cube_verts[i_].first, color, cube_verts[i_].second});
                     }
-                    /*
-                    for (int k_ = 0; k_<=1;k_++){
-                        for (int j_ = 0; j_<=1;j_++){
-                            for (int i_ = 0; i_<=1;i_++){
-                                vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,color}); 
-                                //vertices.push_back(Vertex{current_pos+vec3(i_,j_,k_)*scale,random_brown()}); 
-                                curr_vert_index++;
-                            }
-                        }
-                    }
-                    */
                     // Generate Indices
                     for (int face_i=0; face_i<cube_indices.size(); face_i++){
                         if (!adj_content[face_i]){
@@ -287,8 +280,10 @@ Mesh Grid::get_occupied_geom() const
             }
         }
     }
+    std::cout<<" Done"<<std::endl;
     return Mesh(vertices, indices);
 }
+
 Mesh Grid::get_bound_geom() const
 {
     vector<Vertex> vertices;
@@ -370,4 +365,44 @@ Mesh Grid::get_grid_geom() const
         }
     }
     return Mesh(vertices, indices);
+}
+void Grid::export_data(const char * filename){
+    std::cout<<"Exporting Data...";
+    std::cout.flush();
+    std::ofstream out(filename);
+    for(int k=0;k<grid[0][0].size();k++){
+        for(int j=0;j<grid[0].size();j++){
+            for(int i=0;i<grid.size();i++){
+                if(grid[i][j][k]!=0){
+                    out<< i <<" "<< j << " "<< k <<" "<<(grid[i][j][k])<<"\n";
+                }
+            }
+        }
+    }
+    out.close();
+    std::cout<<" Done"<<std::endl;
+}
+
+void Grid::smooth_grid(){
+    std::cout<<"Smoothing Grid...";
+    std::cout.flush();
+    std::vector<std::vector<std::vector<float>>> temp_grid = grid;
+    // TODO Horrible unbelievable nesting
+    for(int k=0;k<grid[0][0].size();k++){
+        for(int j=0;j<grid[0].size();j++){
+            for(int i=0;i<grid.size();i++){
+                float total_around=0.0;
+                for(int z=-1;z<=1;z++){
+                    for(int y=-1;y<=1;y++){
+                        for(int x=-1;x<=1;x++){
+                            total_around += get_in_grid(glm::ivec3(i+x,i+y,i+z));
+                        }
+                    }
+                }
+                temp_grid[i][j][k]=total_around/27.f;
+            }
+        }
+    }
+    grid = temp_grid;
+    std::cout<<" Done" <<std::endl;
 }
