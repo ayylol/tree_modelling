@@ -52,6 +52,7 @@ public:
     void export_data(const char * filename);
 private:
     std::vector<std::vector<std::vector<float>>> grid;
+    std::vector<glm::ivec3> occupied;
 
     glm::ivec3 dimensions;
     float scale;

@@ -76,7 +76,10 @@ void Grid::occupy_slot(ivec3 slot, float val){
         //std::cout<<"outside of grid "<<slot<<std::endl;
         return;
     }
-    grid[slot.x][slot.y][slot.z] = val;
+    if ( get_in_grid(slot) == 0 ){
+        grid[slot.x][slot.y][slot.z] = val;
+        occupied.push_back(slot);
+    }
 }
 
 void Grid::occupy_line(vec3 start, vec3 end, float val)
@@ -171,16 +174,11 @@ Mesh Grid::get_occupied_geom_points( float threshold ) const
 {
     vector<Vertex> vertices;
     vector<GLuint> indices;
-    for(int k=0;k<grid[0][0].size();k++){
-        for(int j=0;j<grid[0].size();j++){
-            for(int i=0;i<grid.size();i++){
-                ivec3 current_voxel(i,j,k);
-                if(get_in_grid(current_voxel) > threshold){ 
-                    vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale + vec3(1,1,1)*(scale/2);
-                    vertices.push_back(Vertex{current_pos,random_color()});
-                    
-                }
-            }
+    for ( glm::ivec3 voxel : occupied ){
+        if(get_in_grid(voxel) > threshold){ 
+            vec3 current_pos = back_bottom_left + vec3(voxel)*scale + vec3(1,1,1)*(scale/2);
+            vertices.push_back(Vertex{current_pos,random_color()});
+            
         }
     }
     for (size_t i = 0; i < vertices.size(); i++){
@@ -240,45 +238,37 @@ Mesh Grid::get_occupied_geom( float threshold ) const
     }};
 
     int current_index=0;
+    for ( glm::ivec3 voxel : occupied ){
+        // Grid space is occupied
+        if(get_in_grid(voxel) > threshold){ 
+            // Get adjacent voxel contents
+            vector<float> adj_content;
+            bool visible = false;
+            for ( auto norm : face_norms){
+                float content = get_in_grid(voxel+norm);
+                adj_content.push_back(content);
+                if( content == 0 ) visible = true;
+            }
+            if (!visible) continue; // Completely occluded do not add vertices
 
-    // Loop Through all grid slots
-    for(int k=0;k<grid[0][0].size();k++){
-        for(int j=0;j<grid[0].size();j++){
-            for(int i=0;i<grid.size();i++){
-                ivec3 current_voxel(i,j,k);
-
-                // Grid space is occupied
-                if(get_in_grid(current_voxel) > threshold){ 
-                    // Get adjacent voxel contents
-                    vector<float> adj_content;
-                    bool visible = false;
-                    for ( auto norm : face_norms){
-                        float content = get_in_grid(current_voxel+norm);
-                        adj_content.push_back(content);
-                        if( content == 0 ) visible = true;
+            // Loop through and generate vertices
+            vec3 current_pos = back_bottom_left + vec3(voxel)*scale;
+            int curr_vert_index = 0;
+            //glm::vec3 color = random_color();
+            //glm::vec3 color = random_brown();
+            for ( int i_ = 0; i_<=cube_verts.size(); i_++){
+                vertices.push_back(Vertex{current_pos+cube_verts[i_].first, random_brown(), cube_verts[i_].second});
+            }
+            // Generate Indices
+            for (int face_i=0; face_i<cube_indices.size(); face_i++){
+                if (!adj_content[face_i]){
+                    for (int index=0; index<cube_indices[face_i].size(); index++){
+                        indices.push_back(cube_indices[face_i][index]+current_index);
                     }
-                    if (!visible) continue; // Completely occluded do not add vertices
-
-                    // Loop through and generate vertices
-                    vec3 current_pos = back_bottom_left + vec3(current_voxel)*scale;
-                    int curr_vert_index = 0;
-                    //glm::vec3 color = random_color();
-                    //glm::vec3 color = random_brown();
-                    for ( int i_ = 0; i_<=cube_verts.size(); i_++){
-                        vertices.push_back(Vertex{current_pos+cube_verts[i_].first, random_brown(), cube_verts[i_].second});
-                    }
-                    // Generate Indices
-                    for (int face_i=0; face_i<cube_indices.size(); face_i++){
-                        if (!adj_content[face_i]){
-                            for (int index=0; index<cube_indices[face_i].size(); index++){
-                                indices.push_back(cube_indices[face_i][index]+current_index);
-                            }
-                        }
-                    }
-
-                    current_index=vertices.size();
                 }
             }
+
+            current_index=vertices.size();
         }
     }
     std::cout<<" Done"<<std::endl;

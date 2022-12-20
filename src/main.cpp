@@ -109,23 +109,23 @@ int main(int argc, char* argv[])
     // Tree detail
     Strands detail(tree, gr);
     sw.start();
-    //detail.add_strands(1404);
     detail.add_strands(1024);
     sw.stop();
-    //detail.add_strands(4);
+
     // TODO FIX THESE FUNCTIONS
     /*
     gr.smooth_grid();
     gr.export_data("grid.txt");
     */
 
+    // Creating Meshes
+    sw.start();
     //Mesh tree_skelly = tree.get_mesh();
     //Mesh detail_geom = detail.get_mesh();
     //Mesh bound_geom = gr.get_bound_geom();
-    sw.start();
     Mesh occupy_geom = gr.get_occupied_geom(0.3);
+    //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
     sw.stop();
-    //Mesh occupy_dots = gr.get_occupied_geom_points();
 
     // GROUND PLANE
     glm::vec3 ground_color = glm::vec3(0,0.65,0);
