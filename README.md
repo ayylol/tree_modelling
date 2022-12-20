@@ -2,14 +2,10 @@
 
 ![cover](poplar.png)
 
-TODO:
-- Fix closest point to path algorithm
-- Programmatically calculate parameters given skeleton
-- Rendering
+### TODO:
+- Calculate Strand Parameters given skeleton
+- Better Rendering
+- Parallelization?
 
-less important:
-- cleaner CMAKE
-
-NOTES:
-- I don't think that the parser is very flexible 
-- (what if a tree immediately splits off into multiple segments, then the root idea doesnt work)
+### Note:
+- oak4_4.data and bush_ra17.data crash right now
