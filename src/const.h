@@ -11,9 +11,6 @@
 // Tree specific constants
 #define FOCUS glm::vec3(0,1.5,0)
 #define DISTANCE 5.f
-#define DIMENSIONS glm::ivec3(500,500,500)
-#define SCALE .006f
-#define CENTER glm::vec3(0.2,1.5,0)
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50

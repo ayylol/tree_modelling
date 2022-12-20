@@ -29,14 +29,20 @@ class Skeleton{
 
        std::vector<glm::vec3> get_strand(size_t index) const;
        size_t leafs_size() const;
+       std::pair<glm::vec3,glm::vec3> get_bounds() const;
+       glm::vec3 get_com() const;
+       float get_average_length() const;
 
     private:
         struct Node{
             glm::vec3 position; 
-            // Relation to other nodes
-            std::shared_ptr<Node> parent; // If no parent then this node is root
+            std::shared_ptr<Node> parent;
             std::vector<std::shared_ptr<Node>>children;
         }; 
         std::shared_ptr<Node> root;
         std::vector<std::shared_ptr<Node>> leafs;
+
+       std::pair<glm::vec3,glm::vec3> bounds;
+       glm::vec3 center_of_mass;
+       float average_length;
 };

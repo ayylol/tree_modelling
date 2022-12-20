@@ -1,5 +1,6 @@
 #include "tree/skeleton.h"
 #include <iostream>
+#include <glm/gtx/io.hpp>
 
 // FOR DEBUG
 #define PRINT_POS(pos)  \
@@ -8,6 +9,9 @@
 #define PRINT(string) std::cout<<string<<std::endl
 
 size_t Skeleton::leafs_size() const {return leafs.size();}
+std::pair<glm::vec3,glm::vec3> Skeleton::get_bounds() const {return bounds;}
+glm::vec3 Skeleton::get_com() const {return center_of_mass;}
+float Skeleton::get_average_length() const {return average_length;}
 
 // TODO: I feel like this is messy
 Skeleton::Skeleton(const char* filename){
@@ -41,6 +45,13 @@ Skeleton::Skeleton(const char* filename){
     last_split.push(root);
     std::shared_ptr<Node> last_node=root;
 
+    // Setting up stats
+    int num_nodes = 1;
+    glm::vec3 com = root->position;
+    bounds.first = root->position;
+    bounds.second = root->position;
+    float total_length=0;
+
     for (std::string token; GET_NEXT(token);) 
     {
         // Branch starting
@@ -62,15 +73,36 @@ Skeleton::Skeleton(const char* filename){
             glm::vec3 position;
             PARSE_POINT(token,position);
             std::shared_ptr<Node>next=std::make_shared<Node>(Node{position,last_node,{}});
+
             // Define node's relationship
             next->parent = last_node;
             last_node->children.push_back(next);
             // Update last_node
             last_node=next;
+
+            // Updates for stats
+            // Bounds
+            bounds.first.x = fmin(bounds.first.x,position.x);
+            bounds.first.y = fmin(bounds.first.y,position.y);
+            bounds.first.z = fmin(bounds.first.z,position.z);
+            bounds.second.x = fmax(bounds.second.x,position.x);
+            bounds.second.y = fmax(bounds.second.y,position.y);
+            bounds.second.z = fmax(bounds.second.z,position.z);
+            // COM
+            com += position;
+            // length
+            total_length += glm::distance(position, next->parent->position);
+            num_nodes++;
+
         }
     }
     leafs.push_back(last_node);
     in.close();
+
+    // Finalize stats
+    center_of_mass = (1.f/num_nodes)*com;
+    average_length = total_length/num_nodes;
+
     std::cout<<" Done"<<std::endl;
 }
 
