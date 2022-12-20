@@ -1,6 +1,5 @@
 #include "rendering/shader.h"
 
-/*
 std::string get_file_contents(const char* filename)
 {
     std::ifstream in(filename, std::ios::binary);
@@ -16,7 +15,6 @@ std::string get_file_contents(const char* filename)
     }
     throw(errno);
 }
-*/
 
 void Shader::use() const { glUseProgram(ID); }
 void Shader::cleanup() { glDeleteProgram(ID); }
