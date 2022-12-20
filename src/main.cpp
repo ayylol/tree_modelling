@@ -53,10 +53,14 @@ int main(int argc, char* argv[])
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
 
     // Window Creation
-    GLFWwindow* window = glfwCreateWindow(DEFAULT_WIDTH,DEFAULT_HEIGHT, "tree strands (DEBUG)", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(
+            DEFAULT_WIDTH,DEFAULT_HEIGHT, 
+            "tree strands (DEBUG)", 
+            NULL, NULL);
+
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -78,8 +82,12 @@ int main(int argc, char* argv[])
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Readying Shaders 
-    Shader flat_shader("resources/shaders/flat.vert", "resources/shaders/flat.frag");
-    Shader shader("resources/shaders/default.vert", "resources/shaders/default.frag");
+    Shader flat_shader(
+            "resources/shaders/flat.vert", 
+            "resources/shaders/flat.frag");
+    Shader shader(
+            "resources/shaders/default.vert", 
+            "resources/shaders/default.frag");
 
     glEnable(GL_DEPTH_TEST);
     glPointSize(2.f);
@@ -95,16 +103,15 @@ int main(int argc, char* argv[])
 
     // Tree detail
     Strands detail(tree, gr);
-    //detail.add_strand(0);
     detail.add_strands(1024);
-
+    //detail.add_strands(4);
     // TODO FIX THESE FUNCTIONS
     /*
     gr.smooth_grid();
-    gr.export_data("grid.txt");
     */
+    gr.export_data("grid.txt");
 
-    //Mesh tree_skelly = tree.get_mesh();
+    Mesh tree_skelly = tree.get_mesh();
     //Mesh detail_geom = detail.get_mesh();
     //Mesh bound_geom = gr.get_bound_geom();
     Mesh occupy_geom = gr.get_occupied_geom(0.3);
@@ -134,7 +141,7 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        //tree_skelly.draw(flat_shader,camera, GL_LINES);
+        tree_skelly.draw(flat_shader,camera, GL_LINES);
         //detail_geom.draw(flat_shader,camera, GL_LINES);
         //bound_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader,camera, GL_TRIANGLES);

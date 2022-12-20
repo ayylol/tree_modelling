@@ -6,8 +6,8 @@ Camera::Camera(glm::vec3 start_focus, float start_distance, float start_theta, f
     default_focus(start_focus),
     default_distance(start_distance),
     default_theta(start_theta),
-    default_phi(start_phi),
-    aspect_ratio(aspect_ratio)
+    default_phi(start_phi)
+    //aspect_ratio(aspect_ratio)
 {
     set_aspect_ratio(start_width, start_height);
     reset();
