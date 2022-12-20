@@ -98,18 +98,19 @@ int main(int argc, char* argv[])
     
     Stopwatch sw;
 
-    // Grid
-    Grid gr(DIMENSIONS, SCALE, CENTER);
 
     // Creating tree
     sw.start();
     Skeleton tree(argv[1]);
     sw.stop();
 
+    // Grid
+    Grid gr(tree,0.01f,0.5);
+
     // Tree detail
     Strands detail(tree, gr);
     sw.start();
-    detail.add_strands(1024);
+    detail.add_strands(tree.leafs_size());
     sw.stop();
 
     // TODO FIX THESE FUNCTIONS

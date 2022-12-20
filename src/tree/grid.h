@@ -16,6 +16,7 @@
 
 #include "rendering/mesh.h"
 #include "rendering/VBO.h"
+#include "tree/skeleton.h"
 
 class Grid
 {
@@ -23,8 +24,9 @@ public:
     Grid(
         glm::ivec3 dimensions, 
         float scale = 1.f, 
-        glm::vec3 center = {0.f,0.f,0.f}
+        glm::vec3 back_bottom_left = {0.f,0.f,0.f}
         );
+    Grid(const Skeleton& tree, float percent_overshoot, float scale_factor=1.f);
     
     void occupy_pos(glm::vec3 pos, float val);
     void occupy_slot(glm::ivec3 pos, float val);
@@ -56,7 +58,7 @@ private:
 
     glm::ivec3 dimensions;
     float scale;
-    glm::vec3 center;
+    glm::vec3 center; // TODO REMOVE THIS
 
     glm::vec3 back_bottom_left;
 

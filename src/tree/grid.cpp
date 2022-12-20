@@ -12,17 +12,30 @@ using glm::ivec3;
 Grid::Grid(
         ivec3 dimensions, 
         float scale, 
-        vec3 center
+        vec3 back_bottom_left
         ):
     dimensions(dimensions),
     grid(dimensions.x, vector<vector<float>>(dimensions.y, vector<float>(dimensions.z,0))),
     scale(scale),
-    center(center),
-    back_bottom_left(center-vec3(dimensions)*(scale/2.f))
+    back_bottom_left(back_bottom_left),
+    center(back_bottom_left+(scale/2.f)*(vec3)dimensions)
 {
     // TESTING
     
     // TESTING
+}
+// Immplement
+Grid::Grid(const Skeleton& tree, float percent_overshoot, float scale_factor)
+{
+    glm::vec3 bounds_size = tree.get_bounds().second - tree.get_bounds().first;
+    back_bottom_left = tree.get_bounds().first - (bounds_size*percent_overshoot);
+    glm::vec3 front_top_right = tree.get_bounds().second + (bounds_size*percent_overshoot);
+
+    center = back_bottom_left+(scale/2.f)*(vec3)dimensions; // TODO REMOVE
+
+    scale = tree.get_average_length()*scale_factor;
+    dimensions = glm::ceil((front_top_right-back_bottom_left)/scale);
+    grid = std::vector<std::vector<std::vector<float>>>(dimensions.x, vector<vector<float>>(dimensions.y, vector<float>(dimensions.z,0)));
 }
 
 ivec3 Grid::pos_to_grid(vec3 pos) const 
