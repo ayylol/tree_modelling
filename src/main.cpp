@@ -21,6 +21,7 @@
 #include "tree/strands.h"
 
 #include "const.h"  // TODO TEMPORARY SOLUTION
+#include "util/stopwatch.h"
 
 // Default screen dimensions
 const unsigned int DEFAULT_WIDTH = 800;
@@ -94,27 +95,36 @@ int main(int argc, char* argv[])
     //glLineWidth(4.f);
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     // Done OpenGL initialization
+    
+    Stopwatch sw;
 
     // Grid
     Grid gr(DIMENSIONS, SCALE, CENTER);
 
     // Creating tree
+    sw.start();
     Skeleton tree(argv[1]);
+    sw.stop();
 
     // Tree detail
     Strands detail(tree, gr);
+    sw.start();
+    //detail.add_strands(1404);
     detail.add_strands(1024);
+    sw.stop();
     //detail.add_strands(4);
     // TODO FIX THESE FUNCTIONS
     /*
     gr.smooth_grid();
-    */
     gr.export_data("grid.txt");
+    */
 
-    Mesh tree_skelly = tree.get_mesh();
+    //Mesh tree_skelly = tree.get_mesh();
     //Mesh detail_geom = detail.get_mesh();
     //Mesh bound_geom = gr.get_bound_geom();
+    sw.start();
     Mesh occupy_geom = gr.get_occupied_geom(0.3);
+    sw.stop();
     //Mesh occupy_dots = gr.get_occupied_geom_points();
 
     // GROUND PLANE
@@ -141,7 +151,7 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        tree_skelly.draw(flat_shader,camera, GL_LINES);
+        //tree_skelly.draw(flat_shader,camera, GL_LINES);
         //detail_geom.draw(flat_shader,camera, GL_LINES);
         //bound_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader,camera, GL_TRIANGLES);
