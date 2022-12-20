@@ -59,6 +59,7 @@ float Grid::get_in_pos(vec3 pos) const
     
 bool Grid::line_occluded(glm::vec3 start, glm::vec3 end){
     std::vector<glm::ivec3> voxels = get_voxels_line(start,end);
+    if ( voxels.size() == 0 ) return false;
     for ( auto voxel : voxels ){
         if ( get_in_grid(voxel)==0 ) return false;
     }
@@ -299,7 +300,9 @@ Mesh Grid::get_bound_geom() const
     for (int k = 0; k<=1;k++){
         for (int j = 0; j<=1;j++){
             for (int i = 0; i<=1;i++){
-                vertices.push_back(Vertex{back_bottom_left+vec3(i*width,j*height,k*depth),col}); 
+                vertices.push_back(
+                        Vertex{back_bottom_left+vec3(i*width,j*height,k*depth),
+                        col}); 
             }
         }
     }

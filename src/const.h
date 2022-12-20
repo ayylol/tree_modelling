@@ -15,7 +15,7 @@
 #define SCALE .006f
 #define CENTER glm::vec3(0.2,1.5,0)
 // STRAND CONSTANTS
-#define SEGMENT_LENGTH .01f
+#define SEGMENT_LENGTH .05f
 #define NUM_TRIALS 50
 #define MAX_ANGLE 90.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
 #define ALPHA 0.5f

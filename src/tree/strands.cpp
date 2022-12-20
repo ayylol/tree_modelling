@@ -1,4 +1,5 @@
 #include "strands.h"
+#include "const.h"
 #include <glm/gtx/io.hpp>
 
 std::default_random_engine rng(std::chrono::system_clock::now().time_since_epoch().count());
@@ -7,7 +8,7 @@ glm::vec3 random_vector(glm::vec3 axis, float angle);
 std::pair<size_t, glm::vec3> closest_on_path(
         glm::vec3 point,
         const std::vector<glm::vec3>& path,
-        size_t start_index,
+        int start_index,
         int overshoot
         );
 
@@ -17,9 +18,7 @@ Strands::Strands(const Skeleton& tree, Grid& grid):
    for ( size_t i = 0; i<tree.leafs_size(); i++){
         paths.push_back(tree.get_strand(i));
    }
-   // TESTING
-   //std::cout<<closest_on_path().second<<;
-   // TESTING
+   //std::cout<<paths.size()<<std::endl;
 }
 void Strands::add_strands(unsigned int amount){
     std::cout<<"Generating Strands...";
@@ -34,16 +33,30 @@ void Strands::add_strands(unsigned int amount){
     }
     std::cout<<" Done"<<std::endl;
 }
+// FOR TESTING
+void print_actual_closest(glm::vec3 pos, const std::vector<glm::vec3>& path){
+    float closest_dist = FLT_MAX;
+    int closest_ind = 0;
+    for ( int i=0; i<path.size(); i++){
+        float curr_dist = glm::distance(pos,path[i]);
+        if ( closest_dist > curr_dist){
+            closest_dist = curr_dist; 
+            closest_ind = i;
+        }
+    }
+    std::cout<<"ACTUAL: "<<closest_ind<<" "<< closest_dist <<std::endl;
 
+}
+
+// THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
 void Strands::add_strand(size_t path_index){
-    if ( path_index >= paths.size()) return;
+    if ( path_index >= paths.size() ) return;
     const std::vector<glm::vec3>& path = paths[path_index];
     size_t closest_index = 0;
     glm::vec3 last_closest = path[closest_index];
     std::vector<glm::vec3> strand{path[closest_index]};
     // Loop until closest node is last node
     while ( closest_index != path.size()-1 ){
-
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size()-1]);
 
@@ -86,7 +99,8 @@ void Strands::add_strand(size_t path_index){
         float min_distance=FLT_MAX;
         float max_angle=0.f;
         for (int i = 0; i<NUM_TRIALS;i++){
-            glm::vec3 trial_head = start+distance_to_travel*random_vector(canonical_direction, glm::radians(MAX_ANGLE));
+            //glm::vec3 trial_head = start+distance_to_travel*random_vector(canonical_direction, glm::radians(MAX_ANGLE));
+            glm::vec3 trial_head = start+SEGMENT_LENGTH*random_vector(canonical_direction, glm::radians(MAX_ANGLE));
             if (!grid.line_occluded(start, trial_head)){
                 float distance= glm::distance(trial_head,target_point);
                 float angle =  glm::angle(trial_head-start,canonical_direction);
@@ -100,6 +114,7 @@ void Strands::add_strand(size_t path_index){
                 max_angle = fmax(max_angle, angle);
             }//else std::cout<<"REJECTED"<<std::endl;
         }
+        //std::cout<<trials.size()<<std::endl;
         if(trials.empty()) break;
         //if(trials.empty()) return;
         // evaluate trial
@@ -115,8 +130,23 @@ void Strands::add_strand(size_t path_index){
             }
         }
         // Add best trial calculate new closest index
+        // DEBUG TO SEE TRIALS
+        //strand.push_back(trials[best_trial].head);
+        //strand.push_back(target_point);
+        /*
+        for ( auto trial : trials ){
+            strand.push_back(trial.head);
+        }
+        */
+
+        //closest_index=target_index;
         strand.push_back(trials[best_trial].head);
-        closest_index=target_index;
+        closest_index = closest_on_path(strand.back(), path, target_index, 5).first;
+        /*
+        std::cout<<std::endl;
+        std::cout<<"FOUND: "<<closest_index<<" "<<glm::distance(strand.back(), path[closest_index])<<std::endl; //TODO DEBUG PRINT
+        print_actual_closest(strand.back(),path);
+        */
         
     }
     // Occupy strand path
@@ -148,17 +178,50 @@ Mesh Strands::get_mesh() const{
     return Mesh(vertices, indices);
 }
 
-/*
 // TODO IMPLEMENT THIS METHOD
 std::pair<size_t, glm::vec3> closest_on_path(
         glm::vec3 point,
         const std::vector<glm::vec3>& path,
-        size_t start_index,
+        int start_index,
         int overshoot
-        ){
+){
+    // Initialize vars for hill-climb
+    int current_closest_index = start_index;
+    glm::vec3 current_closest_point = path[start_index];
+    float lowest_dist2 = glm::distance2(point, current_closest_point);
+    
+    int point_checking=1;
+    int overshot = -1;
 
+    // Look for closest point on path
+    while ( overshoot >= overshot ){
+        float last_lowest_dist2 = lowest_dist2;
+        //std::cout<<"checking "<<start_index + point_checking <<" and "<<start_index-point_checking<<std::endl;
+        if ( start_index + point_checking <= path.size()-1 
+            && glm::distance2(point, path[start_index+point_checking]) < lowest_dist2 ){
+            lowest_dist2 = glm::distance2(point, path[start_index+point_checking]);
+            current_closest_index = start_index + point_checking;
+        }
+        if ( start_index - point_checking >= 0
+            && glm::distance2(point, path[start_index-point_checking]) < lowest_dist2 ){
+            lowest_dist2 = glm::distance2(point, path[start_index-point_checking]);
+            current_closest_index = start_index - point_checking;
+        }
+
+        // Increase overshot counter or reset it
+        if( lowest_dist2 == last_lowest_dist2 ){
+            overshot++; 
+        } else {
+            overshot = -1;
+        }
+        point_checking++;
+    }
+
+    // Look for closest point on two lines adjacent to closest index
+    // TODO FOR NOW JUST THE POINTS ON THE PATH
+    current_closest_point = path[current_closest_index];
+    return std::make_pair(current_closest_index,current_closest_point);
 }
-*/
 
 // Non-member helper functions
 
