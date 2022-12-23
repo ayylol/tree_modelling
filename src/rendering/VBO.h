@@ -6,6 +6,12 @@
 #include <array>
 #include <vector>
 
+struct VertexInfo{
+    size_t offset; 
+    size_t num_components;
+    GLenum type;
+};
+
 struct Vertex
 {
     // Data
@@ -15,9 +21,27 @@ struct Vertex
 
     // Vertex info
     static constexpr size_t elements = 3;
-    static constexpr std::array<size_t, elements> offsets = {0,3*sizeof(float),6*sizeof(float)};
-    static constexpr std::array<GLenum, elements> types = {GL_FLOAT, GL_FLOAT, GL_FLOAT};
+    static constexpr std::array<VertexInfo, elements> info = {
+        VertexInfo{0,3,GL_FLOAT},
+        VertexInfo{3*sizeof(float),3,GL_FLOAT},
+        VertexInfo{6*sizeof(float),3,GL_FLOAT}
+    };
 };
+
+struct VertFlat
+{
+    // Data
+    glm::vec3 position;
+    glm::vec3 color;
+
+    // Vertex info
+    static constexpr size_t elements = 2;
+    static constexpr std::array<VertexInfo, elements> info = {
+        VertexInfo{0,3,GL_FLOAT},
+        VertexInfo{3*sizeof(float),3,GL_FLOAT}
+    };
+};
+
 template <typename T> class VBO
 {
     public:

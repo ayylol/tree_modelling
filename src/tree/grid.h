@@ -44,10 +44,10 @@ public:
     glm::ivec3 pos_to_grid(glm::vec3 pos) const;
     glm::vec3 grid_to_pos(glm::ivec3 voxel) const;
 
-    Mesh<Vertex> get_grid_geom() const;
-    Mesh<Vertex> get_bound_geom() const;
+    Mesh<VertFlat> get_grid_geom() const;
+    Mesh<VertFlat> get_bound_geom() const;
     Mesh<Vertex> get_occupied_geom(float threshold) const;
-    Mesh<Vertex> get_occupied_geom_points(float threshold) const;
+    Mesh<VertFlat> get_occupied_geom_points(float threshold) const;
 
     void smooth_grid();
 

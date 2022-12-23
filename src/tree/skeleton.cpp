@@ -106,9 +106,9 @@ Skeleton::Skeleton(const char* filename){
     std::cout<<" Done"<<std::endl;
 }
 
-Mesh<Vertex> Skeleton::get_mesh(){
+Mesh<VertFlat> Skeleton::get_mesh(){
     // Initialize mesh verts and indices
-    std::vector<Vertex> vertices;
+    std::vector<VertFlat> vertices;
     std::vector<GLuint> indices;
     struct Info{
         std::shared_ptr<Node> node;
@@ -122,12 +122,11 @@ Mesh<Vertex> Skeleton::get_mesh(){
     bool done = false;
     int debug_counter=0;
     while (!done){
-        //std::cout<<"run: "<<debug_counter++<<std::endl;
         unsigned int num_children = last_node.node->children.size();
         unsigned int explored = last_node.children_explored;
         // Add node to vertices (first time node is reached)
         if (explored==0){
-            vertices.push_back(Vertex{last_node.node->position,random_color()});
+            vertices.push_back(VertFlat{last_node.node->position,random_color()});
             indices.push_back(last_node.parent_index);
             indices.push_back(last_node.index);
         }

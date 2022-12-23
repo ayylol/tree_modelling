@@ -1,4 +1,5 @@
 #include "tree/grid.h"
+#include <climits>
 #include <iostream>
 #include <glm/gtx/io.hpp>
 
@@ -20,9 +21,6 @@ Grid::Grid(
     back_bottom_left(back_bottom_left),
     center(back_bottom_left+(scale/2.f)*(vec3)dimensions)
 {
-    // TESTING
-    
-    // TESTING
 }
 // Immplement
 Grid::Grid(const Skeleton& tree, float percent_overshoot, float scale_factor)
@@ -183,21 +181,20 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const
 }
 
 
-Mesh<Vertex> Grid::get_occupied_geom_points( float threshold ) const
+Mesh<VertFlat> Grid::get_occupied_geom_points( float threshold ) const
 {
-    vector<Vertex> vertices;
+    vector<VertFlat> vertices;
     vector<GLuint> indices;
     for ( glm::ivec3 voxel : occupied ){
         if(get_in_grid(voxel) > threshold){ 
             vec3 current_pos = back_bottom_left + vec3(voxel)*scale + vec3(1,1,1)*(scale/2);
-            vertices.push_back(Vertex{current_pos,random_color()});
-            
+            vertices.push_back(VertFlat{current_pos,random_color()});
         }
     }
     for (size_t i = 0; i < vertices.size(); i++){
         indices.push_back(i);
     }
-    return Mesh(vertices,indices);
+    return Mesh<VertFlat>(vertices,indices);
 }
 
 Mesh<Vertex> Grid::get_occupied_geom( float threshold ) const
@@ -288,9 +285,9 @@ Mesh<Vertex> Grid::get_occupied_geom( float threshold ) const
     return Mesh(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_bound_geom() const
+Mesh<VertFlat> Grid::get_bound_geom() const
 {
-    vector<Vertex> vertices;
+    vector<VertFlat> vertices;
     vector<GLuint> indices = {
         0,1,2,3,4,5,6,7,
         0,2,1,3,4,6,5,7,
@@ -304,7 +301,7 @@ Mesh<Vertex> Grid::get_bound_geom() const
         for (int j = 0; j<=1;j++){
             for (int i = 0; i<=1;i++){
                 vertices.push_back(
-                        Vertex{back_bottom_left+vec3(i*width,j*height,k*depth),
+                        VertFlat{back_bottom_left+vec3(i*width,j*height,k*depth),
                         col}); 
             }
         }
@@ -312,9 +309,9 @@ Mesh<Vertex> Grid::get_bound_geom() const
     return Mesh(vertices,indices);
 }
 
-Mesh<Vertex> Grid::get_grid_geom() const
+Mesh<VertFlat> Grid::get_grid_geom() const
 {
-    vector<Vertex> vertices;
+    vector<VertFlat> vertices;
     vector<GLuint> indices;
 
     //Vertex 
@@ -324,18 +321,18 @@ Mesh<Vertex> Grid::get_grid_geom() const
     for (int j = 0; j <= dimensions.y; j++){
         for (int i = 0; i <= dimensions.x; i++){
             vec3 curr_pos = back_bottom_left+vec3(i,j,0)*scale;
-            Vertex curr = {curr_pos,vert_col};
+            VertFlat curr = {curr_pos,vert_col};
             vertices.push_back(curr);
             // ADD midpoints if on edge
             if (i==0 || i==dimensions.x || j==0 || j==dimensions.y){
                 for (int k = 1; k<dimensions.z;k++){
                     vec3 next_in_pos = curr_pos+vec3(0.f,0.f,k)*scale;
-                    Vertex next_in = {next_in_pos, vert_col};
+                    VertFlat next_in = {next_in_pos, vert_col};
                     vertices.push_back(next_in);
                 }
             }
             vec3 next_pos = vec3(curr_pos.x,curr_pos.y,depth);
-            Vertex next = {next_pos,vert_col};
+            VertFlat next = {next_pos,vert_col};
             vertices.push_back(next);
         }
     }
