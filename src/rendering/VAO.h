@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include "rendering/VBO.h"
+#include <iostream> //TODO DELETE THIS
 
 template <typename T> class VAO
 {
@@ -9,6 +10,13 @@ template <typename T> class VAO
         GLuint ID;
 
         VAO() { glGenVertexArrays(1, &ID); }
+
+        void link_attribs(VBO<T>& vbo){
+            // Loop through attributes, linking them
+            for ( size_t i=0; i<T::elements; i++ ){
+                link_attrib(vbo, i, T::elements, T::types[i], sizeof(T), (void*)(T::offsets[i])); 
+            }
+        }
 
         void link_attrib(VBO<T>& VBO, GLuint layout, GLuint num_components, GLenum type, GLsizeiptr stride, void* offset)
         {

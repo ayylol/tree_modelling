@@ -3,13 +3,20 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
+#include <array>
 #include <vector>
 
 struct Vertex
 {
+    // Data
     glm::vec3 position;
     glm::vec3 color;
     glm::vec3 normal = glm::vec3(0,0,0);
+
+    // Vertex info
+    static constexpr size_t elements = 3;
+    static constexpr std::array<size_t, elements> offsets = {0,3*sizeof(float),6*sizeof(float)};
+    static constexpr std::array<GLenum, elements> types = {GL_FLOAT, GL_FLOAT, GL_FLOAT};
 };
 template <typename T> class VBO
 {

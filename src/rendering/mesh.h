@@ -32,10 +32,7 @@ template <typename T=Vertex> class Mesh
             VBO<T> vbo(vertices);
             EBO ebo(indices);
 
-            // Change to work with varied index types
-            vao.link_attrib(vbo, 0, 3, GL_FLOAT, 9 * sizeof(float), (void*)0);
-            vao.link_attrib(vbo, 1, 3, GL_FLOAT, 9 * sizeof(float), (void*)(3*sizeof(float)));
-            vao.link_attrib(vbo, 2, 3, GL_FLOAT, 9 * sizeof(float), (void*)(6*sizeof(float)));
+            vao.link_attribs(vbo);
 
             vao.unbind();
             vbo.unbind();
