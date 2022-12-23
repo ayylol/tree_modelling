@@ -39,15 +39,12 @@ template <typename T> class Mesh
             ebo.unbind();
         }
 
-        void draw(const Shader& shader, const Camera& camera, GLenum mode)
+        void draw(Shader& shader, const Camera& camera, GLenum mode)
         {
             shader.use();
-            glm::mat4 cam_mat = camera.get_matrix();
-            GLuint camLoc = glGetUniformLocation(shader.ID, "cam");
-            glUniformMatrix4fv(camLoc, 1, GL_FALSE, glm::value_ptr(cam_mat));
-            GLuint camPosLoc = glGetUniformLocation(shader.ID, "camPos");
-            glm::vec3 camPos = camera.get_position();
-            glUniform3f(camPosLoc, camPos.x, camPos.y, camPos.z);
+
+            shader.setUniform("cam", camera.get_matrix());
+            shader.setUniform("camPos", camera.get_position());
 
             vao.bind();
             glDrawElements(mode, indices.size(), GL_UNSIGNED_INT, 0);
