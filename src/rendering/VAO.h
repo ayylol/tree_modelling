@@ -14,7 +14,8 @@ template <typename T> class VAO
         void link_attribs(VBO<T>& vbo){
             // Loop through attributes, linking them
             for ( size_t i=0; i<T::elements; i++ ){
-                link_attrib(vbo, i, T::elements, T::types[i], sizeof(T), (void*)(T::offsets[i])); 
+                link_attrib(vbo, i, T::info[i].num_components, T::info[i].type,
+                        sizeof(T), (void*)(T::info[i].offset)); 
             }
         }
 

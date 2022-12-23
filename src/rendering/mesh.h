@@ -12,7 +12,7 @@
 #include "rendering/VBO.h"
 #include "rendering/EBO.h"
 
-template <typename T=Vertex> class Mesh
+template <typename T> class Mesh
 {
     public:
         std::vector<T> vertices;
