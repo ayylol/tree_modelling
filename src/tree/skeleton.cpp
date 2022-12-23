@@ -106,7 +106,7 @@ Skeleton::Skeleton(const char* filename){
     std::cout<<" Done"<<std::endl;
 }
 
-Mesh Skeleton::get_mesh(){
+Mesh<Vertex> Skeleton::get_mesh(){
     // Initialize mesh verts and indices
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;

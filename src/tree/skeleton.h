@@ -25,7 +25,7 @@ class Skeleton{
     public:
        Skeleton(const char* filename); 
 
-       Mesh get_mesh();
+       Mesh<Vertex> get_mesh();
 
        std::vector<glm::vec3> get_strand(size_t index) const;
        size_t leafs_size() const;

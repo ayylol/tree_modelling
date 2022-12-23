@@ -155,7 +155,7 @@ void Strands::add_strand(size_t path_index){
 }
 
 
-Mesh Strands::get_mesh() const{
+Mesh<Vertex> Strands::get_mesh() const{
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     for ( auto path : strands ) {
