@@ -73,3 +73,14 @@ void Shader::compile_errors(GLuint shader, const char* type)
         }
     }
 }
+
+// Uniform setting functions
+
+void Shader::setUniform(const char* name, glm::mat4 matrix){
+    GLuint loc = glGetUniformLocation(this->ID, name);
+    glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+void Shader::setUniform(const char* name, glm::vec3 vector){
+    GLuint loc = glGetUniformLocation(this->ID, name);
+    glUniform3f(loc, vector.x, vector.y, vector.z);
+}
