@@ -11,15 +11,23 @@ struct Vertex
     glm::vec3 color;
     glm::vec3 normal = glm::vec3(0,0,0);
 };
-class VBO
+template <typename T> class VBO
 {
     public:
         GLuint ID;
 
-        VBO(const std::vector<Vertex>& vertices);
+        VBO(const std::vector<T>& vertices)
+        {
+            glGenBuffers(1, &ID);
+            update(vertices);
+        }
 
-        void update(const std::vector<Vertex>& vertices);
-        void bind();
-        void unbind();
-        void cleanup();
+        void update(const std::vector<T>& vertices)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, ID);
+            glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(T), vertices.data(), GL_STATIC_DRAW);
+        }
+        void bind() { glBindBuffer(GL_ARRAY_BUFFER, ID); }
+        void unbind() { glBindBuffer(GL_ARRAY_BUFFER,0); }
+        void cleanup() { glDeleteBuffers(1, &ID); }
 };

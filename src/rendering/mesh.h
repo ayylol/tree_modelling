@@ -12,16 +12,49 @@
 #include "rendering/VBO.h"
 #include "rendering/EBO.h"
 
-class Mesh
+template <typename T=Vertex> class Mesh
 {
     public:
-        Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices);
-
-        void update();
-        void draw(const Shader& shader, const Camera& cam, GLenum mode);
-
-        std::vector<Vertex> vertices;
+        std::vector<T> vertices;
         std::vector<GLuint> indices;
+
+        Mesh(std::vector<T> vertices, std::vector<GLuint> indices):
+            vertices(vertices),
+            indices(indices)
+        {
+            this->update();
+        }
+
+        // TODO: see if necessary
+        void update(){
+            vao.bind();
+
+            VBO<T> vbo(vertices);
+            EBO ebo(indices);
+
+            // Change to work with varied index types
+            vao.link_attrib(vbo, 0, 3, GL_FLOAT, 9 * sizeof(float), (void*)0);
+            vao.link_attrib(vbo, 1, 3, GL_FLOAT, 9 * sizeof(float), (void*)(3*sizeof(float)));
+            vao.link_attrib(vbo, 2, 3, GL_FLOAT, 9 * sizeof(float), (void*)(6*sizeof(float)));
+
+            vao.unbind();
+            vbo.unbind();
+            ebo.unbind();
+        }
+
+        void draw(const Shader& shader, const Camera& camera, GLenum mode)
+        {
+            shader.use();
+            glm::mat4 cam_mat = camera.get_matrix();
+            GLuint camLoc = glGetUniformLocation(shader.ID, "cam");
+            glUniformMatrix4fv(camLoc, 1, GL_FALSE, glm::value_ptr(cam_mat));
+            GLuint camPosLoc = glGetUniformLocation(shader.ID, "camPos");
+            glm::vec3 camPos = camera.get_position();
+            glUniform3f(camPosLoc, camPos.x, camPos.y, camPos.z);
+
+            vao.bind();
+            glDrawElements(mode, indices.size(), GL_UNSIGNED_INT, 0);
+        }
     private:
-        VAO vao;
+        VAO<T> vao;
 };

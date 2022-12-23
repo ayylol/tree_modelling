@@ -183,7 +183,7 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const
 }
 
 
-Mesh Grid::get_occupied_geom_points( float threshold ) const
+Mesh<Vertex> Grid::get_occupied_geom_points( float threshold ) const
 {
     vector<Vertex> vertices;
     vector<GLuint> indices;
@@ -200,7 +200,7 @@ Mesh Grid::get_occupied_geom_points( float threshold ) const
     return Mesh(vertices,indices);
 }
 
-Mesh Grid::get_occupied_geom( float threshold ) const
+Mesh<Vertex> Grid::get_occupied_geom( float threshold ) const
 {
     std::cout<<"Generating Occupied Geometry...";
     std::cout.flush();
@@ -288,7 +288,7 @@ Mesh Grid::get_occupied_geom( float threshold ) const
     return Mesh(vertices, indices);
 }
 
-Mesh Grid::get_bound_geom() const
+Mesh<Vertex> Grid::get_bound_geom() const
 {
     vector<Vertex> vertices;
     vector<GLuint> indices = {
@@ -312,7 +312,7 @@ Mesh Grid::get_bound_geom() const
     return Mesh(vertices,indices);
 }
 
-Mesh Grid::get_grid_geom() const
+Mesh<Vertex> Grid::get_grid_geom() const
 {
     vector<Vertex> vertices;
     vector<GLuint> indices;

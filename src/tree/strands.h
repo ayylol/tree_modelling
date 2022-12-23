@@ -23,7 +23,7 @@ glm::vec3 random_color();
 class Strands{
 public:
     Strands(const Skeleton& tree, Grid& grid);
-    Mesh get_mesh() const;
+    Mesh<Vertex> get_mesh() const;
     void add_strand(size_t path_index);
     void add_strands(unsigned int amount);
 private:
