@@ -30,6 +30,7 @@ const unsigned int DEFAULT_HEIGHT = 600;
 unsigned int width = DEFAULT_WIDTH;
 unsigned int height = DEFAULT_HEIGHT;
 
+GLFWwindow* openGLInit();
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 void processInput(GLFWwindow* window);
 
@@ -43,44 +44,9 @@ int main(int argc, char* argv[])
         return -1;
     }
     srand(time(NULL));
-    // TODO: move this to a function
-    // OpenGL initialization
-    //GLFW init
-    if(!glfwInit())
-    {
-        std::cout << "Failed to initialize GLFW" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
 
-    // Window Creation
-    GLFWwindow* window = glfwCreateWindow(
-            DEFAULT_WIDTH,DEFAULT_HEIGHT, 
-            "tree strands (DEBUG)", 
-            NULL, NULL);
-
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    //GLAD init
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    
-    // readying viewport
-    glViewport(0,0,width,height);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // Ready window
+    GLFWwindow* window = openGLInit();
 
     // Readying Shaders 
     Shader flat_shader(
@@ -90,34 +56,20 @@ int main(int argc, char* argv[])
             "resources/shaders/default.vert", 
             "resources/shaders/default.frag");
 
-    glEnable(GL_DEPTH_TEST);
-    glPointSize(2.f);
-    //glLineWidth(4.f);
-    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    // Done OpenGL initialization
-    
-    Stopwatch sw;
-
-
+    Stopwatch sw; // Performance stopwatch
     // Creating tree
     sw.start();
     Skeleton tree(argv[1]);
     sw.stop();
 
     // Grid
-    Grid gr(tree,0.01f,0.5);
+    Grid gr(tree,0.01f,1);
 
     // Tree detail
     Strands detail(tree, gr);
     sw.start();
     detail.add_strands(tree.leafs_size());
     sw.stop();
-
-    // TODO FIX THESE FUNCTIONS
-    /*
-    gr.smooth_grid();
-    gr.export_data("grid.txt");
-    */
 
     // Creating Meshes
     sw.start();
@@ -141,7 +93,6 @@ int main(int argc, char* argv[])
     };
     Mesh ground(ground_verts,ground_indices);
 
-
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -158,8 +109,6 @@ int main(int argc, char* argv[])
         occupy_geom.draw(shader,camera, GL_TRIANGLES);
         //occupy_dots.draw(flat_shader,camera, GL_POINTS);
         ground.draw(shader,camera, GL_TRIANGLES);
-        //test_cube.draw(shader,camera,GL_TRIANGLES);
-
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -168,6 +117,53 @@ int main(int argc, char* argv[])
 
     glfwTerminate();
     return 0;
+}
+
+GLFWwindow* openGLInit(){
+    //GLFW init
+    if(!glfwInit())
+    {
+        std::cout << "Failed to initialize GLFW" << std::endl;
+        glfwTerminate();
+        exit(-1);
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
+
+    // Window Creation
+    GLFWwindow* window = glfwCreateWindow(
+            DEFAULT_WIDTH,DEFAULT_HEIGHT, 
+            "tree strands (DEBUG)", 
+            NULL, NULL);
+
+    if (window == NULL)
+    {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        exit(-1);
+    }
+    glfwMakeContextCurrent(window);
+
+    //GLAD init
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        glfwTerminate();
+        exit(-1);
+    }
+    
+    // readying viewport
+    glViewport(0,0,width,height);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    // OpenGL drawing settings
+    //glPointSize(2.f);
+    //glLineWidth(4.f);
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glEnable(GL_DEPTH_TEST);
+
+    return window;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int w, int h)
