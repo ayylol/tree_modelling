@@ -9,20 +9,21 @@ uniform vec3 camPos;
 
 vec4 directionalLight()
 {
+	vec3 lightDirection = normalize(vec3(0,0.65,0.2));
+
 	// ambient lighting
-	float ambient = 0.35f;
+	float ambient = 0.2f;
 
 	// diffuse lighting
+    float diffuseStrength = 0.6;
 	vec3 normal = normalize(Normal);
-	vec3 lightDirection = normalize(vec3(0.3f, 1.0f, 0.0f));
-	float diffuse = max(dot(normal, lightDirection), 0.0f);
+	float diffuse = diffuseStrength*max(dot(normal, lightDirection), 0.0f);
 
 	// specular lighting
-	float specularLight = 0.50f;
+	float specularStrength = 0.8;
 	vec3 viewDirection = normalize(camPos - crntPos);
 	vec3 reflectionDirection = reflect(-lightDirection, normal);
-	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);
-	float specular = specAmount * specularLight;
+	float specular = specularStrength*pow(max(dot(viewDirection, reflectionDirection), 0.0f), 8);
 
 
 	return vec4(Color * (diffuse + ambient + specular),1.f);
