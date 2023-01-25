@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.22.2)
 project(tree_strands)
 
+# Export compile commands
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Use modern C++
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
