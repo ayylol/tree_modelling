@@ -1,4 +1,5 @@
 #include "tree/grid.h"
+#include "tree/implicit.h"
 #include <climits>
 #include <iostream>
 #include <glm/gtx/io.hpp>
@@ -92,6 +93,16 @@ void Grid::occupy_slot(ivec3 slot, float val){
         occupied.push_back(slot);
     }
 }
+void Grid::add_slot(ivec3 slot, float val){
+    if(!is_in_grid(slot)) {
+        //std::cout<<"outside of grid "<<slot<<std::endl;
+        return;
+    }
+    if ( get_in_grid(slot) == 0 ){
+        grid[slot.x][slot.y][slot.z] += val;
+        occupied.push_back(slot);
+    }
+}
 
 void Grid::occupy_line(vec3 start, vec3 end, float val)
 {
@@ -107,6 +118,23 @@ void Grid::occupy_path(std::vector<glm::vec3> path, float val)
     if (path.size()<2) return;
     for (int i = 0; i < path.size()-1; i++){
         occupy_line(path[i],path[i+1],val);
+    }
+}
+
+void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit)
+{
+    int n = std::ceil(implicit.cutoff/scale);
+    if (path.size()<2) return;
+    for (int i = 0; i < path.size()-1; i++) {
+        glm::ivec3 slot = pos_to_grid(path[i]);
+        for (int x = -n; x < n; x++) {
+          for (int y = -n; y < n; y++) {
+            for (int z = -n; z < n; z++) {
+              glm::ivec3 current_slot = slot + glm::ivec3(x, y, z);
+              add_slot(current_slot, implicit.eval(grid_to_pos(current_slot), path, i));
+            }
+          }
+        }
     }
 }
 

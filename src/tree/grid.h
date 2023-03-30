@@ -17,6 +17,7 @@
 #include "rendering/mesh.h"
 #include "rendering/VBO.h"
 #include "tree/skeleton.h"
+#include "tree/implicit.h"
 
 class Grid
 {
@@ -27,11 +28,17 @@ public:
         glm::vec3 back_bottom_left = {0.f,0.f,0.f}
         );
     Grid(const Skeleton& tree, float percent_overshoot, float scale_factor=1.f);
+
+    float get_scale(){return scale;}
     
     void occupy_pos(glm::vec3 pos, float val);
     void occupy_slot(glm::ivec3 pos, float val);
+    void add_slot(glm::ivec3 slot, float val);
     void occupy_line(glm::vec3 start, glm::vec3 end, float val);
     void occupy_path(std::vector<glm::vec3> path, float val);
+
+    // Implicit Filling
+    void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
 
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;
