@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
-#include <random>
-#include <chrono>
 #include <algorithm>
+#include <chrono>
+#include <random>
 #include <utility>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -13,21 +13,24 @@
 #include "rendering/mesh.h"
 
 #include "tree/grid.h"
+#include "tree/implicit.h"
 #include "tree/skeleton.h"
 
-#include <const.h>
 #include "util/color.h"
+#include "const.h"
 
 glm::vec3 random_color();
 
-class Strands{
+class Strands {
 public:
-    Strands(const Skeleton& tree, Grid& grid);
-    Mesh<Vertex> get_mesh() const;
-    void add_strand(size_t path_index);
-    void add_strands(unsigned int amount);
+  Strands(const Skeleton &tree, Grid &grid);
+  Mesh<Vertex> get_mesh() const;
+  void add_strand(size_t path_index);
+  void add_strands(unsigned int amount);
+
 private:
-    std::vector<std::vector<glm::vec3>> paths;
-    std::vector<std::vector<glm::vec3>> strands;
-    Grid& grid;
+  MetaBalls evalfunc;
+  std::vector<std::vector<glm::vec3>> paths;
+  std::vector<std::vector<glm::vec3>> strands;
+  Grid &grid;
 };

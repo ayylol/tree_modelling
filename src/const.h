@@ -7,6 +7,11 @@
 // Foggy
 #define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)
 
+/*
+// Test Camera
+#define FOCUS glm::vec3(0,1.f,0)
+#define DISTANCE 5.f
+*/
 
 // Tree specific constants
 #define FOCUS glm::vec3(0,1.5,0)
@@ -14,8 +19,8 @@
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50
-#define MAX_ANGLE 90.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
-#define ALPHA 0.5f
+#define MAX_ANGLE 90.f
+#define ALPHA 0.5f // Larger alpha makes distance more important vs angle
 
 /*
 // For poplar
@@ -27,7 +32,7 @@
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .05f
 #define NUM_TRIALS 100
-#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define MAX_ANGLE 200.f
 #define ALPHA 0.5f
 
 // For malus baccata columnaris
@@ -39,7 +44,7 @@
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .01f
 #define NUM_TRIALS 100
-#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define MAX_ANGLE 200.f
 #define ALPHA 0.5f
 
 // For nice tree
@@ -51,7 +56,7 @@
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .003f
 #define NUM_TRIALS 50
-#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define MAX_ANGLE 200.f
 #define ALPHA 0.1f
 
 // For bush ra17
@@ -63,7 +68,7 @@
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .001f
 #define NUM_TRIALS 30
-#define MAX_ANGLE 200.f // TODO WHY DOES INCREASING THIS MAKE IT TIGHTER???????
+#define MAX_ANGLE 200.f
 #define ALPHA 0.5f
 
 // For tall ellipsoid tree

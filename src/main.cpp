@@ -20,6 +20,7 @@
 #include "tree/grid.h"
 #include "tree/skeleton.h"
 #include "tree/strands.h"
+#include "tree/implicit.h"
 
 #include "const.h" // TODO TEMPORARY SOLUTION
 #include "util/stopwatch.h"
@@ -62,20 +63,39 @@ int main(int argc, char *argv[]) {
 
     // Grid
     Grid gr(tree, 0.01f, 1);
+    //Grid gr(glm::ivec3(40,40,40),0.05f,glm::vec3(-1.f,0.f,-1.f));
+    //Grid gr(glm::ivec3(400,400,400),0.005f,glm::vec3(-1.f,0.f,-1.f));
 
     // Tree detail
     Strands detail(tree, gr);
     sw.start();
     detail.add_strands(tree.leafs_size());
+    //detail.add_strand(0);
     sw.stop();
+    // TEST OCCUPY
+    /*
+    MetaBalls df(0.04);
+    std::vector<glm::vec3> test_path={
+        glm::vec3(0.2,0.1,0),
+        glm::vec3(0.2,0.15,0),
+        glm::vec3(0.23,0.2,0),
+        glm::vec3(0.19,0.25,0),
+    };
+    //gr.occupy_path(test_path, 1.f);
+    gr.fill_path(test_path, df);
+    */
+
+    //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
+    //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
 
     // Creating Meshes
     sw.start();
     // Mesh tree_skelly = tree.get_mesh();
     // Mesh detail_geom = detail.get_mesh();
-    // Mesh bound_geom = gr.get_bound_geom();
-    Mesh occupy_geom = gr.get_occupied_geom(0.3);
-    // Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
+    Mesh bound_geom = gr.get_bound_geom();
+    Mesh grid_geom = gr.get_grid_geom();
+    Mesh occupy_geom = gr.get_occupied_geom(0.00);
+    //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
     sw.stop();
 
     // GROUND PLANE
@@ -99,7 +119,8 @@ int main(int argc, char *argv[]) {
         // Draw the meshes here
         // tree_skelly.draw(flat_shader,camera, GL_LINES);
         // detail_geom.draw(flat_shader,camera, GL_LINES);
-        // bound_geom.draw(flat_shader,camera, GL_LINES);
+        bound_geom.draw(flat_shader,camera, GL_LINES);
+        //grid_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader, camera, GL_TRIANGLES);
         // occupy_dots.draw(flat_shader,camera, GL_POINTS);
         ground.draw(shader, camera, GL_TRIANGLES);
