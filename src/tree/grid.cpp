@@ -278,14 +278,14 @@ Mesh<Vertex> Grid::get_occupied_geom( float threshold ) const
     int current_index=0;
     for ( glm::ivec3 voxel : occupied ){
         // Grid space is occupied
-        if(get_in_grid(voxel) > threshold){ 
+        if(get_in_grid(voxel) >= threshold){ 
             // Get adjacent voxel contents
             vector<float> adj_content;
             bool visible = false;
             for ( auto norm : face_norms){
                 float content = get_in_grid(voxel+norm);
                 adj_content.push_back(content);
-                if( content == 0 ) visible = true;
+                if( content <= threshold ) visible = true;
             }
             if (!visible) continue; // Completely occluded do not add vertices
 
@@ -299,7 +299,7 @@ Mesh<Vertex> Grid::get_occupied_geom( float threshold ) const
             }
             // Generate Indices
             for (int face_i=0; face_i<cube_indices.size(); face_i++){
-                if (!adj_content[face_i]){
+                if (adj_content[face_i]<=threshold){
                     for (int index=0; index<cube_indices[face_i].size(); index++){
                         indices.push_back(cube_indices[face_i][index]+current_index);
                     }

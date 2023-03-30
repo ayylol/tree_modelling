@@ -92,9 +92,9 @@ int main(int argc, char *argv[]) {
     sw.start();
     // Mesh tree_skelly = tree.get_mesh();
     // Mesh detail_geom = detail.get_mesh();
-    Mesh bound_geom = gr.get_bound_geom();
-    Mesh grid_geom = gr.get_grid_geom();
-    Mesh occupy_geom = gr.get_occupied_geom(0.00);
+    //Mesh bound_geom = gr.get_bound_geom();
+    //Mesh grid_geom = gr.get_grid_geom();
+    Mesh occupy_geom = gr.get_occupied_geom(0.01);
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
     sw.stop();
 
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
         // Draw the meshes here
         // tree_skelly.draw(flat_shader,camera, GL_LINES);
         // detail_geom.draw(flat_shader,camera, GL_LINES);
-        bound_geom.draw(flat_shader,camera, GL_LINES);
+        //bound_geom.draw(flat_shader,camera, GL_LINES);
         //grid_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader, camera, GL_TRIANGLES);
         // occupy_dots.draw(flat_shader,camera, GL_POINTS);
