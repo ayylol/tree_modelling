@@ -27,3 +27,12 @@ public:
 private:
   float potential(float distance);
 };
+
+class Blinn : public DistanceField {
+public:
+  Blinn(float radius, float blobiness, float cutoff_val);
+private:
+  float radius;
+  float blobiness;
+  float potential(float distance);
+};

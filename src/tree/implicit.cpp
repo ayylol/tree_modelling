@@ -16,6 +16,7 @@ float DistanceField::eval(glm::vec3 position, const std::vector<glm::vec3> &stra
 float DistanceField::distance(glm::vec3 position, const std::vector<glm::vec3> &strand,
            std::size_t hint) {
     glm::vec3 closest = closest_on_path(position, strand, hint, 3);
+    //glm::vec3 closest = closest_node_on_path(position, strand, hint, 3).second;
     return glm::distance(position,closest);
 }
 
@@ -24,4 +25,13 @@ float MetaBalls::potential(float distance){
         return 1-3*std::pow(distance/cutoff,2);
     }
     return (3.f/2)*std::pow((1-distance/cutoff),2);
+}
+
+Blinn::Blinn(float radius, float blobiness, float cutoff_val)
+    : radius(radius), blobiness(blobiness),
+      DistanceField(radius * std::sqrt(std::log(cutoff_val) / blobiness + 1)) {}
+
+float Blinn::potential(float distance){
+    return std::exp(blobiness *
+                    (std::pow(distance, 2) / std::pow(radius, 2) - 1));
 }

@@ -29,7 +29,7 @@ public:
   void add_strands(unsigned int amount);
 
 private:
-  MetaBalls evalfunc;
+  Blinn evalfunc;
   std::vector<std::vector<glm::vec3>> paths;
   std::vector<std::vector<glm::vec3>> strands;
   Grid &grid;
