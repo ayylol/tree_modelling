@@ -153,7 +153,7 @@ void Strands::add_strand(size_t path_index) {
 
     // closest_index=target_index;
     strand.push_back(trials[best_trial].head);
-    closest_index = closest_on_path(strand.back(), path, target_index, 5).first;
+    closest_index = closest_node_on_path(strand.back(), path, target_index, 5).first;
     /*
     std::cout<<std::endl;
     std::cout<<"FOUND: "<<closest_index<<" "<<glm::distance(strand.back(),
@@ -190,49 +190,6 @@ Mesh<Vertex> Strands::get_mesh() const {
   return Mesh(vertices, indices);
 }
 
-std::pair<size_t, glm::vec3> closest_on_path(glm::vec3 point,
-                                             const std::vector<glm::vec3> &path,
-                                             int start_index, int overshoot) {
-  // Initialize vars for hill-climb
-  int current_closest_index = start_index;
-  glm::vec3 current_closest_point = path[start_index];
-  float lowest_dist2 = glm::distance2(point, current_closest_point);
-
-  int point_checking = 1;
-  int overshot = -1;
-
-  // Look for closest point on path
-  while (overshoot >= overshot) {
-    float last_lowest_dist2 = lowest_dist2;
-    // std::cout<<"checking "<<start_index + point_checking <<" and
-    // "<<start_index-point_checking<<std::endl;
-    if (start_index + point_checking <= path.size() - 1 &&
-        glm::distance2(point, path[start_index + point_checking]) <
-            lowest_dist2) {
-      lowest_dist2 = glm::distance2(point, path[start_index + point_checking]);
-      current_closest_index = start_index + point_checking;
-    }
-    if (start_index - point_checking >= 0 &&
-        glm::distance2(point, path[start_index - point_checking]) <
-            lowest_dist2) {
-      lowest_dist2 = glm::distance2(point, path[start_index - point_checking]);
-      current_closest_index = start_index - point_checking;
-    }
-
-    // Increase overshot counter or reset it
-    if (lowest_dist2 == last_lowest_dist2) {
-      overshot++;
-    } else {
-      overshot = -1;
-    }
-    point_checking++;
-  }
-
-  // Look for closest point on two lines adjacent to closest index
-  // TODO FOR NOW JUST THE POINTS ON THE PATH
-  current_closest_point = path[current_closest_index];
-  return std::make_pair(current_closest_index, current_closest_point);
-}
 
 // Non-member helper functions
 

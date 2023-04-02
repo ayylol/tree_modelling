@@ -9,6 +9,7 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/io.hpp>
 
 #include "rendering/EBO.h"
 #include "rendering/VAO.h"
@@ -24,6 +25,7 @@
 
 #include "const.h" // TODO TEMPORARY SOLUTION
 #include "util/stopwatch.h"
+#include "util/geometry.h"
 
 // Default screen dimensions
 const unsigned int DEFAULT_WIDTH = 800;
@@ -75,15 +77,21 @@ int main(int argc, char *argv[]) {
     // TEST OCCUPY
     /*
     MetaBalls df(0.04);
-    std::vector<glm::vec3> test_path={
-        glm::vec3(0.2,0.1,0),
-        glm::vec3(0.2,0.15,0),
-        glm::vec3(0.23,0.2,0),
-        glm::vec3(0.19,0.25,0),
+    std::vector<glm::vec3> test_path = {
+          glm::vec3(0.2,0.1,0),
+          glm::vec3(0.2,0.15,0),
+          glm::vec3(0.23,0.2,0),
+          glm::vec3(0.19,0.25,0),
+        //glm::vec3(0.2, 0.1, 0),
+        //glm::vec3(0.2, 0.2, 0),
     };
-    //gr.occupy_path(test_path, 1.f);
-    gr.fill_path(test_path, df);
+    gr.occupy_path(test_path, 1.f);
     */
+
+    //glm::vec3 test_pos(0.3,0.3,-0.1);
+    //glm::vec3 closest = closest_on_path(test_pos,test_path,0,4);
+    //gr.occupy_line(test_pos, closest,1.f);
+    //gr.fill_path(test_path, df);
 
     //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
     //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
@@ -92,7 +100,7 @@ int main(int argc, char *argv[]) {
     sw.start();
     // Mesh tree_skelly = tree.get_mesh();
     // Mesh detail_geom = detail.get_mesh();
-    //Mesh bound_geom = gr.get_bound_geom();
+    Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
     Mesh occupy_geom = gr.get_occupied_geom(0.01);
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
@@ -119,7 +127,7 @@ int main(int argc, char *argv[]) {
         // Draw the meshes here
         // tree_skelly.draw(flat_shader,camera, GL_LINES);
         // detail_geom.draw(flat_shader,camera, GL_LINES);
-        //bound_geom.draw(flat_shader,camera, GL_LINES);
+        bound_geom.draw(flat_shader,camera, GL_LINES);
         //grid_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader, camera, GL_TRIANGLES);
         // occupy_dots.draw(flat_shader,camera, GL_POINTS);

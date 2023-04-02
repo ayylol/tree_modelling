@@ -15,7 +15,7 @@ float DistanceField::eval(glm::vec3 position, const std::vector<glm::vec3> &stra
 // TODO: Should be general
 float DistanceField::distance(glm::vec3 position, const std::vector<glm::vec3> &strand,
            std::size_t hint) {
-    glm::vec3 closest = closest_on_path(position, strand, hint, 3).second;
+    glm::vec3 closest = closest_on_path(position, strand, hint, 3);
     return glm::distance(position,closest);
 }
 
