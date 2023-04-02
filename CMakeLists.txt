@@ -47,7 +47,7 @@ target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${DEFINITIONS})
 # FOR DEBUGGING
-#target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic) 
+# target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic) 
 # FOR PERFORMANCE
 target_compile_options(${PROJECT_NAME} PRIVATE -O3) 
 

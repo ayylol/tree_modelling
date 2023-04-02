@@ -13,8 +13,8 @@ std::pair<size_t, glm::vec3> closest_on_path(glm::vec3 point,
                                              int start_index, int overshoot);
                                              */
 
-Strands::Strands(const Skeleton &tree, Grid &grid) : grid(grid), evalfunc(0.0f) {
-  evalfunc.cutoff=grid.get_scale()*3;
+Strands::Strands(const Skeleton &tree, Grid &grid) : grid(grid), evalfunc(0.005f,-0.2,0.1) {
+  //evalfunc.cutoff=grid.get_scale()*3;
   for (size_t i = 0; i < tree.leafs_size(); i++) {
     paths.push_back(tree.get_strand(i));
   }

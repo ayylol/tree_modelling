@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 
     // Grid
     //Grid gr(tree, 0.01f, 1);
-    Grid gr(tree, 0.01f, 0.8);
+    Grid gr(tree, 0.1f, 0.6);
     //Grid gr(glm::ivec3(40,40,40),0.05f,glm::vec3(-1.f,0.f,-1.f));
     //Grid gr(glm::ivec3(400,400,400),0.005f,glm::vec3(-1.f,0.f,-1.f));
 
@@ -73,26 +73,28 @@ int main(int argc, char *argv[]) {
     Strands detail(tree, gr);
     sw.start();
     detail.add_strands(tree.leafs_size());
+    //detail.add_strands(100);
     //detail.add_strand(0);
     sw.stop();
     // TEST OCCUPY
-    /*
-    MetaBalls df(0.04);
+    //Blinn df(0.1,-0.3,0.1);
+    Blinn df(0.01,-0.3,0.1);
     std::vector<glm::vec3> test_path = {
-          glm::vec3(0.2,0.1,0),
-          glm::vec3(0.2,0.15,0),
-          glm::vec3(0.23,0.2,0),
-          glm::vec3(0.19,0.25,0),
-        //glm::vec3(0.2, 0.1, 0),
-        //glm::vec3(0.2, 0.2, 0),
+         glm::vec3(0.23, 0.1, 0),
+         glm::vec3(0.2, 0.6, 0),
+         glm::vec3(-0.2, 0.8, 0.3),
     };
-    gr.occupy_path(test_path, 1.f);
-    */
+    std::vector<glm::vec3> test_path2 = {
+         glm::vec3(-0.4, 0.1, 0),
+         glm::vec3(0.2, 0.8, 0),
+    };
+    //gr.occupy_path(test_path, 1.f);
 
     //glm::vec3 test_pos(0.3,0.3,-0.1);
     //glm::vec3 closest = closest_on_path(test_pos,test_path,0,4);
     //gr.occupy_line(test_pos, closest,1.f);
     //gr.fill_path(test_path, df);
+    //gr.fill_path(test_path2, df);
 
     //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
     //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
@@ -103,10 +105,12 @@ int main(int argc, char *argv[]) {
     // Mesh detail_geom = detail.get_mesh();
     Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
-    //Mesh occupy_geom = gr.get_occupied_geom(0.15);
-    Mesh occupy_geom = gr.get_occupied_geom(0.0);
+    Mesh occupy_geom = gr.get_occupied_geom(0.6);
+    //Mesh occupy_geom = gr.get_occupied_geom(0.01);
+    //Mesh occupy_geom = gr.get_occupied_geom(0.0);
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
     sw.stop();
+    //gr.export_data("data.txt");
 
     // GROUND PLANE
     glm::vec3 ground_color = glm::vec3(0, 0.65, 0);

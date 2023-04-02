@@ -1,4 +1,5 @@
 #include "tree/grid.h"
+#include "glm/gtx/dual_quaternion.hpp"
 #include "tree/implicit.h"
 #include <climits>
 #include <glm/gtx/io.hpp>
@@ -86,13 +87,12 @@ void Grid::occupy_slot(ivec3 slot, float val) {
 }
 void Grid::add_slot(ivec3 slot, float val) {
   if (!is_in_grid(slot)) {
-    // std::cout<<"outside of grid "<<slot<<std::endl;
     return;
   }
   if (get_in_grid(slot) == 0) {
-    grid[slot.x][slot.y][slot.z] += val;
     occupied.push_back(slot);
   }
+  grid[slot.x][slot.y][slot.z] += val;
 }
 
 void Grid::occupy_line(vec3 start, vec3 end, float val) {
@@ -117,7 +117,8 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit &implicit) {
     return;
   for (int i = 0; i < path.size() - 1; i++) {
     // Find axis with most variance.
-    glm::vec3 variance = glm::abs(path[i + 1] - path[i]);
+    vec3 diff = path[i + 1] - path[i];
+    vec3 variance = glm::abs(diff); 
     int main_axis = 0;
     if (variance.y > variance.x && variance.y > variance.z) {
       main_axis = 1;
@@ -128,25 +129,32 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit &implicit) {
     int axis_2 = (main_axis + 2) % 3;
     // Iterate along axis with largest variance
     // add cutoff distance to both endpoints (maybe at start?)
-    vector<ivec3> voxels = get_voxels_line(path[i], path[i + 1]);
+    vec3 dir = glm::normalize(diff);
+    #define SEGMENT_OVERSHOOT 2.5f
+    vec3 segment_start = path[i] - diff * implicit.cutoff * SEGMENT_OVERSHOOT;
+    vec3 segment_end = path[i + 1] + diff * implicit.cutoff * SEGMENT_OVERSHOOT;
+    vector<ivec3> voxels = get_voxels_line(segment_start, segment_end);
     int last_main_axis = path[0][main_axis] - 1;
     for (int j = 0; j < voxels.size(); j++) {
-      int l1, l2; // Voxel filling limits
+      int l1, l2;                                 // Voxel filling limits
       if (last_main_axis != path[0][main_axis]) { // Add all
         l1 = implicit.cutoff/scale;
         l2 = implicit.cutoff/scale;
       } else { // Add extra
+        std::cout<<"move along another axis"<<std::endl;
         last_main_axis = path[0][main_axis];
         continue;
       }
-      //std::cout<<l1<<" "<<l2<<std::endl;
-      for (int i1 = -l1; i1 < l1; i1++) {
-        for (int i2 = -l2; i2 < l2; i2++) {
+      for (int i1 = -l1; i1 <= l1; i1++) {
+        for (int i2 = -l2; i2 <= l2; i2++) {
           ivec3 slot_to_fill = voxels[j];
           slot_to_fill[axis_1] += i1;
           slot_to_fill[axis_2] += i2;
-          occupy_slot(slot_to_fill,
-                      implicit.eval(grid_to_pos(slot_to_fill), path, i));
+          float val = implicit.eval(grid_to_pos(slot_to_fill), path, i);
+          if (val != 0) {
+            add_slot(slot_to_fill, val);
+            //occupy_slot(slot_to_fill, 1);
+          }
         }
       }
       last_main_axis = path[0][main_axis];
@@ -185,8 +193,7 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {
   }
 
   // loop while position is on line
-  while (glm::distance2(start, pos_cursor) < length2 &&
-         is_in_grid(voxel_cursor)) {
+  while (glm::distance2(start, pos_cursor) < length2){
     float min_m = FLT_MAX;
     ivec3 min_norm;
 
@@ -221,7 +228,6 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {
     // Update cursor and position
     pos_cursor += dir * min_m; // scale to not land right on border
     voxel_cursor += min_norm;
-
     voxel_list.push_back(voxel_cursor);
   }
   // Preventing overshoot
@@ -429,6 +435,11 @@ void Grid::export_data(const char *filename) {
   std::cout << "Exporting Data...";
   std::cout.flush();
   std::ofstream out(filename);
+  for (glm::ivec3 voxel : occupied) {
+    out << voxel.x << " " << voxel.y << " " << voxel.z << " "
+        << grid[voxel.x][voxel.y][voxel.z] << "\n";
+  }
+  /*
   for (int k = 0; k < grid[0][0].size(); k++) {
     for (int j = 0; j < grid[0].size(); j++) {
       for (int i = 0; i < grid.size(); i++) {
@@ -438,6 +449,7 @@ void Grid::export_data(const char *filename) {
       }
     }
   }
+  */
   out.close();
   std::cout << " Done" << std::endl;
 }
