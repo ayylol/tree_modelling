@@ -18,7 +18,6 @@ Strands::Strands(const Skeleton &tree, Grid &grid) : grid(grid), evalfunc(0.0f) 
   for (size_t i = 0; i < tree.leafs_size(); i++) {
     paths.push_back(tree.get_strand(i));
   }
-  // std::cout<<paths.size()<<std::endl;
 }
 void Strands::add_strands(unsigned int amount) {
   std::cout << "Generating Strands...";

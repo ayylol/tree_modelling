@@ -64,7 +64,8 @@ int main(int argc, char *argv[]) {
     sw.stop();
 
     // Grid
-    Grid gr(tree, 0.01f, 1);
+    //Grid gr(tree, 0.01f, 1);
+    Grid gr(tree, 0.01f, 0.8);
     //Grid gr(glm::ivec3(40,40,40),0.05f,glm::vec3(-1.f,0.f,-1.f));
     //Grid gr(glm::ivec3(400,400,400),0.005f,glm::vec3(-1.f,0.f,-1.f));
 
@@ -102,7 +103,8 @@ int main(int argc, char *argv[]) {
     // Mesh detail_geom = detail.get_mesh();
     Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
-    Mesh occupy_geom = gr.get_occupied_geom(0.01);
+    //Mesh occupy_geom = gr.get_occupied_geom(0.15);
+    Mesh occupy_geom = gr.get_occupied_geom(0.0);
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
     sw.stop();
 
