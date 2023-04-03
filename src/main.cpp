@@ -78,7 +78,9 @@ int main(int argc, char *argv[]) {
     sw.stop();
     // TEST OCCUPY
     //Blinn df(0.1,-0.3,0.1);
-    Blinn df(0.01,-0.3,0.1);
+    //Blinn df(0.01,-0.3,0.1);
+    Blinn df(0.01,-0.03,0.1);
+    //MetaBalls df(0.1);
     std::vector<glm::vec3> test_path = {
          glm::vec3(0.23, 0.1, 0),
          glm::vec3(0.2, 0.6, 0),
@@ -88,13 +90,26 @@ int main(int argc, char *argv[]) {
          glm::vec3(-0.4, 0.1, 0),
          glm::vec3(0.2, 0.8, 0),
     };
+    std::vector<glm::vec3> test_path3 = {
+         glm::vec3(-0.4, 0.1, 0),
+         glm::vec3(-0.2, 0.8, 0),
+    };
+    std::vector<glm::vec3> test_path4 = {
+         glm::vec3(-0.4, 0.1, 0),
+         glm::vec3(-0.4, 0.8, 0),
+    };
     //gr.occupy_path(test_path, 1.f);
 
     //glm::vec3 test_pos(0.3,0.3,-0.1);
     //glm::vec3 closest = closest_on_path(test_pos,test_path,0,4);
+ 
     //gr.occupy_line(test_pos, closest,1.f);
     //gr.fill_path(test_path, df);
+
+    //gr.occupy_path(test_path2,1);
     //gr.fill_path(test_path2, df);
+    //gr.fill_path(test_path3, df);
+    //gr.fill_path(test_path4, df);
 
     //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
     //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
@@ -105,10 +120,14 @@ int main(int argc, char *argv[]) {
     // Mesh detail_geom = detail.get_mesh();
     Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
-    Mesh occupy_geom = gr.get_occupied_geom(0.6);
-    //Mesh occupy_geom = gr.get_occupied_geom(0.01);
+
+    //Mesh occupy_geom = gr.get_occupied_geom(0.6);
+    //Mesh occupy_geom = gr.get_occupied_geom(0.1);
+    //Mesh occupy_geom = gr.get_occupied_geom(1.f);
     //Mesh occupy_geom = gr.get_occupied_geom(0.0);
+
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
+    Mesh occupy_dots = gr.get_occupied_geom_points(0.0);
     sw.stop();
     //gr.export_data("data.txt");
 
@@ -135,8 +154,8 @@ int main(int argc, char *argv[]) {
         // detail_geom.draw(flat_shader,camera, GL_LINES);
         bound_geom.draw(flat_shader,camera, GL_LINES);
         //grid_geom.draw(flat_shader,camera, GL_LINES);
-        occupy_geom.draw(shader, camera, GL_TRIANGLES);
-        // occupy_dots.draw(flat_shader,camera, GL_POINTS);
+        //occupy_geom.draw(shader, camera, GL_TRIANGLES);
+        occupy_dots.draw(flat_shader,camera, GL_POINTS);
         ground.draw(shader, camera, GL_TRIANGLES);
 
         glfwSwapBuffers(window);
@@ -220,8 +239,14 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) // ZOOM IN
         camera.move_distance(-0.2f * SENS);
     // PAN FOCUS
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) // PAN UP
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) // PAN UP
         camera.move_focus(glm::vec3(0.f, 0.05f, 0.f) * SENS);
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) // PAN DOWN
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) // PAN DOWN
         camera.move_focus(glm::vec3(0.f, -0.05f, 0.f) * SENS);
+
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) // PAN UP
+        camera.pan_side(-0.05f * SENS);
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) // PAN DOWN
+        camera.pan_side(0.05f * SENS);
+    
 }
