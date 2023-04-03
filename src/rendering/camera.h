@@ -19,6 +19,7 @@ class Camera
         void reset();
         void set_aspect_ratio(int width, int height);
         void move_focus(glm::vec3 move);
+        void pan_side(float amount);
         void move_distance(float amount);
         void rotate_vert(float amount);
         void rotate_horz(float amount);

@@ -1,6 +1,8 @@
 #include "tree/grid.h"
+#include "glm/geometric.hpp"
 #include "glm/gtx/dual_quaternion.hpp"
 #include "tree/implicit.h"
+#include "util/geometry.h"
 #include <climits>
 #include <glm/gtx/io.hpp>
 #include <iostream>
@@ -131,15 +133,18 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit &implicit) {
     // add cutoff distance to both endpoints (maybe at start?)
     vec3 dir = glm::normalize(diff);
     #define SEGMENT_OVERSHOOT 2.5f
+    //#define SEGMENT_OVERSHOOT 1.f
     vec3 segment_start = path[i] - diff * implicit.cutoff * SEGMENT_OVERSHOOT;
     vec3 segment_end = path[i + 1] + diff * implicit.cutoff * SEGMENT_OVERSHOOT;
+    //vec3 segment_start = path[i];
+    //vec3 segment_end = path[i + 1];
     vector<ivec3> voxels = get_voxels_line(segment_start, segment_end);
     int last_main_axis = path[0][main_axis] - 1;
     for (int j = 0; j < voxels.size(); j++) {
       int l1, l2;                                 // Voxel filling limits
       if (last_main_axis != path[0][main_axis]) { // Add all
-        l1 = implicit.cutoff/scale;
-        l2 = implicit.cutoff/scale;
+        l1 = implicit.cutoff/scale*1.5;
+        l2 = implicit.cutoff/scale*1.5;
       } else { // Add extra
         std::cout<<"move along another axis"<<std::endl;
         last_main_axis = path[0][main_axis];
@@ -152,16 +157,27 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit &implicit) {
           slot_to_fill[axis_2] += i2;
           float val = implicit.eval(grid_to_pos(slot_to_fill), path, i);
           if (val != 0) {
-            add_slot(slot_to_fill, val);
-            //occupy_slot(slot_to_fill, 1);
+             add_slot(slot_to_fill, val);
+          } else {
+            /*
+            vec3 gridpos = grid_to_pos(slot_to_fill);
+            vec3 closest = closest_on_line(gridpos, path[i], path[i + 1]);
+            std::cout<<"ZERO: "<<glm::distance(gridpos,closest)<<std::endl;
+            */
           }
+          // TODO: FOR TESTING
+          /*
+          vec3 gridpos = grid_to_pos(slot_to_fill);
+          vec3 closest = closest_on_line(gridpos, path[i], path[i+1]);
+          if (glm::distance(gridpos, closest) <= implicit.cutoff) {
+            occupy_slot(slot_to_fill, 1);
+          }
+            //occupy_slot(slot_to_fill, 1);
+        */
         }
       }
       last_main_axis = path[0][main_axis];
     }
-    /*
-    implicit.eval(grid_to_pos(current_slot), path, i));
-    */
   }
 }
 
@@ -238,13 +254,26 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {
 }
 
 Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold) const {
+  const vec3 fullcol(1,0,0);
+  const vec3 nocol(0,0,1);
   vector<VertFlat> vertices;
   vector<GLuint> indices;
+  float max_val = 0.f;
   for (glm::ivec3 voxel : occupied) {
-    if (get_in_grid(voxel) > threshold) {
+    float val = get_in_grid(voxel);
+    if (val > max_val) {
+      max_val = val;
+    }
+  }
+  for (glm::ivec3 voxel : occupied) {
+    float val = get_in_grid(voxel);
+    if (val > threshold) {
+      float intensity = val/max_val;
+      vec3 col = (1-intensity)*nocol+intensity*fullcol;
       vec3 current_pos =
           back_bottom_left + vec3(voxel) * scale + vec3(1, 1, 1) * (scale / 2);
-      vertices.push_back(VertFlat{current_pos, random_color()});
+      //vertices.push_back(VertFlat{current_pos, random_color()});
+      vertices.push_back(VertFlat{current_pos, col});
     }
   }
   for (size_t i = 0; i < vertices.size(); i++) {
