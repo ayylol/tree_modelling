@@ -27,6 +27,10 @@ void Camera::set_aspect_ratio(int width, int height) {
 
 void Camera::move_focus(glm::vec3 move) { focus += move; }
 
+void Camera::pan_fwd(float amount){
+  glm::vec3 dir = glm::normalize(get_matrix() * glm::vec4(0, 0, 1, 0));
+  move_focus(dir * amount);
+}
 void Camera::pan_side(float amount) {
   glm::vec3 dir = get_matrix() * glm::vec4(1, 0, 0, 0);
   dir.y = 0;
