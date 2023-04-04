@@ -74,11 +74,12 @@ int main(int argc, char *argv[]) {
     // Blinn df(0.01,-0.3,0.1); // Ok with full tree
     // Blinn df(0.01, -0.03, 0.1);
     // Blinn df(0.005f,-0.2,0.1); // Ok with Trees
-    Blinn df(0.005f,-0.05,0.1); // Ok with Trees
-    // Blinn df(0.01f,-.01,0.01); // Too much for trees
+    //Blinn df(0.005f,-0.05,0.1); // Good with Trees
+    //Blinn df(0.01f,-.01,0.01); // Too much for trees
+    Blinn df(0.02f,-.034,0.01); // Too much for trees (Good with 1.f threshold)
     Strands detail(tree, gr, df);
     sw.start();
-    detail.add_strands(tree.leafs_size());
+    //detail.add_strands(tree.leafs_size());
     //detail.add_strands(10);
     //detail.add_strand(0);
     sw.stop();
@@ -104,8 +105,8 @@ int main(int argc, char *argv[]) {
     glm::vec3 p1(0,0.3,0);
     glm::vec3 p2(0,0.48,0);
     //glm::vec3 p2(0.1,0.25,0);
-    //gr.fill_point(p1,df);
-    //gr.fill_point(p2,df);
+    gr.fill_point(p1,df);
+    gr.fill_point(p2,df);
 
     //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
     //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
@@ -221,28 +222,32 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // RESET VIEW
         camera.reset();
     // ROTATE AROUND FOCUS
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // ROTATE UP
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) // ROTATE UP
         camera.rotate_vert(0.1f * SENS);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // ROTATE DOWN
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) // ROTATE DOWN
         camera.rotate_vert(-0.1f * SENS);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // ROTATE LEFT
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) // ROTATE LEFT
         camera.rotate_horz(-0.1f * SENS);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // ROTATE RIGHT
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) // ROTATE RIGHT
         camera.rotate_horz(0.1f * SENS);
     // ZOOM BOOM ARM
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) // ZOOM OUT
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) // ZOOM OUT
         camera.move_distance(0.2f * SENS);
-    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) // ZOOM IN
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) // ZOOM IN
         camera.move_distance(-0.2f * SENS);
     // PAN FOCUS
-    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) // PAN UP
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) // PAN UP
         camera.move_focus(glm::vec3(0.f, 0.05f, 0.f) * SENS);
-    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) // PAN DOWN
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) // PAN DOWN
         camera.move_focus(glm::vec3(0.f, -0.05f, 0.f) * SENS);
 
-    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) // PAN UP
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // PAN FWD
+        camera.pan_fwd(0.08f * SENS);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // PAN BACK
+        camera.pan_fwd(-0.08f * SENS);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // PAN LEFT
         camera.pan_side(-0.05f * SENS);
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) // PAN DOWN
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // PAN RIGHT
         camera.pan_side(0.05f * SENS);
     
 }
