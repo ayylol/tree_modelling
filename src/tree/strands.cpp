@@ -108,7 +108,6 @@ void Strands::add_strand(size_t path_index) {
       glm::vec3 trial_head =
           start + SEGMENT_LENGTH * random_vector(canonical_direction,
                                                  glm::radians(MAX_ANGLE));
-      #define REJECT_VAL 1.f
       float val = grid.get_in_pos(trial_head);
       //if (!grid.line_occluded(start, trial_head)) { // Original validation condition
       if (val<=REJECT_VAL) {

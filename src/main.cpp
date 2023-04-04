@@ -70,13 +70,7 @@ int main(int argc, char *argv[]) {
     //Grid gr(glm::ivec3(400,400,400),0.005f,glm::vec3(-1.f,0.f,-1.f));
 
     // Tree detail
-    // Blinn df(0.1,-0.3,0.1);
-    // Blinn df(0.01,-0.3,0.1); // Ok with full tree
-    // Blinn df(0.01, -0.03, 0.1);
-    //Blinn df(0.007f,-0.2,0.05); // Ok with Trees (not good with new reject condition)
-    Blinn df(0.005f,-1.,0.05); // 
-    //Blinn df(0.005f,-0.05,0.1); // Good with Trees (very thick) try 1.f threshold
-    //Blinn df(0.01f,-.01,0.01); // Too much for trees
+    Blinn df(RADIUS,BLOBINESS,CUTOFF_VAL); // 
     //Blinn df(0.02f,-.034,0.01); // Too much for trees (Good with 1.f threshold) (good for other examples)
     Strands detail(tree, gr, df);
     sw.start();
