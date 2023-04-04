@@ -74,39 +74,29 @@ int main(int argc, char *argv[]) {
     // Blinn df(0.01,-0.3,0.1); // Ok with full tree
     // Blinn df(0.01, -0.03, 0.1);
     // Blinn df(0.005f,-0.2,0.1); // Ok with Trees
-    //Blinn df(0.005f,-0.05,0.1); // Good with Trees
+    Blinn df(0.005f,-0.05,0.1); // Good with Trees
     //Blinn df(0.01f,-.01,0.01); // Too much for trees
-    Blinn df(0.02f,-.034,0.01); // Too much for trees (Good with 1.f threshold)
+    //Blinn df(0.02f,-.034,0.01); // Too much for trees (Good with 1.f threshold) (good for other examples)
     Strands detail(tree, gr, df);
     sw.start();
-    //detail.add_strands(tree.leafs_size());
+    detail.add_strands(tree.leafs_size());
     //detail.add_strands(10);
     //detail.add_strand(0);
     sw.stop();
     // TEST OCCUPY
-    // MetaBalls df(0.1);
     std::vector<glm::vec3> test_path = {
          glm::vec3(0.23, 0.1, 0),
          glm::vec3(0.2, 0.6, 0),
          glm::vec3(-0.2, 0.8, 0.3),
     };
-    std::vector<glm::vec3> test_path2 = {
-         glm::vec3(-0.4, 0.1, 0),
-         glm::vec3(0.2, 0.8, 0),
-    };
-    std::vector<glm::vec3> test_path3 = {
-         glm::vec3(-0.4, 0.1, 0),
-         glm::vec3(-0.2, 0.8, 0),
-    };
-    std::vector<glm::vec3> test_path4 = {
-         glm::vec3(-0.4, 0.1, 0),
-         glm::vec3(-0.4, 0.8, 0),
-    };
     glm::vec3 p1(0,0.3,0);
     glm::vec3 p2(0,0.48,0);
-    //glm::vec3 p2(0.1,0.25,0);
-    gr.fill_point(p1,df);
-    gr.fill_point(p2,df);
+    glm::vec3 p3(-0.1,0.35,0.18);
+    glm::vec3 p4(0.2,0.35,0.18);
+    //gr.fill_point(p1,df);
+    //gr.fill_point(p2,df);
+    //gr.fill_line(p1,p2,df);
+    //gr.fill_line(p3,p4,df);
 
     //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
     //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
@@ -117,12 +107,7 @@ int main(int argc, char *argv[]) {
     // Mesh detail_geom = detail.get_mesh();
     //Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
-
-    //Mesh occupy_geom = gr.get_occupied_geom(0.5f);
-    //Mesh occupy_geom = gr.get_occupied_geom(0.0f);
-    //Mesh occupy_geom = gr.get_occupied_geom(0.7f);
     Mesh occupy_geom = gr.get_occupied_geom(1.f);
-
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.0);
     sw.stop();
