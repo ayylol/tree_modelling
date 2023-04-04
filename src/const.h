@@ -14,13 +14,19 @@
 */
 
 // Tree specific constants
-#define FOCUS glm::vec3(0,1.5,0)
+#define FOCUS glm::vec3(0, 1.5, 0)
 #define DISTANCE 5.f
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50
 #define MAX_ANGLE 90.f
 #define ALPHA 0.5f // Larger alpha makes distance more important vs angle
+// IMPLICIT CONSTANTS
+#define RADIUS 0.005f
+#define BLOBINESS -1.f
+#define CUTOFF_VAL 0.05f
+//#define REJECT_VAL 1.f
+#define REJECT_VAL 2.f
 
 /*
 // For poplar
