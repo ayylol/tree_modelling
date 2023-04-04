@@ -64,9 +64,8 @@ int main(int argc, char *argv[]) {
     sw.stop();
 
     // Grid
-    //Grid gr(tree, 0.01f, 1);
-    Grid gr(tree, 0.1f, 0.6);
-    //Grid gr(glm::ivec3(40,40,40),0.05f,glm::vec3(-1.f,0.f,-1.f));
+    //Grid gr(tree, 0.1f);
+    Grid gr(tree, 0.1f, GRIDSCALEFACTOR);
     //Grid gr(glm::ivec3(400,400,400),0.005f,glm::vec3(-1.f,0.f,-1.f));
 
     // Tree detail
@@ -103,11 +102,11 @@ int main(int argc, char *argv[]) {
     // Mesh detail_geom = detail.get_mesh();
     //Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
-    Mesh occupy_geom = gr.get_occupied_geom(1.f);
+    Mesh occupy_geom = gr.get_occupied_geom(SURFACE_VAL);
     //Mesh occupy_dots = gr.get_occupied_geom_points(1.0);
     //Mesh strands = detail.get_mesh();
     sw.stop();
-    //gr.export_data("data.txt");
+    // gr.export_data("data.txt");
 
     // GROUND PLANE
     glm::vec3 ground_color = glm::vec3(0, 0.65, 0);
@@ -218,17 +217,10 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) // ZOOM IN
         camera.move_distance(-0.2f * SENS);
     // PAN FOCUS
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) // PAN UP
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // PAN UP
         camera.move_focus(glm::vec3(0.f, 0.05f, 0.f) * SENS);
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) // PAN DOWN
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // PAN DOWN
         camera.move_focus(glm::vec3(0.f, -0.05f, 0.f) * SENS);
-
-    /*
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // PAN FWD
-        camera.pan_fwd(0.08f * SENS);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // PAN BACK
-        camera.pan_fwd(-0.08f * SENS);
-        */
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // PAN LEFT
         camera.pan_side(-0.05f * SENS);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // PAN RIGHT

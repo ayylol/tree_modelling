@@ -160,6 +160,7 @@ void Strands::add_strand(size_t path_index) {
     */
   }
   // Occupy strand path
+  if (strand.size()<=2) return;
   strands.push_back(strand);
   //grid.occupy_path(strand, 1);
   //grid.fill_path(strand, evalfunc);
