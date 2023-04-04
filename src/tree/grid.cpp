@@ -171,20 +171,9 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
   }
 }
 void Grid::fill_path_2(std::vector<glm::vec3> path, Implicit& implicit){
-  //std::cout<<"gaminf"<<std::endl;
   fill_line(path[0], path[1], implicit);
   for (int i = 1; i<path.size()-1;i++){
-    //vec3 segment_start = path[i]*0.9f+path[i+1]*0.1f;
-    //fill_line(segment_start, path[i + 1], implicit);
     fill_line(path[i], path[i + 1], implicit);
-    //break;
-    /*
-    if (i%2==0){ //add line
-      fill_line(path[i],path[i+1],implicit);
-    }else{ //add midpoint
-      fill_point(0.5f*(path[i]+path[i+1]),implicit);
-    }
-    */
   }
 }
 
