@@ -73,8 +73,9 @@ int main(int argc, char *argv[]) {
     // Blinn df(0.1,-0.3,0.1);
     // Blinn df(0.01,-0.3,0.1); // Ok with full tree
     // Blinn df(0.01, -0.03, 0.1);
-    // Blinn df(0.005f,-0.2,0.1); // Ok with Trees
-    Blinn df(0.005f,-0.05,0.1); // Good with Trees
+    //Blinn df(0.007f,-0.2,0.05); // Ok with Trees (not good with new reject condition)
+    Blinn df(0.005f,-1.,0.05); // 
+    //Blinn df(0.005f,-0.05,0.1); // Good with Trees (very thick) try 1.f threshold
     //Blinn df(0.01f,-.01,0.01); // Too much for trees
     //Blinn df(0.02f,-.034,0.01); // Too much for trees (Good with 1.f threshold) (good for other examples)
     Strands detail(tree, gr, df);
@@ -97,6 +98,7 @@ int main(int argc, char *argv[]) {
     //gr.fill_point(p2,df);
     //gr.fill_line(p1,p2,df);
     //gr.fill_line(p3,p4,df);
+    //gr.fill_line(p1,p3,df);
 
     //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
     //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
@@ -108,8 +110,8 @@ int main(int argc, char *argv[]) {
     //Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
     Mesh occupy_geom = gr.get_occupied_geom(1.f);
-    //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
-    //Mesh occupy_dots = gr.get_occupied_geom_points(0.0);
+    //Mesh occupy_dots = gr.get_occupied_geom_points(1.0);
+    //Mesh strands = detail.get_mesh();
     sw.stop();
     //gr.export_data("data.txt");
 
@@ -138,6 +140,7 @@ int main(int argc, char *argv[]) {
         //grid_geom.draw(flat_shader,camera, GL_LINES);
         occupy_geom.draw(shader, camera, GL_TRIANGLES);
         //occupy_dots.draw(flat_shader,camera, GL_POINTS);
+        //strands.draw(flat_shader,camera, GL_LINES);
         ground.draw(shader, camera, GL_TRIANGLES);
 
         glfwSwapBuffers(window);
@@ -184,7 +187,7 @@ GLFWwindow *openGLInit() {
 
     // OpenGL drawing settings
     // glPointSize(2.f);
-    // glLineWidth(4.f);
+    glLineWidth(4.f);
     // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     glEnable(GL_DEPTH_TEST);
 
@@ -226,10 +229,12 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) // PAN DOWN
         camera.move_focus(glm::vec3(0.f, -0.05f, 0.f) * SENS);
 
+    /*
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // PAN FWD
         camera.pan_fwd(0.08f * SENS);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // PAN BACK
         camera.pan_fwd(-0.08f * SENS);
+        */
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // PAN LEFT
         camera.pan_side(-0.05f * SENS);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // PAN RIGHT

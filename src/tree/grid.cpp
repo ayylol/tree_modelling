@@ -129,7 +129,7 @@ void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
   }
 }
 
-#define SEGMENT_OVERSHOOT 2.5f
+#define SEGMENT_OVERSHOOT 40.f
 void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
   int n = std::ceil(implicit.cutoff / scale);
   vec3 diff = p2 - p1;
@@ -153,7 +153,6 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
       l1 = n;
       l2 = n;
     } else { // Add extra
-      //std::cout << "move along another axis" << std::endl;
       last_main_axis = voxels[i][main_axis];
       continue;
     }
@@ -169,6 +168,23 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
       }
     }
     last_main_axis = voxels[i][main_axis];
+  }
+}
+void Grid::fill_path_2(std::vector<glm::vec3> path, Implicit& implicit){
+  //std::cout<<"gaminf"<<std::endl;
+  fill_line(path[0], path[1], implicit);
+  for (int i = 1; i<path.size()-1;i++){
+    //vec3 segment_start = path[i]*0.9f+path[i+1]*0.1f;
+    //fill_line(segment_start, path[i + 1], implicit);
+    fill_line(path[i], path[i + 1], implicit);
+    //break;
+    /*
+    if (i%2==0){ //add line
+      fill_line(path[i],path[i+1],implicit);
+    }else{ //add midpoint
+      fill_point(0.5f*(path[i]+path[i+1]),implicit);
+    }
+    */
   }
 }
 
@@ -200,7 +216,7 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit &implicit) {
         l1 = implicit.cutoff/scale*1.5;
         l2 = implicit.cutoff/scale*1.5;
       } else { // Add extra
-        std::cout<<"move along another axis"<<std::endl;
+        //std::cout<<"move along another axis"<<std::endl;
         last_main_axis = voxels[j][main_axis];
         continue;
       }
