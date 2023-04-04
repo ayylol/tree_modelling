@@ -108,7 +108,10 @@ void Strands::add_strand(size_t path_index) {
       glm::vec3 trial_head =
           start + SEGMENT_LENGTH * random_vector(canonical_direction,
                                                  glm::radians(MAX_ANGLE));
-      if (!grid.line_occluded(start, trial_head)) {
+      #define REJECT_VAL 1.f
+      float val = grid.get_in_pos(trial_head);
+      //if (!grid.line_occluded(start, trial_head)) { // Original validation condition
+      if (val<=REJECT_VAL) {
         float distance = glm::distance(trial_head, target_point);
         float angle = glm::angle(trial_head - start, canonical_direction);
         trials.push_back({trial_head, distance, angle});
@@ -161,9 +164,12 @@ void Strands::add_strand(size_t path_index) {
   strands.push_back(strand);
   //grid.occupy_path(strand, 1);
   //grid.fill_path(strand, evalfunc);
+  grid.fill_path_2(strand, evalfunc);
+  /*
   for (auto point : strand){
     grid.fill_point(point,evalfunc);
   }
+  */
 }
 
 Mesh<Vertex> Strands::get_mesh() const {
