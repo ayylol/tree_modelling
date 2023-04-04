@@ -3,9 +3,10 @@
 #include <glm/gtx/norm.hpp>
 #include <iostream>
 
+// TODO DELETE THIS
 std::pair<size_t, glm::vec3>
 closest_node_on_path(glm::vec3 point, const std::vector<glm::vec3> &path,
-                      int start_index, int overshoot) {
+                     int start_index, int overshoot) {
   // Initialize vars for hill-climb
   int current_closest_index = start_index;
   glm::vec3 current_closest_point = path[start_index];
@@ -54,7 +55,7 @@ glm::vec3 closest_on_path(glm::vec3 point, const std::vector<glm::vec3> &path,
     glm::vec3 next_closest = closest_on_line(point, path[i], path[i + 1]);
     float dist2 = glm::distance2(next_closest, point);
     if (dist2 < lowest_dist2) {
-      closest_point=next_closest;
+      closest_point = next_closest;
       lowest_dist2 = dist2;
       overshot = -1;
     } else {
@@ -70,6 +71,16 @@ glm::vec3 closest_on_line(glm::vec3 p, glm::vec3 a, glm::vec3 b) {
   glm::vec3 ap = p - a;
   float proj = glm::dot(ab, ap);
   float abLen2 = glm::length2(ab);
-  //std::cout << std::clamp(proj / abLen2, 0.f, 1.f) << std::endl;
   return std::clamp((proj / abLen2), 0.f, 1.f) * ab + a;
+}
+
+float distance(glm::vec3 p1, glm::vec3 p2) { return glm::distance(p1, p2); }
+float distance(glm::vec3 p1, glm::vec3 a, glm::vec3 b) {
+  return glm::distance(p1, closest_on_line(p1, a, b));
+};
+
+float distance(glm::vec3 position, const std::vector<glm::vec3> &strand,
+               std::size_t hint) {
+  glm::vec3 closest = closest_on_path(position, strand, hint, 3);
+  return glm::distance(position, closest);
 }
