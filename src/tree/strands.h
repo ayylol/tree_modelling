@@ -23,13 +23,13 @@ glm::vec3 random_color();
 
 class Strands {
 public:
-  Strands(const Skeleton &tree, Grid &grid);
+  Strands(const Skeleton &tree, Grid &grid, Blinn& evalfunc);
   Mesh<Vertex> get_mesh() const;
   void add_strand(size_t path_index);
   void add_strands(unsigned int amount);
 
 private:
-  Blinn evalfunc;
+  Blinn &evalfunc;
   std::vector<std::vector<glm::vec3>> paths;
   std::vector<std::vector<glm::vec3>> strands;
   Grid &grid;

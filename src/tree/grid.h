@@ -39,6 +39,7 @@ public:
 
     // Implicit Filling
     void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
+    void fill_point(glm::vec3 p, Implicit& implicit);
 
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;

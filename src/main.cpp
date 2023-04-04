@@ -70,17 +70,20 @@ int main(int argc, char *argv[]) {
     //Grid gr(glm::ivec3(400,400,400),0.005f,glm::vec3(-1.f,0.f,-1.f));
 
     // Tree detail
-    Strands detail(tree, gr);
+    // Blinn df(0.1,-0.3,0.1);
+    // Blinn df(0.01,-0.3,0.1); // Ok with full tree
+    // Blinn df(0.01, -0.03, 0.1);
+    // Blinn df(0.005f,-0.2,0.1); // Ok with Trees
+    Blinn df(0.005f,-0.05,0.1); // Ok with Trees
+    // Blinn df(0.01f,-.01,0.01); // Too much for trees
+    Strands detail(tree, gr, df);
     sw.start();
     detail.add_strands(tree.leafs_size());
-    //detail.add_strands(100);
+    //detail.add_strands(10);
     //detail.add_strand(0);
     sw.stop();
     // TEST OCCUPY
-    //Blinn df(0.1,-0.3,0.1);
-    //Blinn df(0.01,-0.3,0.1);
-    Blinn df(0.01,-0.03,0.1);
-    //MetaBalls df(0.1);
+    // MetaBalls df(0.1);
     std::vector<glm::vec3> test_path = {
          glm::vec3(0.23, 0.1, 0),
          glm::vec3(0.2, 0.6, 0),
@@ -98,18 +101,11 @@ int main(int argc, char *argv[]) {
          glm::vec3(-0.4, 0.1, 0),
          glm::vec3(-0.4, 0.8, 0),
     };
-    //gr.occupy_path(test_path, 1.f);
-
-    //glm::vec3 test_pos(0.3,0.3,-0.1);
-    //glm::vec3 closest = closest_on_path(test_pos,test_path,0,4);
- 
-    //gr.occupy_line(test_pos, closest,1.f);
-    //gr.fill_path(test_path, df);
-
-    //gr.occupy_path(test_path2,1);
-    //gr.fill_path(test_path2, df);
-    //gr.fill_path(test_path3, df);
-    //gr.fill_path(test_path4, df);
+    glm::vec3 p1(0,0.3,0);
+    glm::vec3 p2(0,0.48,0);
+    //glm::vec3 p2(0.1,0.25,0);
+    //gr.fill_point(p1,df);
+    //gr.fill_point(p2,df);
 
     //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
     //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
@@ -118,16 +114,16 @@ int main(int argc, char *argv[]) {
     sw.start();
     // Mesh tree_skelly = tree.get_mesh();
     // Mesh detail_geom = detail.get_mesh();
-    Mesh bound_geom = gr.get_bound_geom();
+    //Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
 
-    //Mesh occupy_geom = gr.get_occupied_geom(0.6);
-    //Mesh occupy_geom = gr.get_occupied_geom(0.1);
-    //Mesh occupy_geom = gr.get_occupied_geom(1.f);
-    //Mesh occupy_geom = gr.get_occupied_geom(0.0);
+    //Mesh occupy_geom = gr.get_occupied_geom(0.5f);
+    //Mesh occupy_geom = gr.get_occupied_geom(0.0f);
+    //Mesh occupy_geom = gr.get_occupied_geom(0.7f);
+    Mesh occupy_geom = gr.get_occupied_geom(1.f);
 
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.3);
-    Mesh occupy_dots = gr.get_occupied_geom_points(0.0);
+    //Mesh occupy_dots = gr.get_occupied_geom_points(0.0);
     sw.stop();
     //gr.export_data("data.txt");
 
@@ -152,10 +148,10 @@ int main(int argc, char *argv[]) {
         // Draw the meshes here
         // tree_skelly.draw(flat_shader,camera, GL_LINES);
         // detail_geom.draw(flat_shader,camera, GL_LINES);
-        bound_geom.draw(flat_shader,camera, GL_LINES);
+        //bound_geom.draw(flat_shader,camera, GL_LINES);
         //grid_geom.draw(flat_shader,camera, GL_LINES);
-        //occupy_geom.draw(shader, camera, GL_TRIANGLES);
-        occupy_dots.draw(flat_shader,camera, GL_POINTS);
+        occupy_geom.draw(shader, camera, GL_TRIANGLES);
+        //occupy_dots.draw(flat_shader,camera, GL_POINTS);
         ground.draw(shader, camera, GL_TRIANGLES);
 
         glfwSwapBuffers(window);

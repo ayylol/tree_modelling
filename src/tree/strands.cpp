@@ -7,13 +7,10 @@ std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
 
 glm::vec3 random_vector(glm::vec3 axis, float angle);
-/*
-std::pair<size_t, glm::vec3> closest_on_path(glm::vec3 point,
-                                             const std::vector<glm::vec3> &path,
-                                             int start_index, int overshoot);
-                                             */
 
-Strands::Strands(const Skeleton &tree, Grid &grid) : grid(grid), evalfunc(0.005f,-0.2,0.1) {
+Strands::Strands(const Skeleton &tree, Grid &grid, Blinn &evalfunc) : 
+  grid(grid),evalfunc(evalfunc)
+{
   //evalfunc.cutoff=grid.get_scale()*3;
   for (size_t i = 0; i < tree.leafs_size(); i++) {
     paths.push_back(tree.get_strand(i));
@@ -162,8 +159,11 @@ void Strands::add_strand(size_t path_index) {
   }
   // Occupy strand path
   strands.push_back(strand);
-  //grid.occupy_path(strand, 1); //TODO: Change this to adding implicit primitive
-  grid.fill_path(strand, evalfunc); //TODO: Change this to adding implicit primitive
+  //grid.occupy_path(strand, 1);
+  //grid.fill_path(strand, evalfunc);
+  for (auto point : strand){
+    grid.fill_point(point,evalfunc);
+  }
 }
 
 Mesh<Vertex> Strands::get_mesh() const {

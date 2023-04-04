@@ -112,6 +112,22 @@ void Grid::occupy_path(std::vector<glm::vec3> path, float val) {
     occupy_line(path[i], path[i + 1], val);
   }
 }
+void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
+  int n = std::ceil(implicit.cutoff / scale);
+  ivec3 slot = pos_to_grid(p);
+  for (int i0 = -n; i0 <= n; ++i0) {
+    for (int i1 = -n; i1 <= n; ++i1) {
+      for (int i2 = -n; i2 <= n; ++i2) {
+        ivec3 current_slot = slot + ivec3(i0, i1, i2);
+        vec3 current_pos = grid_to_pos(current_slot);
+        float val = implicit.eval(current_pos, p);
+        if (val != 0) {
+          add_slot(current_slot, val);
+        }
+      }
+    }
+  }
+}
 
 void Grid::fill_path(std::vector<glm::vec3> path, Implicit &implicit) {
   int n = std::ceil(implicit.cutoff / scale);
@@ -158,22 +174,7 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit &implicit) {
           float val = implicit.eval(grid_to_pos(slot_to_fill), path, i);
           if (val != 0) {
              add_slot(slot_to_fill, val);
-          } else {
-            /*
-            vec3 gridpos = grid_to_pos(slot_to_fill);
-            vec3 closest = closest_on_line(gridpos, path[i], path[i + 1]);
-            std::cout<<"ZERO: "<<glm::distance(gridpos,closest)<<std::endl;
-            */
           }
-          // TODO: FOR TESTING
-          /*
-          vec3 gridpos = grid_to_pos(slot_to_fill);
-          vec3 closest = closest_on_line(gridpos, path[i], path[i+1]);
-          if (glm::distance(gridpos, closest) <= implicit.cutoff) {
-            occupy_slot(slot_to_fill, 1);
-          }
-            //occupy_slot(slot_to_fill, 1);
-        */
         }
       }
       last_main_axis = path[0][main_axis];
