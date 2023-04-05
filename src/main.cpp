@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
     // gr.export_data("data.txt");
 
     // GROUND PLANE
-    glm::vec3 ground_color = glm::vec3(0, 1.0, 0);
+    glm::vec3 ground_color = glm::vec3(0, 0.6, 0.02);
     std::vector<Vertex> ground_verts{
         Vertex{glm::vec3(50, 0, 50), ground_color},
             Vertex{glm::vec3(50, 0, -50), ground_color},
