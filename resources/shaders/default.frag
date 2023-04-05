@@ -12,18 +12,18 @@ vec4 directionalLight()
 	vec3 lightDirection = normalize(vec3(0,0,0.1));
 
 	// ambient lighting
-	float ambient = 0.1f;
+	float ambient = 0.3f;
 
 	// diffuse lighting
-    float diffuseStrength = 1.5;
+  float diffuseStrength = 1.5;
 	vec3 normal = normalize(Normal);
 	float diffuse = diffuseStrength*max(dot(normal, lightDirection), 0.0f);
 
 	// specular lighting
-	float specularStrength = 0.2;
+	float specularStrength = 0.24;
 	vec3 viewDirection = normalize(camPos - crntPos);
 	vec3 reflectionDirection = reflect(-lightDirection, normal);
-	float specular = specularStrength*pow(max(dot(viewDirection, reflectionDirection), 0.0f), 8);
+	float specular = specularStrength*pow(max(dot(viewDirection, reflectionDirection), 0.0f), 32);
 
 
 	return vec4(Color * (diffuse + ambient + specular),1.f);
