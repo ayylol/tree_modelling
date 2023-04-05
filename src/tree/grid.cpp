@@ -10,7 +10,7 @@
 // Commonly used names
 using glm::ivec3;
 using glm::vec3;
-using std::array;
+//using std::array;
 using std::tuple;
 using std::vector;
 
@@ -53,8 +53,7 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
 
 float Grid::get_in_grid(ivec3 index) const {
   if (!is_in_grid(index)) {
-    // std::cout<<"outside of grid "<<index<<std::endl;
-    return 0;
+    return 0.f;
   }
   return grid[index.x][index.y][index.z];
 }
@@ -170,6 +169,7 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
     last_main_axis = voxels[i][main_axis];
   }
 }
+
 void Grid::fill_path_2(std::vector<glm::vec3> path, Implicit& implicit){
   fill_line(path[0], path[1], implicit);
   for (int i = 1; i<path.size()-1;i++){
@@ -329,61 +329,22 @@ Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold) const {
 Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
   std::cout << "Generating Occupied Geometry...";
   std::cout.flush();
+  glm::vec3 col(0.1, 0.08, 0.01);
   vector<Vertex> vertices;
   vector<GLuint> indices;
-
-  glm::vec3 col(0, 0, 1);
-  std::vector<std::pair<glm::vec3, glm::vec3>> cube_verts{
-      // Right
-      {glm::vec3(scale, scale, 0), glm::vec3(1, 0, 0)},
-      {glm::vec3(scale, scale, scale), glm::vec3(1, 0, 0)},
-      {glm::vec3(scale, 0, 0), glm::vec3(scale, 0, 0)},
-      {glm::vec3(scale, 0, scale), glm::vec3(1, 0, 0)},
-      // Left
-      {glm::vec3(0, scale, 0), glm::vec3(-1, 0, 0)},
-      {glm::vec3(0, scale, scale), glm::vec3(-1, 0, 0)},
-      {glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0)},
-      {glm::vec3(0, 0, scale), glm::vec3(-1, 0, 0)},
-
-      // Top
-      {glm::vec3(0, scale, 0), glm::vec3(0, 1, 0)},
-      {glm::vec3(scale, scale, 0), glm::vec3(0, 1, 0)},
-      {glm::vec3(0, scale, scale), glm::vec3(0, 1, 0)},
-      {glm::vec3(scale, scale, scale), glm::vec3(0, 1, 0)},
-      // Bottom
-      {glm::vec3(0, 0, 0), glm::vec3(0, -1, 0)},
-      {glm::vec3(scale, 0, 0), glm::vec3(0, -1, 0)},
-      {glm::vec3(0, 0, scale), glm::vec3(0, -1, 0)},
-      {glm::vec3(scale, 0, scale), glm::vec3(0, -1, 0)},
-
-      // Front
-      {glm::vec3(0, scale, scale), glm::vec3(0, 0, 1)},
-      {glm::vec3(scale, scale, scale), glm::vec3(0, 0, 1)},
-      {glm::vec3(0, 0, scale), glm::vec3(0, 0, 1)},
-      {glm::vec3(scale, 0, scale), glm::vec3(0, 0, 1)},
-      // Back
-      {glm::vec3(0, scale, 0), glm::vec3(0, 0, -1)},
-      {glm::vec3(scale, scale, 0), glm::vec3(0, 0, -1)},
-      {glm::vec3(0, 0, 0), glm::vec3(0, 0, -1)},
-      {glm::vec3(scale, 0, 0), glm::vec3(0, 0, -1)},
-
+  std::vector<glm::vec3> cube_verts{
+      {0, 0, 0},         {scale, 0, 0},         {0, scale, 0},
+      {scale, scale, 0}, {0, 0, scale},         {scale, 0, scale},
+      {0, scale, scale}, {scale, scale, scale},
   };
-  std::vector<std::vector<GLuint>> cube_indices{
-      {0, 2, 3, 0, 3, 1},       // Right
-      {4, 6, 7, 4, 7, 5},       // Left
-      {8, 10, 11, 8, 11, 9},    // Top
-      {12, 14, 15, 12, 15, 13}, // Bottom
-      {16, 18, 19, 16, 19, 17}, // Front
-      {20, 22, 23, 20, 23, 21}  // Back
+  std::vector<GLuint> cube_indices{
+      1, 3, 7, 1, 7, 5, // Right
+      0, 4, 6, 0, 6, 2, // Left
+      4, 5, 7, 4, 7, 6, // Top
+      0, 1, 3, 0, 3, 2, // Bottom
+      0, 1, 5, 0, 5, 4, // Front
+      2, 6, 7, 2, 7, 3  // Back
   };
-  const array<array<unsigned int, 3>, 8> adj_norms = {{{1, 3, 5},
-                                                       {0, 3, 5},
-                                                       {1, 2, 5},
-                                                       {0, 2, 5},
-                                                       {1, 3, 4},
-                                                       {0, 3, 4},
-                                                       {1, 2, 4},
-                                                       {0, 2, 4}}};
 
   int current_index = 0;
   for (glm::ivec3 voxel : occupied) {
@@ -398,27 +359,26 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
         if (content <= threshold)
           visible = true;
       }
+      // Completely occluded do not add vertices
       if (!visible)
-        continue; // Completely occluded do not add vertices
+        continue;
+
+      glm::vec3 normal{0.5f * (get_in_grid(voxel + ivec3(1, 0, 0)) +
+                               get_in_grid(voxel + ivec3(-1, 0, 0))),
+                       0.5f * (get_in_grid(voxel + ivec3(0, 1, 0)) +
+                               get_in_grid(voxel + ivec3(0, -1, 0))),
+                       0.5f * (get_in_grid(voxel + ivec3(0, 0, 1)) +
+                               get_in_grid(voxel + ivec3(0, 0, -1)))};
 
       // Loop through and generate vertices
       vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
-      int curr_vert_index = 0;
-      // glm::vec3 color = random_color();
-      // glm::vec3 color = random_brown();
       for (int i_ = 0; i_ <= cube_verts.size(); i_++) {
-        vertices.push_back(Vertex{current_pos + cube_verts[i_].first,
-                                  random_brown(), cube_verts[i_].second});
+        vertices.push_back(Vertex{current_pos + cube_verts[i_], col, normal});
       }
       // Generate Indices
-      for (int face_i = 0; face_i < cube_indices.size(); face_i++) {
-        if (adj_content[face_i] <= threshold) {
-          for (int index = 0; index < cube_indices[face_i].size(); index++) {
-            indices.push_back(cube_indices[face_i][index] + current_index);
-          }
-        }
+      for (int i_ = 0; i_ < cube_indices.size(); i_++) {
+        indices.push_back(current_index + cube_indices[i_]);
       }
-
       current_index = vertices.size();
     }
   }

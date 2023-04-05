@@ -14,9 +14,9 @@
 */
 
 // Tree specific constants
-#define FOCUS glm::vec3(0,0.3,0)
-#define DISTANCE 2.f
-#define GRIDSCALEFACTOR 1.f
+#define FOCUS glm::vec3(0, 1.5, 0)
+#define DISTANCE 5.f
+#define GRIDSCALEFACTOR 0.5f
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50
@@ -24,9 +24,9 @@
 #define ALPHA 0.5f
 // IMPLICIT CONSTANTS
 #define RADIUS 0.005f
-#define BLOBINESS -5.f
-#define CUTOFF_VAL 0.5f
-#define REJECT_VAL 10.f
+#define BLOBINESS -1.f
+#define CUTOFF_VAL 0.05f
+#define REJECT_VAL 2.f
 #define SURFACE_VAL 1.f
 
 /*
@@ -123,7 +123,8 @@
 // For Irregular Crown
 #define FOCUS glm::vec3(0,0.3,0)
 #define DISTANCE 2.f
-#define GRIDSCALEFACTOR 1.f
+//#define GRIDSCALEFACTOR 1.f
+#define GRIDSCALEFACTOR 0.5f
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50
