@@ -6,6 +6,7 @@
 #include <climits>
 #include <glm/gtx/io.hpp>
 #include <iostream>
+#include "const.h"
 
 // Commonly used names
 using glm::ivec3;
@@ -171,9 +172,10 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
 }
 
 void Grid::fill_path_2(std::vector<glm::vec3> path, Implicit& implicit){
+  const float offset=OFFSET;
   fill_line(path[0], path[1], implicit);
   for (int i = 1; i<path.size()-1;i++){
-    fill_line(path[i], path[i + 1], implicit);
+    fill_line(path[i]+offset*(path[i+1]-path[i]), path[i + 1], implicit);
   }
 }
 
@@ -345,6 +347,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
   };
 
   int current_index = 0;
+  glm::vec3 col = glm::vec3(1,1,1);
   for (glm::ivec3 voxel : occupied) {
     // Grid space is occupied
     if (get_in_grid(voxel) >= threshold) {
@@ -372,7 +375,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
       // Loop through and generate vertices
       vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
       for (int i_ = 0; i_ <= cube_verts.size(); i_++) {
-        vertices.push_back(Vertex{current_pos + cube_verts[i_], random_brown(), normal});
+        vertices.push_back(Vertex{current_pos + cube_verts[i_], col, normal});
       }
       // Generate Indices
       for (int i_ = 0; i_ < cube_indices.size(); i_++) {

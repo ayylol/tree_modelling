@@ -28,6 +28,7 @@
 #define CUTOFF_VAL 0.05f
 #define REJECT_VAL 2.f
 #define SURFACE_VAL 1.f
+#define OFFSET 0.0f
 
 /*
 // For poplar
@@ -45,9 +46,9 @@
 #define CUTOFF_VAL 0.05f
 #define REJECT_VAL 2.f
 #define SURFACE_VAL 1.f
+#define OFFSET 0.0f
 
 // For malus baccata columnaris
-// THIS SHOWS LINE PRIMITIVE BULGING
 #define FOCUS glm::vec3(0, 1.5, 0)
 #define DISTANCE 5.f
 #define GRIDSCALEFACTOR 0.2f
@@ -62,6 +63,7 @@
 #define CUTOFF_VAL 0.05f
 #define REJECT_VAL 5.f
 #define SURFACE_VAL 1.f
+#define OFFSET 0.22f
 
 // For nice tree
 #define FOCUS glm::vec3(0,0.3,0)
