@@ -316,7 +316,6 @@ Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold) const {
       vec3 col = (1-intensity)*nocol+intensity*fullcol;
       vec3 current_pos =
           back_bottom_left + vec3(voxel) * scale + vec3(1, 1, 1) * (scale / 2);
-      //vertices.push_back(VertFlat{current_pos, random_color()});
       vertices.push_back(VertFlat{current_pos, col});
     }
   }
@@ -329,7 +328,6 @@ Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold) const {
 Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
   std::cout << "Generating Occupied Geometry...";
   std::cout.flush();
-  glm::vec3 col(0.1, 0.08, 0.01);
   vector<Vertex> vertices;
   vector<GLuint> indices;
   std::vector<glm::vec3> cube_verts{
@@ -373,7 +371,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
       // Loop through and generate vertices
       vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
       for (int i_ = 0; i_ <= cube_verts.size(); i_++) {
-        vertices.push_back(Vertex{current_pos + cube_verts[i_], col, normal});
+        vertices.push_back(Vertex{current_pos + cube_verts[i_], random_brown(), normal});
       }
       // Generate Indices
       for (int i_ = 0; i_ < cube_indices.size(); i_++) {
