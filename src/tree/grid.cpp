@@ -361,12 +361,13 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
       if (!visible)
         continue;
 
-      glm::vec3 normal{0.5f * (get_in_grid(voxel + ivec3(1, 0, 0)) +
-                               get_in_grid(voxel + ivec3(-1, 0, 0))),
-                       0.5f * (get_in_grid(voxel + ivec3(0, 1, 0)) +
-                               get_in_grid(voxel + ivec3(0, -1, 0))),
-                       0.5f * (get_in_grid(voxel + ivec3(0, 0, 1)) +
-                               get_in_grid(voxel + ivec3(0, 0, -1)))};
+      glm::vec3 normal = glm::normalize(
+          glm::vec3(0.5f * (get_in_grid(voxel + ivec3(1, 0, 0)) +
+                            get_in_grid(voxel + ivec3(-1, 0, 0))),
+                    0.5f * (get_in_grid(voxel + ivec3(0, 1, 0)) +
+                            get_in_grid(voxel + ivec3(0, -1, 0))),
+                    0.5f * (get_in_grid(voxel + ivec3(0, 0, 1)) +
+                            get_in_grid(voxel + ivec3(0, 0, -1)))));
 
       // Loop through and generate vertices
       vec3 current_pos = back_bottom_left + vec3(voxel) * scale;

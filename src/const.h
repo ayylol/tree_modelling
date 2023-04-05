@@ -16,7 +16,7 @@
 // Tree specific constants
 #define FOCUS glm::vec3(0, 1.5, 0)
 #define DISTANCE 5.f
-#define GRIDSCALEFACTOR 0.5f
+#define GRIDSCALEFACTOR 0.6f
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50
