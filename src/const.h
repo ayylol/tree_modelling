@@ -16,7 +16,7 @@
 // Tree specific constants
 #define FOCUS glm::vec3(0, 1.5, 0)
 #define DISTANCE 5.f
-#define GRIDSCALEFACTOR 0.6f
+#define GRIDSCALEFACTOR 0.4f
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50
@@ -28,13 +28,13 @@
 #define CUTOFF_VAL 0.05f
 #define REJECT_VAL 2.f
 #define SURFACE_VAL 1.f
-#define OFFSET 0.0f
+#define OFFSET 0.2f
 
 /*
 // For poplar
 #define FOCUS glm::vec3(0, 1.5, 0)
 #define DISTANCE 5.f
-#define GRIDSCALEFACTOR 0.6f
+#define GRIDSCALEFACTOR 0.4f
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50
@@ -46,7 +46,7 @@
 #define CUTOFF_VAL 0.05f
 #define REJECT_VAL 2.f
 #define SURFACE_VAL 1.f
-#define OFFSET 0.0f
+#define OFFSET 0.2f
 
 // For malus baccata columnaris
 #define FOCUS glm::vec3(0, 1.5, 0)
