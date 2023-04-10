@@ -375,7 +375,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
       // Loop through and generate vertices
       vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
       for (int i_ = 0; i_ <= cube_verts.size(); i_++) {
-        vertices.push_back(Vertex{current_pos + cube_verts[i_], col, normal});
+        vertices.push_back(Vertex{current_pos + cube_verts[i_], random_brown(), normal});
       }
       // Generate Indices
       for (int i_ = 0; i_ < cube_indices.size(); i_++) {
