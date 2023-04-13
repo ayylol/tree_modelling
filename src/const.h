@@ -13,7 +13,9 @@
 #define DISTANCE 5.f
 */
 
+
 // Tree specific constants
+// FOR TREE SCENE
 #define FOCUS glm::vec3(0, 1.5, 0)
 #define DISTANCE 5.f
 #define GRIDSCALEFACTOR 0.4f
@@ -23,12 +25,67 @@
 #define MAX_ANGLE 90.f
 #define ALPHA 0.5f
 // IMPLICIT CONSTANTS
+// FOR BLINN
 #define RADIUS 0.005f
 #define BLOBINESS -1.f
 #define CUTOFF_VAL 0.05f
-#define REJECT_VAL 2.f
-#define SURFACE_VAL 1.f
-#define OFFSET 0.2f
+// FOR METABALL
+#define A 3.f
+#define B 0.01f
+// GENERAL
+#define REJECT_VAL 0.5f
+#define SURFACE_VAL 0.3f
+#define OFFSET 0.3f
+#define SEGMENT_OVERSHOOT 40.f
+
+// FOR BASIC SCENE
+// FOR BLINN
+/*
+#define RADIUS 0.05f
+#define BLOBINESS -1.f
+#define CUTOFF_VAL 0.05f
+// FOR METABALL
+#define A 3.f
+#define B 0.1f
+// GENERAL
+#define REJECT_VAL 0.5f
+#define SURFACE_VAL 1.5f
+#define OFFSET 0.15f
+#define SEGMENT_OVERSHOOT 40.f
+
+#define FOCUS glm::vec3(0, 1.5, 0)
+#define DISTANCE 5.f
+
+#define GRIDSCALEFACTOR 0.4f
+// STRAND CONSTANTS
+#define SEGMENT_LENGTH .03f
+#define NUM_TRIALS 50
+#define MAX_ANGLE 90.f
+#define ALPHA 0.5f
+*/
+
+/*
+// TEST SCENE CONSTANTS
+#define FOCUS glm::vec3(0, 1.5, 0)
+#define DISTANCE 5.f
+#define GRIDSCALEFACTOR 0.4f
+// STRAND CONSTANTS
+#define SEGMENT_LENGTH .03f
+#define NUM_TRIALS 50
+#define MAX_ANGLE 90.f
+#define ALPHA 0.5f
+// IMPLICIT CONSTANTS
+// FOR BLINN
+#define RADIUS 0.005f
+#define BLOBINESS -1.f
+#define CUTOFF_VAL 0.05f
+// FOR METABALL
+#define A 3.f
+#define B 0.01f
+// GENERAL
+#define REJECT_VAL 0.5f
+#define SURFACE_VAL 0.3f
+#define OFFSET 0.3f
 
 /*
 // For poplar
@@ -41,12 +98,17 @@
 #define MAX_ANGLE 90.f
 #define ALPHA 0.5f
 // IMPLICIT CONSTANTS
+// FOR BLINN
 #define RADIUS 0.005f
 #define BLOBINESS -1.f
 #define CUTOFF_VAL 0.05f
-#define REJECT_VAL 2.f
-#define SURFACE_VAL 1.f
-#define OFFSET 0.2f
+// FOR METABALL
+#define A 3.f
+#define B 0.01f
+// GENERAL
+#define REJECT_VAL 0.5f
+#define SURFACE_VAL 0.3f
+#define OFFSET 0.3f
 
 // For malus baccata columnaris
 #define FOCUS glm::vec3(0, 1.5, 0)

@@ -129,7 +129,6 @@ void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
   }
 }
 
-#define SEGMENT_OVERSHOOT 40.f
 void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
   int n = std::ceil(implicit.cutoff / scale);
   vec3 diff = p2 - p1;
@@ -347,7 +346,8 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
   };
 
   int current_index = 0;
-  glm::vec3 col = glm::vec3(1,1,1);
+  glm::vec3 col0 = glm::vec3(1,1,1);
+  glm::vec3 col1 = glm::vec3(0.5,0,0.7);
   for (glm::ivec3 voxel : occupied) {
     // Grid space is occupied
     if (get_in_grid(voxel) >= threshold) {
@@ -374,8 +374,11 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
 
       // Loop through and generate vertices
       vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
+      vec3 cube_col = random_color();
       for (int i_ = 0; i_ <= cube_verts.size(); i_++) {
         vertices.push_back(Vertex{current_pos + cube_verts[i_], random_brown(), normal});
+        //vertices.push_back(Vertex{current_pos + cube_verts[i_], col1, normal});
+        //vertices.push_back(Vertex{current_pos + cube_verts[i_], cube_col, normal});
       }
       // Generate Indices
       for (int i_ = 0; i_ < cube_indices.size(); i_++) {

@@ -69,8 +69,9 @@ int main(int argc, char *argv[]) {
     //Grid gr(glm::ivec3(400,400,400),0.005f,glm::vec3(-1.f,0.f,-1.f));
 
     // Tree detail
-    Blinn df(RADIUS,BLOBINESS,CUTOFF_VAL); // 
+    //Blinn df(RADIUS,BLOBINESS,CUTOFF_VAL); // 
     //Blinn df(0.02f,-.034,0.01); // Too much for trees (Good with 1.f threshold) (good for other examples)
+    MetaBalls df(A, B);
     Strands detail(tree, gr, df);
     sw.start();
     detail.add_strands(tree.leafs_size());
@@ -83,15 +84,22 @@ int main(int argc, char *argv[]) {
          glm::vec3(0.2, 0.6, 0),
          glm::vec3(-0.2, 0.8, 0.3),
     };
+    std::vector<glm::vec3> test_path2 = {
+        glm::vec3(-0.1, 0.2, 0),
+        glm::vec3(0.0, 0.5, 0.4),
+        glm::vec3(0.1, 0.8, 0.1),
+    };
     glm::vec3 p1(0,0.3,0);
-    glm::vec3 p2(0,0.48,0);
-    glm::vec3 p3(-0.1,0.35,0.18);
-    glm::vec3 p4(0.2,0.35,0.18);
+    glm::vec3 p2(0,0.42,0);
+    glm::vec3 p3(-0.1,0.35,0.1);
+    glm::vec3 p4(0.2,0.35,0.1);
     //gr.fill_point(p1,df);
     //gr.fill_point(p2,df);
     //gr.fill_line(p1,p2,df);
     //gr.fill_line(p3,p4,df);
     //gr.fill_line(p1,p3,df);
+    //gr.fill_path_2(test_path,df);
+    //gr.fill_path_2(test_path2,df);
 
     //std::cout<<"eval: "<<df.eval(glm::vec3(0.6,0.6,0),test_path,0)<<std::endl;
     //gr.occupy_pos(glm::vec3(0,0.4,0),1.f);
@@ -103,7 +111,7 @@ int main(int argc, char *argv[]) {
     //Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
     Mesh occupy_geom = gr.get_occupied_geom(SURFACE_VAL);
-    //Mesh occupy_dots = gr.get_occupied_geom_points(1.0);
+    //Mesh occupy_dots = gr.get_occupied_geom_points(0.0);
     //Mesh strands = detail.get_mesh();
     sw.stop();
     // gr.export_data("data.txt");
