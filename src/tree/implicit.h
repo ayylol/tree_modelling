@@ -31,8 +31,10 @@ private:
 
 class MetaBalls : public DistanceField {
 public:
-  MetaBalls(float cutoff) : DistanceField(cutoff){};
+  MetaBalls(float a, float b) : DistanceField(b), a(a), b(b){};
 private:
+  float a;
+  float b;
   float potential(float distance);
 };
 

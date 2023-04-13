@@ -20,8 +20,8 @@ vec4 directionalLight()
 	float diffuse = diffuseStrength*max(dot(normal, lightDirection), 0.0f);
 
 	// specular lighting
-	//float specularStrength = 0.24;
-	float specularStrength = 0.0;
+	float specularStrength = 0.24;
+	//float specularStrength = 0.0;
 	vec3 viewDirection = normalize(camPos - crntPos);
 	vec3 reflectionDirection = reflect(-lightDirection, normal);
 	float specular = specularStrength*pow(max(dot(viewDirection, reflectionDirection), 0.0f), 32);

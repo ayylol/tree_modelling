@@ -1,5 +1,6 @@
 #include "strands.h"
 #include "const.h"
+#include "tree/implicit.h"
 #include "util/geometry.h"
 #include <glm/gtx/io.hpp>
 
@@ -8,10 +9,9 @@ std::default_random_engine
 
 glm::vec3 random_vector(glm::vec3 axis, float angle);
 
-Strands::Strands(const Skeleton &tree, Grid &grid, Blinn &evalfunc) : 
+Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) : 
   grid(grid),evalfunc(evalfunc)
 {
-  //evalfunc.cutoff=grid.get_scale()*3;
   for (size_t i = 0; i < tree.leafs_size(); i++) {
     paths.push_back(tree.get_strand(i));
   }
