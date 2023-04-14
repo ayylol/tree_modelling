@@ -18,7 +18,7 @@
 // FOR TREE SCENE
 #define FOCUS glm::vec3(0, 1.5, 0)
 #define DISTANCE 5.f
-#define GRIDSCALEFACTOR 0.4f
+#define GRIDSCALEFACTOR 0.5f
 // STRAND CONSTANTS
 #define SEGMENT_LENGTH .03f
 #define NUM_TRIALS 50
@@ -34,7 +34,7 @@
 #define B 0.01f
 // GENERAL
 #define REJECT_VAL 0.5f
-#define SURFACE_VAL 0.3f
+#define SURFACE_VAL 1.0f
 #define OFFSET 0.3f
 #define SEGMENT_OVERSHOOT 40.f
 
