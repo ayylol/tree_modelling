@@ -65,14 +65,15 @@ int main(int argc, char *argv[]) {
 
     // Grid
     //Grid gr(tree, 0.1f);
-    Grid gr(tree, 0.1f, GRIDSCALEFACTOR);
+    //Grid gr(tree, 0.1f, GRIDSCALEFACTOR);
     //Grid gr(glm::ivec3(400,400,400),0.005f,glm::vec3(-1.f,0.f,-1.f));
+    Grid* gr = new Grid(tree, 0.1f, GRIDSCALEFACTOR);
 
     // Tree detail
     //Blinn df(RADIUS,BLOBINESS,CUTOFF_VAL); // 
     //Blinn df(0.02f,-.034,0.01); // Too much for trees (Good with 1.f threshold) (good for other examples)
     MetaBalls df(A, B);
-    Strands detail(tree, gr, df);
+    Strands detail(tree, *gr, df);
     sw.start();
     detail.add_strands(tree.leafs_size());
     //detail.add_strands(10);
@@ -110,9 +111,10 @@ int main(int argc, char *argv[]) {
     // Mesh detail_geom = detail.get_mesh();
     //Mesh bound_geom = gr.get_bound_geom();
     //Mesh grid_geom = gr.get_grid_geom();
-    Mesh occupy_geom = gr.get_occupied_geom(SURFACE_VAL);
+    Mesh occupy_geom = gr->get_occupied_geom(SURFACE_VAL);
     //Mesh occupy_dots = gr.get_occupied_geom_points(0.0);
     //Mesh strands = detail.get_mesh();
+    delete gr;
     sw.stop();
     // gr.export_data("data.txt");
 
