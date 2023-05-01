@@ -13,6 +13,7 @@
 #include <regex>
 
 #include <glm/glm.hpp>
+#include <nlohmann/json.hpp>
 
 //#include "util/fileContents.h"
 #include "rendering/mesh.h"
@@ -23,7 +24,7 @@ glm::vec3 random_color();
 
 class Skeleton{
     public:
-       Skeleton(const char* filename); 
+       Skeleton(nlohmann::json& options); 
 
        Mesh<VertFlat> get_mesh();
 

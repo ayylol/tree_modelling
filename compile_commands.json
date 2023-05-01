@@ -1,170 +1,170 @@
 [
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/cc -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -O3 -o CMakeFiles/tree_strands.dir/libs/glad.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glad.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glad.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/cc -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -O3 -o CMakeFiles/tree_strands.dir/libs/glad.c.o -c /home/david/Documents/projects/tree_modelling/libs/glad.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glad.c",
   "output": "CMakeFiles/tree_strands.dir/libs/glad.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/main.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/main.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/main.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/main.cpp.o -c /home/david/Documents/projects/tree_modelling/src/main.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/main.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/main.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/rendering/EBO.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/rendering/EBO.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/rendering/EBO.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/rendering/EBO.cpp.o -c /home/david/Documents/projects/tree_modelling/src/rendering/EBO.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/rendering/EBO.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/rendering/EBO.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/rendering/camera.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/rendering/camera.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/rendering/camera.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/rendering/camera.cpp.o -c /home/david/Documents/projects/tree_modelling/src/rendering/camera.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/rendering/camera.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/rendering/camera.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/rendering/shader.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/rendering/shader.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/rendering/shader.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/rendering/shader.cpp.o -c /home/david/Documents/projects/tree_modelling/src/rendering/shader.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/rendering/shader.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/rendering/shader.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/tree/grid.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/tree/grid.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/tree/grid.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/tree/grid.cpp.o -c /home/david/Documents/projects/tree_modelling/src/tree/grid.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/tree/grid.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/tree/grid.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/tree/implicit.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/tree/implicit.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/tree/implicit.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/tree/implicit.cpp.o -c /home/david/Documents/projects/tree_modelling/src/tree/implicit.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/tree/implicit.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/tree/implicit.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/tree/skeleton.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/tree/skeleton.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/tree/skeleton.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/tree/skeleton.cpp.o -c /home/david/Documents/projects/tree_modelling/src/tree/skeleton.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/tree/skeleton.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/tree/skeleton.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/tree/strands.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/tree/strands.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/tree/strands.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/tree/strands.cpp.o -c /home/david/Documents/projects/tree_modelling/src/tree/strands.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/tree/strands.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/tree/strands.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/util/color.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/util/color.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/util/color.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/util/color.cpp.o -c /home/david/Documents/projects/tree_modelling/src/util/color.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/util/color.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/util/color.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/util/geometry.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/util/geometry.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/util/geometry.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/util/geometry.cpp.o -c /home/david/Documents/projects/tree_modelling/src/util/geometry.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/util/geometry.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/util/geometry.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build",
-  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/util/stopwatch.cpp.o -c /home/david/Documents/school/601/tree_modelling/src/util/stopwatch.cpp",
-  "file": "/home/david/Documents/school/601/tree_modelling/src/util/stopwatch.cpp",
+  "directory": "/home/david/Documents/projects/tree_modelling/build",
+  "command": "/usr/bin/c++ -DGLM_FORCE_CXX14=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\\\"glad/glad.h\\\" -D_USE_MATH_DEFINES=1 -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -std=c++17 -O3 -o CMakeFiles/tree_strands.dir/src/util/stopwatch.cpp.o -c /home/david/Documents/projects/tree_modelling/src/util/stopwatch.cpp",
+  "file": "/home/david/Documents/projects/tree_modelling/src/util/stopwatch.cpp",
   "output": "CMakeFiles/tree_strands.dir/src/util/stopwatch.cpp.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/context.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/context.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/context.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/context.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/context.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/context.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/context.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/init.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/init.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/init.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/init.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/init.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/init.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/init.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/input.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/input.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/input.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/input.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/input.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/input.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/input.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/monitor.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/monitor.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/monitor.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/monitor.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/monitor.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/monitor.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/monitor.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/vulkan.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/vulkan.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/vulkan.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/vulkan.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/vulkan.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/vulkan.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/vulkan.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/window.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/window.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/window.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/window.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/window.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/window.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/window.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/x11_init.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/x11_init.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/x11_init.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/x11_init.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/x11_init.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/x11_init.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/x11_init.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/x11_monitor.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/x11_monitor.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/x11_monitor.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/x11_monitor.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/x11_monitor.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/x11_monitor.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/x11_monitor.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/x11_window.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/x11_window.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/x11_window.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/x11_window.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/x11_window.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/x11_window.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/x11_window.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/xkb_unicode.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/xkb_unicode.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/xkb_unicode.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/xkb_unicode.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/xkb_unicode.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/xkb_unicode.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/xkb_unicode.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/posix_time.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/posix_time.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/posix_time.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/posix_time.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/posix_time.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/posix_time.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/posix_time.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/posix_thread.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/posix_thread.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/posix_thread.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/posix_thread.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/posix_thread.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/posix_thread.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/posix_thread.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/glx_context.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/glx_context.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/glx_context.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/glx_context.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/glx_context.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/glx_context.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/glx_context.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/egl_context.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/egl_context.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/egl_context.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/egl_context.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/egl_context.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/egl_context.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/egl_context.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/osmesa_context.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/osmesa_context.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/osmesa_context.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/osmesa_context.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/osmesa_context.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/osmesa_context.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/osmesa_context.c.o"
 },
 {
-  "directory": "/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src",
-  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/school/601/tree_modelling/build -I/home/david/Documents/school/601/tree_modelling/libs -I/home/david/Documents/school/601/tree_modelling/src -I/home/david/Documents/school/601/tree_modelling/libs/glfw/include -I/home/david/Documents/school/601/tree_modelling/libs/glfw/src -I/home/david/Documents/school/601/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/linux_joystick.c.o -c /home/david/Documents/school/601/tree_modelling/libs/glfw/src/linux_joystick.c",
-  "file": "/home/david/Documents/school/601/tree_modelling/libs/glfw/src/linux_joystick.c",
+  "directory": "/home/david/Documents/projects/tree_modelling/build/libs/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/david/Documents/projects/tree_modelling/build -I/home/david/Documents/projects/tree_modelling/libs -I/home/david/Documents/projects/tree_modelling/src -I/home/david/Documents/projects/tree_modelling/libs/glfw/include -I/home/david/Documents/projects/tree_modelling/libs/glfw/src -I/home/david/Documents/projects/tree_modelling/build/libs/glfw/src -std=gnu99 -fPIC -Wall -o CMakeFiles/glfw.dir/linux_joystick.c.o -c /home/david/Documents/projects/tree_modelling/libs/glfw/src/linux_joystick.c",
+  "file": "/home/david/Documents/projects/tree_modelling/libs/glfw/src/linux_joystick.c",
   "output": "libs/glfw/src/CMakeFiles/glfw.dir/linux_joystick.c.o"
 }
 ]

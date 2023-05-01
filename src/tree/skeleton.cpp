@@ -2,6 +2,8 @@
 #include <iostream>
 #include <glm/gtx/io.hpp>
 
+using json = nlohmann::json;
+
 // FOR DEBUG
 #define PRINT_POS(pos)  \
     std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl \
@@ -14,11 +16,11 @@ glm::vec3 Skeleton::get_com() const {return center_of_mass;}
 float Skeleton::get_average_length() const {return average_length;}
 
 // TODO: I feel like this is messy
-Skeleton::Skeleton(const char* filename){
+Skeleton::Skeleton(json& options){
     std::cout<<"Parsing Skeleton...";
     std::cout.flush();
     // Initialize file stream, and string token
-    std::ifstream in(filename);
+    std::ifstream in(options.at("tree_file"));
     std::string token;
 
     #define GET_NEXT(token) std::getline(in,token, ' ')

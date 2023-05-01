@@ -1,5 +1,4 @@
 #include "strands.h"
-#include "const.h"
 #include "tree/implicit.h"
 #include "util/geometry.h"
 #include <glm/gtx/io.hpp>
@@ -10,24 +9,39 @@ std::default_random_engine
 glm::vec3 random_vector(glm::vec3 axis, float angle);
 
 Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) : 
-  grid(grid),evalfunc(evalfunc)
+  grid(grid),evalfunc(evalfunc), tree(tree)
 {
   for (size_t i = 0; i < tree.leafs_size(); i++) {
     paths.push_back(tree.get_strand(i));
   }
 }
+void Strands::add_strands(nlohmann::json& options){
+    int num_strands = tree.leafs_size();
+    if (options.contains("num_abs")) {
+        num_strands = options.at("num_abs");
+    } else if (options.contains("num_per")) {
+        num_strands *= (int)options.at("num_per");
+    }
+    segment_length = options.at("segment_length");
+    num_trials = options.at("num_trials");
+    max_angle = options.at("max_angle");
+    alpha = options.at("alpha");
+    offset = options.at("segment_offset");
+    reject_iso = options.at("reject_iso");
+    add_strands(num_strands);
+}
 void Strands::add_strands(unsigned int amount) {
-  std::cout << "Generating Strands...";
-  std::cout.flush();
-  std::vector<size_t> indices;
-  for (size_t i = 0; i < paths.size(); i++) {
-    indices.push_back(i);
-  }
-  std::shuffle(std::begin(indices), std::end(indices), rng);
-  for (size_t i = 0; i < amount; i++) {
-    add_strand(indices[i % (indices.size())]);
-  }
-  std::cout << " Done" << std::endl;
+    std::cout << "Generating Strands...";
+    std::cout.flush();
+    std::vector<size_t> indices;
+    for (size_t i = 0; i < paths.size(); i++) {
+        indices.push_back(i);
+    }
+    std::shuffle(std::begin(indices), std::end(indices), rng);
+    for (size_t i = 0; i < amount; i++) {
+        add_strand(indices[i % (indices.size())]);
+    }
+    std::cout << " Done" << std::endl;
 }
 
 // FOR TESTING
@@ -45,6 +59,7 @@ void print_actual_closest(glm::vec3 pos, const std::vector<glm::vec3> &path) {
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
+// TODO: Extract to seperate smaller functions
 void Strands::add_strand(size_t path_index) {
   // Set up strand
   if (path_index >= paths.size())
@@ -60,12 +75,11 @@ void Strands::add_strand(size_t path_index) {
     glm::vec3 start(strand[strand.size() - 1]);
 
     // Find Target point
-    // TODO: Extract to function
     size_t target_index = closest_index;
     glm::vec3 target_point = path[target_index];
     float travelled = 0.f;
     float distance_to_travel =
-        SEGMENT_LENGTH + glm::distance(target_point, start);
+        segment_length + glm::distance(target_point, start);
     bool found_target = false;
     while (!found_target) {
       if (target_index == path.size() - 1) {
@@ -96,80 +110,50 @@ void Strands::add_strand(size_t path_index) {
       float distance;
       float angle;
     };
-    std::vector<Trial>
-        trials; // TODO already know the size of the vector so allocate it
-    float max_distance = 0.f;
-    float min_distance = FLT_MAX;
-    float max_angle = 0.f;
-    for (int i = 0; i < NUM_TRIALS; i++) {
-      // glm::vec3 trial_head =
-      // start+distance_to_travel*random_vector(canonical_direction,
-      // glm::radians(MAX_ANGLE));
+    // TODO already know the size of the vector so allocate it
+    std::vector<Trial> trials;
+    float max_trial_distance = 0.f;
+    float min_trial_distance = FLT_MAX;
+    float max_trial_angle = 0.f;
+    for (int i = 0; i < num_trials; i++) {
       glm::vec3 trial_head =
-          start + SEGMENT_LENGTH * random_vector(canonical_direction,
-                                                 glm::radians(MAX_ANGLE));
+          start + segment_length * random_vector(canonical_direction,
+                                                 glm::radians(max_angle));
       float val = grid.get_in_pos(trial_head);
-      //if (!grid.line_occluded(start, trial_head)) { // Original validation condition
-      if (val<=REJECT_VAL) {
+      if (val<=reject_iso) {
         float distance = glm::distance(trial_head, target_point);
         float angle = glm::angle(trial_head - start, canonical_direction);
         trials.push_back({trial_head, distance, angle});
-        max_distance = fmax(max_distance, distance);
-        min_distance = fmin(min_distance, distance);
-        max_angle = fmax(max_angle, angle);
-      } // else std::cout<<"REJECTED"<<std::endl;
+        max_trial_distance = fmax(max_trial_distance, distance);
+        min_trial_distance = fmin(min_trial_distance, distance);
+        max_trial_angle = fmax(max_trial_angle, angle);
+      }
     }
-    // std::cout<<trials.size()<<std::endl;
 
     // If no valid trials add strand up to this moment
     if (trials.empty()) //TODO: could change this to back up
       break;
-    // if(trials.empty()) return;
 
     //  Evaluate trials
     int best_trial = 0;
     float best_fitness = 0.f;
     for (int i = 1; i < trials.size(); i++) {
-      float distance_metric = 1 - (trials[i].distance - min_distance) /
-                                      (max_distance - min_distance);
-      float direction_metric = 1 - (trials[i].angle / max_angle);
-      float fitness = ALPHA * distance_metric + (1 - ALPHA) * direction_metric;
+      float distance_metric = 1 - (trials[i].distance - min_trial_distance) /
+                                      (max_trial_distance - min_trial_distance);
+      float direction_metric = 1 - (trials[i].angle / max_trial_angle);
+      float fitness = alpha * distance_metric + (1 - alpha) * direction_metric;
       if (fitness >= best_fitness) {
         best_trial = i;
         best_fitness = fitness;
       }
     }
-    // Add best trial calculate new closest index
-    // DEBUG TO SEE TRIALS
-    // strand.push_back(trials[best_trial].head);
-    // strand.push_back(target_point);
-    /*
-    for ( auto trial : trials ){
-        strand.push_back(trial.head);
-    }
-    */
-
-    // closest_index=target_index;
     strand.push_back(trials[best_trial].head);
     closest_index = closest_node_on_path(strand.back(), path, target_index, 5).first;
-    /*
-    std::cout<<std::endl;
-    std::cout<<"FOUND: "<<closest_index<<" "<<glm::distance(strand.back(),
-    path[closest_index])<<std::endl; //TODO DEBUG PRINT
-    print_actual_closest(strand.back(),path);
-    */
   }
   // Occupy strand path
   if (strand.size()<=2) return;
   strands.push_back(strand);
-  //grid.occupy_path(strand, 1);
-  //grid.fill_path(strand, evalfunc);
-  grid.fill_path_2(strand, evalfunc);
-  /*
-  for (auto point : strand){
-    grid.fill_point(point,evalfunc);
-  }
-  */
+  grid.fill_path(strand, evalfunc, offset);
 }
 
 Mesh<Vertex> Strands::get_mesh() const {

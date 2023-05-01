@@ -1,0 +1,19 @@
+
+{
+  "tree_file": "./resources/tree_data/irregular_crown2.data",
+  "grid_scale": 0.5,
+  "implicit":{
+    "type": "metaballs", 
+    "max_val": 3,
+    "range": 0.01
+  },
+  "strands":{
+    "segment_length": 0.03,
+    "num_trials": 50,
+    "max_angle": 90.0,
+    "alpha": 0.5,
+    "segment_offset": 0.3,
+    "reject_iso": 6.0
+  },
+  "mesh_iso": 1.0
+}

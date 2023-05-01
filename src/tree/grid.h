@@ -29,8 +29,10 @@ public:
         );
     Grid(const Skeleton& tree, float percent_overshoot, float scale_factor=1.f);
 
-    float get_scale(){return scale;}
-    
+    float get_scale() { return scale; }
+    glm::vec3 get_center() { return center; }
+    glm::vec3 get_backbottomleft() { return back_bottom_left; }
+
     void occupy_pos(glm::vec3 pos, float val);
     void occupy_slot(glm::ivec3 pos, float val);
     void add_slot(glm::ivec3 slot, float val);
@@ -38,8 +40,7 @@ public:
     void occupy_path(std::vector<glm::vec3> path, float val);
 
     // Implicit Filling
-    void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
-    void fill_path_2(std::vector<glm::vec3> path, Implicit& implicit);
+    void fill_path(std::vector<glm::vec3> path, Implicit& implicit, float offset);
     void fill_line(glm::vec3 p1, glm::vec3 p2, Implicit& implicit);
     void fill_point(glm::vec3 p, Implicit& implicit);
 
@@ -68,7 +69,7 @@ private:
 
     glm::ivec3 dimensions;
     float scale;
-    glm::vec3 center; // TODO REMOVE THIS
+    glm::vec3 center;
 
     glm::vec3 back_bottom_left;
 
