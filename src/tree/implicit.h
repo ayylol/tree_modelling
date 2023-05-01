@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <nlohmann/json.hpp>
 
 #include <vector>
 class Implicit {
@@ -32,6 +33,10 @@ private:
 class MetaBalls : public DistanceField {
 public:
   MetaBalls(float a, float b) : DistanceField(b), a(a), b(b){};
+  MetaBalls(nlohmann::json &options)
+      : MetaBalls(options.at("max_val"),
+                  options.at("range")){};
+
 private:
   float a;
   float b;
@@ -41,6 +46,11 @@ private:
 class Blinn : public DistanceField {
 public:
   Blinn(float radius, float blobiness, float cutoff_val);
+  Blinn(nlohmann::json &options)
+      : Blinn(options.at("radius"), 
+              options.at("blobiness"),
+              options.at("cutoff_val")){};
+
 private:
   float radius;
   float blobiness;

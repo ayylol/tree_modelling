@@ -38,3 +38,5 @@ build/*
 *.swp
 .cache/*
 tags
+# vscode
+.vscode

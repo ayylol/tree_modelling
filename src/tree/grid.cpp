@@ -6,7 +6,6 @@
 #include <climits>
 #include <glm/gtx/io.hpp>
 #include <iostream>
-#include "const.h"
 
 // Commonly used names
 using glm::ivec3;
@@ -21,7 +20,7 @@ Grid::Grid(ivec3 dimensions, float scale, vec3 back_bottom_left)
            vector<vector<float>>(dimensions.y, vector<float>(dimensions.z, 0))),
       scale(scale), back_bottom_left(back_bottom_left),
       center(back_bottom_left + (scale / 2.f) * (vec3)dimensions) {}
-// Immplement
+
 Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
   glm::vec3 bounds_size = tree.get_bounds().second - tree.get_bounds().first;
   back_bottom_left =
@@ -29,7 +28,7 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
   glm::vec3 front_top_right =
       tree.get_bounds().second + (bounds_size * percent_overshoot);
 
-  center = back_bottom_left + (scale / 2.f) * (vec3)dimensions; // TODO REMOVE
+  center = 0.5f*(back_bottom_left+front_top_right);
 
   scale = tree.get_average_length() * scale_factor;
   dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
@@ -141,9 +140,22 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
   }
   int axis_1 = (main_axis + 1) % 3;
   int axis_2 = (main_axis + 2) % 3;
-  vec3 dir = glm::normalize(diff);
+  // Try to find what the exact overshoot should be
+  /*
+  int least_axis = 0;
+  if (variance.y < variance.x && variance.y < variance.z) {
+    least_axis = 1;
+  } else if (variance.z < variance.x && variance.z < variance.y) {
+    least_axis = 2;
+  }
+  float overshoot = (implicit.cutoff/diff[least_axis]);
+  vec3 segment_start = p1 - diff*overshoot;
+  vec3 segment_end = p2 + diff*overshoot;
+  */
+  #define SEGMENT_OVERSHOOT 40.f
   vec3 segment_start = p1 - diff * implicit.cutoff * SEGMENT_OVERSHOOT;
   vec3 segment_end = p2 + diff * implicit.cutoff * SEGMENT_OVERSHOOT;
+
   vector<ivec3> voxels = get_voxels_line(segment_start, segment_end);
   int last_main_axis = pos_to_grid(p1)[main_axis] - 1;
   for (int i = 0; i < voxels.size(); i++) {
@@ -170,59 +182,10 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
   }
 }
 
-void Grid::fill_path_2(std::vector<glm::vec3> path, Implicit& implicit){
-  const float offset=OFFSET;
+void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit, float offset){
   fill_line(path[0], path[1], implicit);
   for (int i = 1; i<path.size()-1;i++){
     fill_line(path[i]+offset*(path[i+1]-path[i]), path[i + 1], implicit);
-  }
-}
-
-void Grid::fill_path(std::vector<glm::vec3> path, Implicit &implicit) {
-  int n = std::ceil(implicit.cutoff / scale);
-  if (path.size() < 2)
-    return;
-  for (int i = 0; i < path.size() - 1; i++) {
-    // Find axis with most variance.
-    vec3 diff = path[i + 1] - path[i];
-    vec3 variance = glm::abs(diff); 
-    int main_axis = 0;
-    if (variance.y > variance.x && variance.y > variance.z) {
-      main_axis = 1;
-    } else if (variance.z > variance.x && variance.z > variance.y) {
-      main_axis = 2;
-    }
-    int axis_1 = (main_axis + 1) % 3;
-    int axis_2 = (main_axis + 2) % 3;
-    // Iterate along axis with largest variance
-    vec3 dir = glm::normalize(diff);
-    vec3 segment_start = path[i] - diff * implicit.cutoff * SEGMENT_OVERSHOOT;
-    vec3 segment_end = path[i + 1] + diff * implicit.cutoff * SEGMENT_OVERSHOOT;
-    vector<ivec3> voxels = get_voxels_line(segment_start, segment_end);
-    int last_main_axis = voxels[0][main_axis] - 1;
-    for (int j = 0; j < voxels.size(); j++) {
-      int l1, l2;                                 // Voxel filling limits
-      if (last_main_axis != voxels[j][main_axis]) { // Add all
-        l1 = implicit.cutoff/scale*1.5;
-        l2 = implicit.cutoff/scale*1.5;
-      } else { // Add extra
-        //std::cout<<"move along another axis"<<std::endl;
-        last_main_axis = voxels[j][main_axis];
-        continue;
-      }
-      for (int i1 = -l1; i1 <= l1; i1++) {
-        for (int i2 = -l2; i2 <= l2; i2++) {
-          ivec3 slot_to_fill = voxels[j];
-          slot_to_fill[axis_1] += i1;
-          slot_to_fill[axis_2] += i2;
-          float val = implicit.eval(grid_to_pos(slot_to_fill), path, i);
-          if (val != 0) {
-             add_slot(slot_to_fill, val);
-          }
-        }
-      }
-      last_main_axis = voxels[j][main_axis];
-    }
   }
 }
 
