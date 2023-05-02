@@ -35,6 +35,7 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
   grid = std::vector<std::vector<std::vector<float>>>(
       dimensions.x,
       vector<vector<float>>(dimensions.y, vector<float>(dimensions.z, 0)));
+  std::cout<<"Grid dimensions: "<<dimensions<<std::endl;
 }
 
 ivec3 Grid::pos_to_grid(vec3 pos) const {
