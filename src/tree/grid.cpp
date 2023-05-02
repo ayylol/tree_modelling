@@ -47,9 +47,9 @@ vec3 Grid::grid_to_pos(ivec3 voxel) const {
 }
 
 bool Grid::is_in_grid(ivec3 grid_cell) const {
-  return grid_cell.x >= 0 && grid_cell.x < grid.size() && grid_cell.y >= 0 &&
-         grid_cell.y < grid[0].size() && grid_cell.z >= 0 &&
-         grid_cell.z < grid[0][0].size();
+  return grid_cell.x >= 0 && grid_cell.x < dimensions.x && grid_cell.y >= 0 &&
+         grid_cell.y < dimensions.y && grid_cell.z >= 0 &&
+         grid_cell.z < dimensions.z;
 }
 
 float Grid::get_in_grid(ivec3 index) const {
