@@ -3,7 +3,7 @@
   "grid_scale": 0.6,
   "implicit":{
     "type": "metaballs", 
-    "max_val": 10,
+    "max_val": 10.0,
     "range": 0.01
   },
   "strands":{
