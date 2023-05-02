@@ -40,3 +40,5 @@ build/*
 tags
 # vscode
 .vscode
+# compile commands
+compile_commands.json
