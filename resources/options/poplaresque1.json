@@ -1,6 +1,6 @@
 {
   "tree_file": "./resources/tree_data/poplaresque1.data",
-  "grid_scale": 0.4,
+  "grid_scale": 0.6,
   "implicit":{
     "type": "metaballs", 
     "max_val": 10,
