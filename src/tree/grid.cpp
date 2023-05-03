@@ -61,6 +61,16 @@ float Grid::get_in_grid(ivec3 index) const {
 
 float Grid::get_in_pos(vec3 pos) const { return get_in_grid(pos_to_grid(pos)); }
 
+glm::vec3 Grid::get_norm_grid(glm::ivec3 index) const {
+  return glm::normalize(glm::vec3((get_in_grid(index + ivec3(-1, 0, 0)) -
+                                   get_in_grid(index + ivec3(1, 0, 0))),
+                                  (get_in_grid(index + ivec3(0, -1, 0)) -
+                                   get_in_grid(index + ivec3(0, 1, 0))),
+                                  (get_in_grid(index + ivec3(0, 0, -1)) -
+                                   get_in_grid(index + ivec3(0, 0, 1)))));
+}
+glm::vec3 Grid::get_norm_pos(glm::vec3 pos) const { return get_norm_grid(pos_to_grid(pos)); }
+
 bool Grid::line_occluded(glm::vec3 start, glm::vec3 end) {
   std::vector<glm::ivec3> voxels = get_voxels_line(start, end);
   if (voxels.size() == 0)
@@ -79,7 +89,6 @@ void Grid::occupy_pos(vec3 pos, float val) {
 
 void Grid::occupy_slot(ivec3 slot, float val) {
   if (!is_in_grid(slot)) {
-    // std::cout<<"outside of grid "<<slot<<std::endl;
     return;
   }
   if (get_in_grid(slot) == 0) {
@@ -290,6 +299,32 @@ Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold) const {
   return Mesh<VertFlat>(vertices, indices);
 }
 
+Mesh<VertFlat> Grid::get_normals_geom(float threshold) const {
+  vector<VertFlat> vertices;
+  vector<GLuint> indices;
+  float max_val = 0.f;
+  for (glm::ivec3 voxel : occupied) {
+    if (get_in_grid(voxel) > threshold) {
+      bool visible = false;
+      for (auto norm : face_norms) {
+        if (get_in_grid(voxel + norm) <= threshold)
+          visible = true;
+      }
+      // Completely occluded do not add vertices
+      if (!visible)
+        continue;
+      vec3 norm_start = back_bottom_left + vec3(voxel) * scale + vec3(1, 1, 1) * (scale / 2);
+      vec3 norm_end = norm_start + get_norm_grid(voxel)*scale*3.0f;
+      vertices.push_back(VertFlat{norm_start, glm::vec3(0,1,0)});
+      vertices.push_back(VertFlat{norm_end, glm::vec3(0,1,0)});
+    }
+  }
+  for (size_t i = 0; i < vertices.size(); i++) {
+    indices.push_back(i);
+  }
+  return Mesh<VertFlat>(vertices, indices);
+}
+
 Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
   std::cout << "Generating Occupied Geometry...";
   std::cout.flush();
@@ -328,13 +363,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
       if (!visible)
         continue;
 
-      glm::vec3 normal = glm::normalize(
-          glm::vec3(0.5f * (get_in_grid(voxel + ivec3(1, 0, 0)) +
-                            get_in_grid(voxel + ivec3(-1, 0, 0))),
-                    0.5f * (get_in_grid(voxel + ivec3(0, 1, 0)) +
-                            get_in_grid(voxel + ivec3(0, -1, 0))),
-                    0.5f * (get_in_grid(voxel + ivec3(0, 0, 1)) +
-                            get_in_grid(voxel + ivec3(0, 0, -1)))));
+      glm::vec3 normal = get_norm_grid(voxel);
 
       // Loop through and generate vertices
       vec3 current_pos = back_bottom_left + vec3(voxel) * scale;

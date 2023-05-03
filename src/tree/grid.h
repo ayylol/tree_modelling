@@ -46,6 +46,8 @@ public:
 
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;
+    glm::vec3 get_norm_grid(glm::ivec3 index) const;
+    glm::vec3 get_norm_pos(glm::vec3 pos) const;
 
     bool line_occluded(glm::vec3 start, glm::vec3 end);
 
@@ -59,6 +61,7 @@ public:
     Mesh<VertFlat> get_bound_geom() const;
     Mesh<Vertex> get_occupied_geom(float threshold) const;
     Mesh<VertFlat> get_occupied_geom_points(float threshold) const;
+    Mesh<VertFlat> get_normals_geom(float threshold) const;
 
     void smooth_grid();
 
