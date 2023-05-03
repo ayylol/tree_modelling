@@ -44,6 +44,13 @@ void processInput(GLFWwindow *window);
 
 Camera* camera;
 
+// Toggles
+bool view_mesh = true, 
+     view_volume = false, 
+     view_strands = false,
+     view_normals = false,
+     view_skeleton = false;
+
 int main(int argc, char *argv[]) {
 
     // Validating input
@@ -99,18 +106,16 @@ int main(int argc, char *argv[]) {
     // Creating Meshes
     sw.start();
     float surface_val = opt_data.at("mesh_iso");
-    Mesh tree_skelly = tree.get_mesh();
-    Mesh detail_geom = detail.get_mesh();
-    Mesh bound_geom = gr.get_bound_geom();
-    Mesh grid_geom = gr.get_grid_geom();
-    Mesh occupy_geom = gr.get_occupied_geom(surface_val);
-    Mesh occupy_dots = gr.get_occupied_geom_points(surface_val);
-    Mesh strands = detail.get_mesh();
+    Mesh skeleton_geom = tree.get_mesh();
+    Mesh tree_geom = gr.get_occupied_geom(surface_val);
+    Mesh volume_geom = gr.get_occupied_geom_points(0.0f);
+    Mesh strands_geom = detail.get_mesh();
+    Mesh normals_geom = gr.get_normals_geom(surface_val);
     sw.stop();
     gr.export_data("data.txt");
 
     // GROUND PLANE
-    glm::vec3 ground_color = glm::vec3(0, 0.6, 0.02);
+    glm::vec3 ground_color = glm::vec3(0, 0.3, 0.02);
     std::vector<Vertex> ground_verts{
         Vertex{glm::vec3(50, 0, 50), ground_color},
             Vertex{glm::vec3(50, 0, -50), ground_color},
@@ -128,13 +133,12 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        // tree_skelly.draw(flat_shader, *camera, GL_LINES);
-        // detail_geom.draw(flat_shader, *camera, GL_LINES);
-        bound_geom.draw(flat_shader, *camera, GL_LINES);
-        // grid_geom.draw(flat_shader, *camera, GL_LINES);
-        occupy_geom.draw(shader, *camera, GL_TRIANGLES);
-        // occupy_dots.draw(flat_shader, *camera, GL_POINTS);
-        // strands.draw(flat_shader, *camera, GL_LINES);
+        // bound_geom.draw(flat_shader, *camera, GL_LINES);
+        if (view_mesh) tree_geom.draw(shader, *camera, GL_TRIANGLES);
+        if (view_volume) volume_geom.draw(flat_shader, *camera, GL_POINTS);
+        if (view_strands) strands_geom.draw(flat_shader, *camera, GL_LINES);
+        if (view_normals) normals_geom.draw(flat_shader, *camera, GL_LINES);
+        if (view_skeleton) skeleton_geom.draw(flat_shader, *camera, GL_LINES);
         ground.draw(shader, *camera, GL_TRIANGLES);
 
         glfwSwapBuffers(window);
@@ -180,9 +184,8 @@ GLFWwindow *openGLInit() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // OpenGL drawing settings
-    // glPointSize(2.f);
-    glLineWidth(4.f);
-    // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glPointSize(2.f);
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     glEnable(GL_DEPTH_TEST);
 
     return window;
@@ -196,6 +199,7 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 }
 
 #define SENS 0.5f
+bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false, pressed5 = false;
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -226,5 +230,34 @@ void processInput(GLFWwindow *window) {
         camera->pan_side(-0.05f * SENS);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // PAN RIGHT
         camera->pan_side(0.05f * SENS);
-    
+    // Mesh view modes 
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !pressed1){ // Toggle
+        view_mesh = !view_mesh;
+        pressed1 = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE && pressed1) pressed1 = false;
+
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && !pressed2){ // Toggle
+        view_volume = !view_volume;
+        pressed2 = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE && pressed2) pressed2 = false;
+
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !pressed3){ // Toggle
+        view_strands = !view_strands;
+        pressed3 = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_RELEASE && pressed3) pressed3 = false;
+
+    if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS && !pressed4){ // Toggle
+        view_normals = !view_normals;
+        pressed4 = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_4) == GLFW_RELEASE && pressed4) pressed4 = false;
+
+    if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS && !pressed5){ // Toggle
+        view_skeleton = !view_skeleton;
+        pressed5 = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_5) == GLFW_RELEASE && pressed5) pressed5 = false;
 }
