@@ -36,6 +36,7 @@ public:
     void occupy_pos(glm::vec3 pos, float val);
     void occupy_slot(glm::ivec3 pos, float val);
     void add_slot(glm::ivec3 slot, float val);
+    void add_gradient(glm::ivec3 slot, glm::vec3 val);
     void occupy_line(glm::vec3 start, glm::vec3 end, float val);
     void occupy_path(std::vector<glm::vec3> path, float val);
 
@@ -68,6 +69,7 @@ public:
     void export_data(const char * filename);
 private:
     std::vector<std::vector<std::vector<float>>> grid;
+    std::vector<std::vector<std::vector<glm::vec3>>> gradient;
     std::vector<glm::ivec3> occupied;
 
     glm::ivec3 dimensions;

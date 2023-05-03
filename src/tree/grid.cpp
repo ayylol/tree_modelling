@@ -16,8 +16,8 @@ using std::vector;
 
 Grid::Grid(ivec3 dimensions, float scale, vec3 back_bottom_left)
     : dimensions(dimensions),
-      grid(dimensions.x,
-           vector<vector<float>>(dimensions.y, vector<float>(dimensions.z, 0))),
+      grid(dimensions.x, vector<vector<float>>(dimensions.y, vector<float>(dimensions.z, 0))),
+      gradient(dimensions.x, vector<vector<glm::vec3>>(dimensions.y, vector<glm::vec3>(dimensions.z, glm::vec3(0,0,0)))),
       scale(scale), back_bottom_left(back_bottom_left),
       center(back_bottom_left + (scale / 2.f) * (vec3)dimensions) {}
 
@@ -35,7 +35,11 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
   grid = std::vector<std::vector<std::vector<float>>>(
       dimensions.x,
       vector<vector<float>>(dimensions.y, vector<float>(dimensions.z, 0)));
-  std::cout<<"Grid dimensions: "<<dimensions<<std::endl;
+  gradient = std::vector<std::vector<std::vector<vec3>>>(
+      dimensions.x,
+      vector<vector<vec3>>(dimensions.y,
+                           vector<vec3>(dimensions.z, vec3(0, 0, 0))));
+  std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 
 ivec3 Grid::pos_to_grid(vec3 pos) const {
@@ -106,6 +110,13 @@ void Grid::add_slot(ivec3 slot, float val) {
   grid[slot.x][slot.y][slot.z] += val;
 }
 
+void Grid::add_gradient(ivec3 slot, glm::vec3 val) {
+  if (!is_in_grid(slot)) {
+    return;
+  }
+  gradient[slot.x][slot.y][slot.z] += val;
+}
+
 void Grid::occupy_line(vec3 start, vec3 end, float val) {
   // fill voxel
   vector<ivec3> voxel_list = get_voxels_line(start, end);
@@ -151,17 +162,6 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
   int axis_1 = (main_axis + 1) % 3;
   int axis_2 = (main_axis + 2) % 3;
   // Try to find what the exact overshoot should be
-  /*
-  int least_axis = 0;
-  if (variance.y < variance.x && variance.y < variance.z) {
-    least_axis = 1;
-  } else if (variance.z < variance.x && variance.z < variance.y) {
-    least_axis = 2;
-  }
-  float overshoot = (implicit.cutoff/diff[least_axis]);
-  vec3 segment_start = p1 - diff*overshoot;
-  vec3 segment_end = p2 + diff*overshoot;
-  */
   #define SEGMENT_OVERSHOOT 40.f
   vec3 segment_start = p1 - diff * implicit.cutoff * SEGMENT_OVERSHOOT;
   vec3 segment_end = p2 + diff * implicit.cutoff * SEGMENT_OVERSHOOT;
@@ -182,9 +182,17 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
         ivec3 slot_to_fill = voxels[i];
         slot_to_fill[axis_1] += i1;
         slot_to_fill[axis_2] += i2;
-        float val = implicit.eval(grid_to_pos(slot_to_fill), p1, p2);
+        vec3 pos = grid_to_pos(slot_to_fill);
+        float val = implicit.eval(pos, p1, p2);
         if (val != 0) {
           add_slot(slot_to_fill, val);
+          //calculate gradient
+          const float step = 0.000001f;
+          vec3 dir(
+              implicit.eval(pos+vec3(-1,0,0)*step,p1,p2)-implicit.eval(pos+vec3(1,0,0)*step,p1,p2),
+              implicit.eval(pos+vec3(0,-1,0)*step,p1,p2)-implicit.eval(pos+vec3(0,1,0)*step,p1,p2),
+              implicit.eval(pos+vec3(0,0,-1)*step,p1,p2)-implicit.eval(pos+vec3(0,0,1)*step,p1,p2));
+          add_gradient(slot_to_fill, dir);
         }
       }
     }
@@ -314,9 +322,12 @@ Mesh<VertFlat> Grid::get_normals_geom(float threshold) const {
       if (!visible)
         continue;
       vec3 norm_start = back_bottom_left + vec3(voxel) * scale + vec3(1, 1, 1) * (scale / 2);
-      vec3 norm_end = norm_start + get_norm_grid(voxel)*scale*3.0f;
+      vec3 norm_end = norm_start + get_norm_grid(voxel)*scale*2.0f;
+      vec3 norm_end2 = norm_start + glm::normalize(gradient[voxel.x][voxel.y][voxel.z])*scale*2.0f;
       vertices.push_back(VertFlat{norm_start, glm::vec3(0,1,0)});
       vertices.push_back(VertFlat{norm_end, glm::vec3(0,1,0)});
+      vertices.push_back(VertFlat{norm_start, glm::vec3(0,0,1)});
+      vertices.push_back(VertFlat{norm_end2, glm::vec3(0,0,1)});
     }
   }
   for (size_t i = 0; i < vertices.size(); i++) {
@@ -363,7 +374,8 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
       if (!visible)
         continue;
 
-      glm::vec3 normal = get_norm_grid(voxel);
+      //glm::vec3 normal = get_norm_grid(voxel);
+      glm::vec3 normal = glm::normalize(gradient[voxel.x][voxel.y][voxel.z]);
 
       // Loop through and generate vertices
       vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
