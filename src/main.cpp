@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
         if (view_strands) strands_geom.draw(flat_shader, *camera, GL_LINES);
         if (view_normals) normals_geom.draw(flat_shader, *camera, GL_LINES);
         if (view_skeleton) skeleton_geom.draw(flat_shader, *camera, GL_LINES);
-        ground.draw(shader, *camera, GL_TRIANGLES);
+        //ground.draw(shader, *camera, GL_TRIANGLES);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
