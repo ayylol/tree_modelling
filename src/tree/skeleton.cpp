@@ -85,7 +85,6 @@ Mesh<VertFlat> Skeleton::get_mesh(){
             }
         }
         if (done && !done_shoot){
-          std::cout<<"HERE!!!"<<std::endl;
           done_shoot = true;
           done = false;
           last_node = {root_root, 0};
