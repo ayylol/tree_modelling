@@ -1,6 +1,0 @@
-#!/bin/bash
-
-tree_panel $1&
-while true; do
-  ./tree_strands $1 2> /dev/null
-done
