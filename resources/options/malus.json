@@ -1,5 +1,6 @@
 {
   "tree_file": "./resources/tree_data/malus_baccata_columnaris",
+  "root_file": "./resources/tree_data/roots.data",
   "grid_scale": 0.2,
   "implicit":{
     "type": "metaballs", 

@@ -9,7 +9,7 @@ uniform vec3 camPos;
 
 vec4 directionalLight()
 {
-	vec3 lightDirection = normalize(vec3(0,0,0.1));
+	vec3 lightDirection = normalize(vec3(0,1.0,0.2));
 
 	// ambient lighting
 	float ambient = 0.8f;
