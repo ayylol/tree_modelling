@@ -106,7 +106,12 @@ Skeleton::Skeleton(json& options){
     average_length = total_length/num_nodes;
 
     std::cout<<" Done"<<std::endl;
-    std::cout<<"Average Length: "<< average_length <<std::endl;
+    std::cout<<"---- Skeleton Stats ----"<<std::endl;
+    std::cout<<"Root Position: "<<root->position<<std::endl;
+    std::cout<<"Number of Leafs: "<< leafs.size()<<std::endl;
+    std::cout<<"Average Segment Length: "<< average_length<<std::endl;
+    std::cout<<"Max Extent: "<<bounds.first<<" "<<bounds.second<<std::endl;
+    std::cout<<"------------------------"<<std::endl;
 }
 
 Mesh<VertFlat> Skeleton::get_mesh(){
