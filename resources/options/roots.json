@@ -1,5 +1,5 @@
 {
-  "tree_file": "./roots.data",
+  "tree_file": "./resources/tree_data/roots.data",
   "grid_scale": 0.8,
   "implicit":{
     "type": "metaballs", 
