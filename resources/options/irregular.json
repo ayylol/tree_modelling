@@ -1,6 +1,7 @@
 
 {
   "tree_file": "./resources/tree_data/irregular_crown2.data",
+  "root_file": "./resources/tree_data/roots.data",
   "grid_scale": 0.5,
   "implicit":{
     "type": "metaballs", 

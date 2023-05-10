@@ -24,15 +24,15 @@ glm::vec3 random_color();
 
 class Skeleton{
     public:
-       Skeleton(nlohmann::json& options); 
+        Skeleton(nlohmann::json& options); 
 
-       Mesh<VertFlat> get_mesh();
+        Mesh<VertFlat> get_mesh();
 
-       std::vector<glm::vec3> get_strand(size_t index) const;
-       size_t leafs_size() const;
-       std::pair<glm::vec3,glm::vec3> get_bounds() const;
-       glm::vec3 get_com() const;
-       float get_average_length() const;
+        std::vector<glm::vec3> get_strand(size_t index) const;
+        size_t leafs_size() const;
+        std::pair<glm::vec3,glm::vec3> get_bounds() const;
+        glm::vec3 get_com() const;
+        float get_average_length() const;
 
     private:
         struct Node{
@@ -40,10 +40,22 @@ class Skeleton{
             std::shared_ptr<Node> parent;
             std::vector<std::shared_ptr<Node>>children;
         }; 
-        std::shared_ptr<Node> root;
+        std::shared_ptr<Node> shoot_root;
         std::vector<std::shared_ptr<Node>> leafs;
+        std::shared_ptr<Node> root_root;
+        std::vector<std::shared_ptr<Node>> root_tips;
 
-       std::pair<glm::vec3,glm::vec3> bounds;
-       glm::vec3 center_of_mass;
-       float average_length;
+        struct ParseInfo{
+            std::pair<glm::vec3,glm::vec3> extent;
+            glm::vec3 center_of_mass;
+            int num_nodes;
+            float total_length;
+        };
+        static ParseInfo parse(std::shared_ptr<Node>& root,  
+            std::vector<std::shared_ptr<Node>>& leafs,
+            std::string filename);
+
+        std::pair<glm::vec3,glm::vec3> bounds;
+        glm::vec3 center_of_mass;
+        float average_length;
 };
