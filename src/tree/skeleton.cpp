@@ -106,6 +106,7 @@ Skeleton::Skeleton(json& options){
     average_length = total_length/num_nodes;
 
     std::cout<<" Done"<<std::endl;
+    std::cout<<"Average Length: "<< average_length <<std::endl;
 }
 
 Mesh<VertFlat> Skeleton::get_mesh(){
