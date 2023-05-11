@@ -74,8 +74,9 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
   glm::vec3 last_closest = (*path)[closest_index];
   std::vector<glm::vec3> strand{(*path)[closest_index]};
 
+  bool on_root = false;
   // Loop until closest node is last node
-  while (closest_index != path->size() - 1) {
+  while (closest_index != path->size() - 1 || !on_root) {
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
 
@@ -88,9 +89,18 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
     bool found_target = false;
     while (!found_target) {
       if (target_index == path->size() - 1) {
-        // Bound target point to tree root
-        target_point = (*path)[target_index];
-        found_target = true;
+        //std::cout<<"EDGE"<<std::endl;
+        if (!on_root){
+          path=&(root_paths[root_index]);
+          target_index=0;
+          on_root=true;
+          //std::cout<<"Got To Root"<<std::endl;
+        }else{
+          // Bound target point to last point on root
+          target_point = (*path)[target_index];
+          found_target = true;
+          //std::cout<<"Got To Tip of Root"<<std::endl;
+        }
       } else if (travelled > distance_to_travel) {
         // Backtrack and travel exactly distance needed
         target_index--;
@@ -100,10 +110,12 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
         target_point =
             (*path)[target_index] + glm::normalize(last_step) * left_to_travel;
         found_target = true;
+        //std::cout<<"Went Too Far"<<std::endl;
       } else {
         // Travel down the path
         travelled += glm::distance((*path)[target_index], (*path)[target_index + 1]);
         target_index++;
+        //std::cout<<"Travelling Down"<<std::endl;
       }
     }
     // use target point to calculate canonical direction
