@@ -52,8 +52,10 @@ void Strands::add_strands(unsigned int amount) {
     std::shuffle(root_indices.begin(), root_indices.end(), rng);
 
     for (size_t i = 0; i < amount; i++) {
+        //std::cout<<"Adding Strand: "<<i<<std::endl;
         add_strand(shoot_indices[i % (shoot_indices.size())],
                    root_indices[i % (root_indices.size())]);
+        //std::cout<<std::endl;
     }
 
     std::cout << " Done" << std::endl;
@@ -77,7 +79,9 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
 
   bool on_root = false;
   // Loop until closest node is last node
-  while (closest_index != path->size() - 1 || !on_root) {
+  bool done = false;
+  while (!done) {
+    //std::cout <<"Closest Index: "<<closest_index<<std::endl;
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
 
@@ -88,7 +92,9 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
     float distance_to_travel =
         segment_length + glm::distance(target_point, start);
     bool found_target = false;
+    // TODO: look at this closer, and extract to function
     while (!found_target) {
+      //std::cout<<"STEPPING ALONG PATH"<<std::endl;
       if (target_index == path->size() - 1) {
         //std::cout<<"EDGE"<<std::endl;
         if (!on_root){
@@ -100,11 +106,12 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
           // Bound target point to last point on root
           target_point = (*path)[target_index];
           found_target = true;
+          done = true;
           //std::cout<<"Got To Tip of Root"<<std::endl;
         }
       } else if (travelled > distance_to_travel) {
         // Backtrack and travel exactly distance needed
-        target_index--;
+        if(target_index!=0) target_index--;
         glm::vec3 last_step = (*path)[target_index + 1] - (*path)[target_index];
         travelled -= glm::length(last_step);
         float left_to_travel = distance_to_travel - travelled;
@@ -122,6 +129,7 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
     // use target point to calculate canonical direction
     glm::vec3 canonical_direction = glm::normalize(target_point - last_closest);
 
+    //std::cout<<"Making Trials"<<std::endl;
     // Generate trials
     struct Trial {
       glm::vec3 head;
@@ -154,6 +162,7 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
       break;
     }
 
+    //std::cout<<"Evaluating Trials"<<std::endl;
     //  Evaluate trials
     int best_trial = 0;
     float best_fitness = 0.f;
@@ -168,7 +177,9 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
       }
     }
     strand.push_back(trials[best_trial].head);
+    //std::cout<<target_index<<std::endl;
     closest_index = closest_node_on_path(strand.back(), *path, target_index, 5).first;
+    //std::cout<<"Going Next"<<std::endl;
   }
   // Occupy strand path
   if (strand.size()<=2) return;

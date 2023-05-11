@@ -49,7 +49,9 @@ bool view_mesh = true,
      view_volume = false, 
      view_strands = false,
      view_normals = false,
-     view_skeleton = false;
+     view_skeleton = false,
+     view_ground = false,
+     view_bound = false;
 
 int main(int argc, char *argv[]) {
 
@@ -81,7 +83,7 @@ int main(int argc, char *argv[]) {
     sw.stop();
 
     // Grid
-    Grid gr = Grid(tree, 0.1f, opt_data.at("grid_scale"));
+    Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
 
     // Make camera according to grid
     Camera cam(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height);
@@ -134,13 +136,13 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        //bound_geom.draw(flat_shader, *camera, GL_LINES);
         if (view_mesh) tree_geom.draw(shader, *camera, GL_TRIANGLES);
         if (view_volume) volume_geom.draw(flat_shader, *camera, GL_POINTS);
         if (view_strands) strands_geom.draw(flat_shader, *camera, GL_LINES);
         if (view_normals) normals_geom.draw(flat_shader, *camera, GL_LINES);
         if (view_skeleton) skeleton_geom.draw(flat_shader, *camera, GL_LINES);
-        //ground.draw(shader, *camera, GL_TRIANGLES);
+        if (view_ground) ground.draw(shader, *camera, GL_TRIANGLES);
+        if (view_bound) bound_geom.draw(flat_shader, *camera, GL_LINES);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -200,7 +202,8 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 }
 
 #define SENS 0.5f
-bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false, pressed5 = false;
+bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
+     pressed5 = false, pressed6 = false, pressed7 = false;
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -261,4 +264,16 @@ void processInput(GLFWwindow *window) {
         pressed5 = true;
     }
     if (glfwGetKey(window, GLFW_KEY_5) == GLFW_RELEASE && pressed5) pressed5 = false;
+
+    if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS && !pressed6){ // Toggle
+        view_ground = !view_ground;
+        pressed6 = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_6) == GLFW_RELEASE && pressed6) pressed6 = false;
+
+    if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS && !pressed7){ // Toggle
+        view_bound = !view_bound;
+        pressed7 = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_7) == GLFW_RELEASE && pressed7) pressed7 = false;
 }
