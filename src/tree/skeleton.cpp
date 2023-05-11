@@ -6,6 +6,7 @@
 using json = nlohmann::json;
 
 size_t Skeleton::leafs_size() const {return leafs.size();}
+size_t Skeleton::roots_size() const {return root_tips.size();}
 std::pair<glm::vec3,glm::vec3> Skeleton::get_bounds() const {return bounds;}
 glm::vec3 Skeleton::get_com() const {return center_of_mass;}
 float Skeleton::get_average_length() const {return average_length;}
@@ -93,33 +94,22 @@ Mesh<VertFlat> Skeleton::get_mesh(){
     return Mesh(vertices, indices); 
 }
 
-std::vector<glm::vec3> Skeleton::get_strand(size_t index) const
+std::vector<glm::vec3> Skeleton::get_strand(size_t index, path_type type) const
 {
-    if ( index >= leafs.size() || index < 0) {
+    auto &paths = type == LEAF ? leafs : root_tips;
+    if ( index >= paths.size() || index < 0) {
         std::cout<<"Not a valid strand"<<std::endl;
         return std::vector<glm::vec3>();
     }
     std::vector<glm::vec3> strand;
-    std::shared_ptr<Node> current = leafs[index];
+    std::shared_ptr<Node> current = paths[index];
     while ( current != nullptr){
         strand.push_back(current->position);
         current = current->parent;
     }
     return strand;
 }
-/*
-#define GET_NEXT(token) std::getline(in,token, ' ')
-#define PARSE_POINT(token, pos)     \
-    GET_NEXT(token);                \
-    pos.x = std::stof(token);       \
-    GET_NEXT(token);                \
-    pos.z = std::stof(token);       \
-    GET_NEXT(token);                \
-    pos.y = std::stof(token);       \
-    GET_NEXT(token);                \
-    if(token.find(")")==std::string::npos)    \
-        throw std::invalid_argument( "Incorrect file format: position parentheses not closed" )    \
-*/
+
 
 Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
                                   std::vector<std::shared_ptr<Node>>& leafs,

@@ -20,14 +20,13 @@
 #include "util/color.h"
 
 glm::vec3 random_color();
-
 class Strands {
 public:
   Strands(const Skeleton &tree, Grid &grid, Implicit& evalfunc);
   Mesh<Vertex> get_mesh() const;
   void add_strands(nlohmann::json& options);
 private:
-  void add_strand(size_t path_index);
+  void add_strand(size_t shoot_index, size_t root_index);
   void add_strands(unsigned int amount);
   Implicit &evalfunc;
   const Skeleton& tree;

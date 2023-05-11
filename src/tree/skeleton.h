@@ -21,18 +21,23 @@
 #include "util/color.h"
 
 glm::vec3 random_color();
-
 class Skeleton{
     public:
         Skeleton(nlohmann::json& options); 
 
         Mesh<VertFlat> get_mesh();
 
-        std::vector<glm::vec3> get_strand(size_t index) const;
         size_t leafs_size() const;
+        size_t roots_size() const;
         std::pair<glm::vec3,glm::vec3> get_bounds() const;
         glm::vec3 get_com() const;
         float get_average_length() const;
+
+        enum path_type{
+          LEAF,
+          ROOT
+        };
+        std::vector<glm::vec3> get_strand(size_t index, path_type type=LEAF) const;
 
     private:
         struct Node{

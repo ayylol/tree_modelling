@@ -12,7 +12,16 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
   grid(grid),evalfunc(evalfunc), tree(tree)
 {
   for (size_t i = 0; i < tree.leafs_size(); i++) {
-    shoot_paths.push_back(tree.get_strand(i));
+    shoot_paths.push_back(tree.get_strand(i, Skeleton::LEAF));
+  }
+  for (size_t i = 0; i < tree.roots_size(); i++) {
+    std::vector<glm::vec3> root_path = tree.get_strand(i, Skeleton::ROOT);
+    // Reverse the path
+    for (size_t i = 0; i < root_path.size()/2; i++) {
+      size_t j = root_path.size()-1-i;
+      std::swap(root_path[i],root_path[j]);
+    }
+    root_paths.push_back(root_path);
   }
 }
 void Strands::add_strands(nlohmann::json& options){
@@ -33,23 +42,33 @@ void Strands::add_strands(nlohmann::json& options){
 void Strands::add_strands(unsigned int amount) {
     std::cout << "Generating Strands...";
     std::cout.flush();
-    std::vector<size_t> indices;
-    for (size_t i = 0; i < shoot_paths.size(); i++) {
-        indices.push_back(i);
-    }
-    std::shuffle(std::begin(indices), std::end(indices), rng);
+
+    std::vector<size_t> shoot_indices(shoot_paths.size());
+    std::iota(shoot_indices.begin(),shoot_indices.end(),0);
+    std::shuffle(shoot_indices.begin(), shoot_indices.begin(), rng);
+
+    std::vector<size_t> root_indices(root_paths.size());
+    std::iota(root_indices.begin(),root_indices.end(),0);
+    std::shuffle(root_indices.begin(), root_indices.end(), rng);
+
     for (size_t i = 0; i < amount; i++) {
-        add_strand(indices[i % (indices.size())]);
+        add_strand(shoot_indices[i % (shoot_indices.size())],
+                   root_indices[i % (root_indices.size())]);
     }
+
     std::cout << " Done" << std::endl;
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
 // TODO: Extract to seperate smaller functions
-void Strands::add_strand(size_t shoot_index) {
-  // Set up strand
-  if (shoot_index >= shoot_paths.size())
+void Strands::add_strand(size_t shoot_index, size_t root_index) {
+
+  if (shoot_index >= shoot_paths.size()||
+      root_index >= root_paths.size()){
     return;
+  }
+
+  // Set up strand
   const std::vector<glm::vec3> *path = &(shoot_paths[shoot_index]);
   size_t closest_index = 0;
   glm::vec3 last_closest = (*path)[closest_index];
