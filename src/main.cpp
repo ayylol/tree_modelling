@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        bound_geom.draw(flat_shader, *camera, GL_LINES);
+        //bound_geom.draw(flat_shader, *camera, GL_LINES);
         if (view_mesh) tree_geom.draw(shader, *camera, GL_TRIANGLES);
         if (view_volume) volume_geom.draw(flat_shader, *camera, GL_POINTS);
         if (view_strands) strands_geom.draw(flat_shader, *camera, GL_LINES);
