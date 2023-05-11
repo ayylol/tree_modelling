@@ -12,7 +12,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
   grid(grid),evalfunc(evalfunc), tree(tree)
 {
   for (size_t i = 0; i < tree.leafs_size(); i++) {
-    paths.push_back(tree.get_strand(i));
+    shoot_paths.push_back(tree.get_strand(i));
   }
 }
 void Strands::add_strands(nlohmann::json& options){
@@ -34,7 +34,7 @@ void Strands::add_strands(unsigned int amount) {
     std::cout << "Generating Strands...";
     std::cout.flush();
     std::vector<size_t> indices;
-    for (size_t i = 0; i < paths.size(); i++) {
+    for (size_t i = 0; i < shoot_paths.size(); i++) {
         indices.push_back(i);
     }
     std::shuffle(std::begin(indices), std::end(indices), rng);
@@ -44,60 +44,46 @@ void Strands::add_strands(unsigned int amount) {
     std::cout << " Done" << std::endl;
 }
 
-// FOR TESTING
-void print_actual_closest(glm::vec3 pos, const std::vector<glm::vec3> &path) {
-  float closest_dist = FLT_MAX;
-  int closest_ind = 0;
-  for (int i = 0; i < path.size(); i++) {
-    float curr_dist = glm::distance(pos, path[i]);
-    if (closest_dist > curr_dist) {
-      closest_dist = curr_dist;
-    }
-    closest_ind = i;
-  }
-  std::cout << "ACTUAL: " << closest_ind << " " << closest_dist << std::endl;
-}
-
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
 // TODO: Extract to seperate smaller functions
-void Strands::add_strand(size_t path_index) {
+void Strands::add_strand(size_t shoot_index) {
   // Set up strand
-  if (path_index >= paths.size())
+  if (shoot_index >= shoot_paths.size())
     return;
-  const std::vector<glm::vec3> &path = paths[path_index];
+  const std::vector<glm::vec3> *path = &(shoot_paths[shoot_index]);
   size_t closest_index = 0;
-  glm::vec3 last_closest = path[closest_index];
-  std::vector<glm::vec3> strand{path[closest_index]};
+  glm::vec3 last_closest = (*path)[closest_index];
+  std::vector<glm::vec3> strand{(*path)[closest_index]};
 
   // Loop until closest node is last node
-  while (closest_index != path.size() - 1) {
+  while (closest_index != path->size() - 1) {
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
 
     // Find Target point
     size_t target_index = closest_index;
-    glm::vec3 target_point = path[target_index];
+    glm::vec3 target_point = (*path)[target_index];
     float travelled = 0.f;
     float distance_to_travel =
         segment_length + glm::distance(target_point, start);
     bool found_target = false;
     while (!found_target) {
-      if (target_index == path.size() - 1) {
+      if (target_index == path->size() - 1) {
         // Bound target point to tree root
-        target_point = path[target_index];
+        target_point = (*path)[target_index];
         found_target = true;
       } else if (travelled > distance_to_travel) {
         // Backtrack and travel exactly distance needed
         target_index--;
-        glm::vec3 last_step = path[target_index + 1] - path[target_index];
+        glm::vec3 last_step = (*path)[target_index + 1] - (*path)[target_index];
         travelled -= glm::length(last_step);
         float left_to_travel = distance_to_travel - travelled;
         target_point =
-            path[target_index] + glm::normalize(last_step) * left_to_travel;
+            (*path)[target_index] + glm::normalize(last_step) * left_to_travel;
         found_target = true;
       } else {
         // Travel down the path
-        travelled += glm::distance(path[target_index], path[target_index + 1]);
+        travelled += glm::distance((*path)[target_index], (*path)[target_index + 1]);
         target_index++;
       }
     }
@@ -148,7 +134,7 @@ void Strands::add_strand(size_t path_index) {
       }
     }
     strand.push_back(trials[best_trial].head);
-    closest_index = closest_node_on_path(strand.back(), path, target_index, 5).first;
+    closest_index = closest_node_on_path(strand.back(), *path, target_index, 5).first;
   }
   // Occupy strand path
   if (strand.size()<=2) return;
