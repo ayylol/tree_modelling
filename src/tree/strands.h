@@ -31,7 +31,8 @@ private:
   void add_strands(unsigned int amount);
   Implicit &evalfunc;
   const Skeleton& tree;
-  std::vector<std::vector<glm::vec3>> paths;
+  std::vector<std::vector<glm::vec3>> shoot_paths;
+  std::vector<std::vector<glm::vec3>> root_paths;
   std::vector<std::vector<glm::vec3>> strands;
   Grid &grid;
 
