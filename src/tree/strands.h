@@ -41,4 +41,6 @@ private:
   float alpha;
   float offset;
   float reject_iso;
+
+  int strands_terminated = 0;
 };

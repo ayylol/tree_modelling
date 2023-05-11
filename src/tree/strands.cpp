@@ -57,6 +57,7 @@ void Strands::add_strands(unsigned int amount) {
     }
 
     std::cout << " Done" << std::endl;
+    std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
@@ -148,8 +149,10 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
     }
 
     // If no valid trials add strand up to this moment
-    if (trials.empty()) //TODO: could change this to back up
+    if (trials.empty()){ //TODO: could change this to back up
+      strands_terminated++;
       break;
+    }
 
     //  Evaluate trials
     int best_trial = 0;
