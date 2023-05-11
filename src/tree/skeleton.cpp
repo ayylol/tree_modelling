@@ -19,13 +19,19 @@ Skeleton::Skeleton(json& options){
     auto shoot_stats = parse(shoot_root, leafs, options.at("tree_file"));
     auto root_stats = parse(root_root, root_tips, options.at("root_file"));
     center_of_mass = shoot_stats.center_of_mass;
-    bounds = shoot_stats.extent;
     average_length = (shoot_stats.total_length+root_stats.total_length)/(shoot_stats.num_nodes+root_stats.num_nodes);
+    bounds.first.x =  fmin(shoot_stats.extent.first.x, root_stats.extent.first.x);
+    bounds.first.y =  fmin(shoot_stats.extent.first.y, root_stats.extent.first.y);
+    bounds.first.z =  fmin(shoot_stats.extent.first.z, root_stats.extent.first.z);
+    bounds.second.x = fmax(shoot_stats.extent.second.x,root_stats.extent.second.x);
+    bounds.second.y = fmax(shoot_stats.extent.second.y,root_stats.extent.second.y);
+    bounds.second.z = fmax(shoot_stats.extent.second.z,root_stats.extent.second.z);
 
     std::cout<<" Done"<<std::endl;
     std::cout<<"---- Skeleton Stats ----"<<std::endl;
     std::cout<<"Root Position: "<<shoot_root->position<<std::endl;
-    std::cout<<"Number of Leafs: "<< leafs.size()<<std::endl;
+    std::cout<<"Number of Leafs: "<< leafs_size()<<std::endl;
+    std::cout<<"Number of Roots: "<< roots_size()<<std::endl;
     std::cout<<"Average Segment Length: "<< average_length<<std::endl;
     std::cout<<"Max Extent: "<<bounds.first<<" "<<bounds.second<<std::endl;
     std::cout<<"------------------------"<<std::endl;
