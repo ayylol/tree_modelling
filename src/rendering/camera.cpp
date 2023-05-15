@@ -38,8 +38,10 @@ void Camera::pan_side(float amount) {
   move_focus(dir * amount);
 }
 
+#define MAX_DIST 12.f
+#define MIN_DIST 0.1f
 void Camera::move_distance(float amount) {
-  distance = std::max(distance + amount, 0.f);
+  distance = fmin(fmax(distance + amount, MIN_DIST),MAX_DIST);
 }
 void Camera::rotate_vert(float amount) {
   phi = std::clamp(phi + amount, -max_phi, max_phi);
