@@ -96,20 +96,16 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
     bool found_target = false;
     // TODO: look at this closer, and extract to function
     while (!found_target) {
-      //std::cout<<"STEPPING ALONG PATH"<<std::endl;
       if (target_index == path->size() - 1) {
-        //std::cout<<"EDGE"<<std::endl;
         if (!on_root){
           path=&(root_paths[root_index]);
           target_index=0;
           on_root=true;
-          //std::cout<<"Got To Root"<<std::endl;
         }else{
           // Bound target point to last point on root
           target_point = (*path)[target_index];
           found_target = true;
           done = true;
-          //std::cout<<"Got To Tip of Root"<<std::endl;
         }
       } else if (travelled > distance_to_travel) {
         // Backtrack and travel exactly distance needed
@@ -120,25 +116,21 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
         target_point =
             (*path)[target_index] + glm::normalize(last_step) * left_to_travel;
         found_target = true;
-        //std::cout<<"Went Too Far"<<std::endl;
       } else {
         // Travel down the path
         travelled += glm::distance((*path)[target_index], (*path)[target_index + 1]);
         target_index++;
-        //std::cout<<"Travelling Down"<<std::endl;
       }
     }
     // use target point to calculate canonical direction
     glm::vec3 canonical_direction = glm::normalize(target_point - last_closest);
 
-    //std::cout<<"Making Trials"<<std::endl;
     // Generate trials
     struct Trial {
       glm::vec3 head;
       float distance;
       float angle;
     };
-    // TODO already know the size of the vector so allocate it
     std::vector<Trial> trials;
     float max_trial_distance = 0.f;
     float min_trial_distance = FLT_MAX;
@@ -164,7 +156,6 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
       break;
     }
 
-    //std::cout<<"Evaluating Trials"<<std::endl;
     //  Evaluate trials
     int best_trial = 0;
     float best_fitness = 0.f;
@@ -179,9 +170,7 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
       }
     }
     strand.push_back(trials[best_trial].head);
-    //std::cout<<target_index<<std::endl;
     closest_index = closest_node_on_path(strand.back(), *path, target_index, 5).first;
-    //std::cout<<"Going Next"<<std::endl;
   }
   // Occupy strand path
   if (strand.size()<=2) return;
@@ -196,7 +185,6 @@ Mesh<Vertex> Strands::get_mesh() const {
   glm::vec3 blue(0,0,1);  // Placed Earlier
   glm::vec3 red(1,0,0);   // Placed Later
   for (auto path : strands) {
-    //glm::vec3 color = random_brown();
     glm::vec3 color = (1-((float)i/strands.size()))*blue+((float)i/strands.size())*red;
     size_t start_index = vertices.size();
     for (auto position : path) {
@@ -212,9 +200,7 @@ Mesh<Vertex> Strands::get_mesh() const {
   return Mesh(vertices, indices);
 }
 
-
 // Non-member helper functions
-
 glm::vec3 random_vector(glm::vec3 axis, float angle) {
   const glm::vec3 x_axis(1, 0, 0);
   glm::quat rotation = glm::angleAxis(glm::angle(axis, x_axis),
