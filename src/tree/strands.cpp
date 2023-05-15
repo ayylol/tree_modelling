@@ -45,7 +45,7 @@ void Strands::add_strands(unsigned int amount) {
 
     std::vector<size_t> shoot_indices(shoot_paths.size());
     std::iota(shoot_indices.begin(),shoot_indices.end(),0);
-    std::shuffle(shoot_indices.begin(), shoot_indices.begin(), rng);
+    std::shuffle(shoot_indices.begin(), shoot_indices.end(), rng);
 
     std::vector<size_t> root_indices(root_paths.size());
     std::iota(root_indices.begin(),root_indices.end(),0);
@@ -53,6 +53,7 @@ void Strands::add_strands(unsigned int amount) {
 
     for (size_t i = 0; i < amount; i++) {
         //std::cout<<"Adding Strand: "<<i<<std::endl;
+        //std::cout<<"Adding Strand: "<<shoot_indices[i % (shoot_indices.size())]<<std::endl;
         add_strand(shoot_indices[i % (shoot_indices.size())],
                    root_indices[i % (root_indices.size())]);
         //std::cout<<std::endl;
@@ -190,8 +191,12 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
 Mesh<Vertex> Strands::get_mesh() const {
   std::vector<Vertex> vertices;
   std::vector<GLuint> indices;
+  int i = 0;
+  glm::vec3 blue(0,0,1);  // Placed Earlier
+  glm::vec3 red(1,0,0);   // Placed Later
   for (auto path : strands) {
-    glm::vec3 color = random_brown();
+    //glm::vec3 color = random_brown();
+    glm::vec3 color = (1-((float)i/strands.size()))*blue+((float)i/strands.size())*red;
     size_t start_index = vertices.size();
     for (auto position : path) {
       vertices.push_back(Vertex{position, color});
@@ -201,12 +206,8 @@ Mesh<Vertex> Strands::get_mesh() const {
       indices.push_back(i);
       indices.push_back(i + 1);
     }
+    i++;
   }
-  /*
-  for (size_t i = 0; i < vertices.size(); i++){
-      indices.push_back(i);
-  }
-  */
   return Mesh(vertices, indices);
 }
 
