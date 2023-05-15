@@ -45,18 +45,19 @@ void Strands::add_strands(unsigned int amount) {
 
     std::vector<size_t> shoot_indices(shoot_paths.size());
     std::iota(shoot_indices.begin(),shoot_indices.end(),0);
-    std::shuffle(shoot_indices.begin(), shoot_indices.end(), rng);
 
     std::vector<size_t> root_indices(root_paths.size());
     std::iota(root_indices.begin(),root_indices.end(),0);
-    std::shuffle(root_indices.begin(), root_indices.end(), rng);
 
     for (size_t i = 0; i < amount; i++) {
-        //std::cout<<"Adding Strand: "<<i<<std::endl;
-        //std::cout<<"Adding Strand: "<<shoot_indices[i % (shoot_indices.size())]<<std::endl;
+        if (shoot_indices[i % (shoot_indices.size())] == 0){
+          std::shuffle(shoot_indices.begin(), shoot_indices.end(), rng);
+        }
+        if (root_indices[i % (root_indices.size())] == 0){
+          std::shuffle(root_indices.begin(), root_indices.end(), rng);
+        }
         add_strand(shoot_indices[i % (shoot_indices.size())],
                    root_indices[i % (root_indices.size())]);
-        //std::cout<<std::endl;
     }
 
     std::cout << " Done" << std::endl;
