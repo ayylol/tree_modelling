@@ -46,6 +46,10 @@ void Strands::add_strands(unsigned int amount) {
     std::cout.flush();
 
     std::vector<std::pair<size_t,size_t>> paths(shoot_paths.size());
+    for (int i = 0; i < paths.size(); i++) {
+        paths[i].first = i;
+    }
+    std::shuffle(paths.begin(), paths.end(), rng);
 
     std::vector<float> root_angles(root_paths.size());
     for (size_t i = 0; i<root_angles.size(); i++){
@@ -54,26 +58,33 @@ void Strands::add_strands(unsigned int amount) {
                                          glm::vec2(angle_vec.x, angle_vec.z));
         root_angles[i] = angle;
     }
-
+    std::vector<size_t> root_pool;
+    root_pool.reserve(root_paths.size());
     for (size_t i = 0; i < paths.size(); i++){
-        paths[i].first = i;
         // Finding matching root
-        glm::vec3 angle_vec = shoot_paths[i][0] - tree.get_com();
+        glm::vec3 angle_vec = shoot_paths[paths[i].first][0] - tree.get_com();
         float angle = glm::orientedAngle(glm::vec2(1.f, 0.f),
                                          glm::vec2(angle_vec.x, angle_vec.z));
         //size_t closest_index = 0;
-        paths[i].second = 0;
-        float smallest_diff = FLT_MAX;
-        for (size_t j = 0; j < root_angles.size(); j++) {
-          float angle_diff = std::abs(angle-root_angles[j]);
-          if (angle_diff < smallest_diff){
-            paths[i].second = j;
-            smallest_diff = angle_diff;
+        if (root_pool.empty()){
+          for (size_t i=0; i<root_paths.size(); i++){
+            root_pool.push_back(i);
           }
         }
+        paths[i].second = 0;
+        float smallest_diff = FLT_MAX;
+        size_t closest_root = 0;
+        for (size_t j = 0; j < root_pool.size(); j++) {
+          float angle_diff = std::abs(angle-root_angles[root_pool[j]]);
+          if (angle_diff < smallest_diff){
+            paths[i].second = root_pool[j];
+            smallest_diff = angle_diff;
+            closest_root = j;
+          }
+        }
+        root_pool.erase(root_pool.begin()+closest_root);
     }
 
-    std::shuffle(paths.begin(), paths.end(), rng);
     for (size_t i = 0; i < amount; i++) {
         std::pair<size_t,size_t> path = paths[i % (paths.size())];
         add_strand(path.first, path.second);
