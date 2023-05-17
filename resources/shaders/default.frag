@@ -12,10 +12,10 @@ vec4 directionalLight()
 	vec3 lightDirection = normalize(vec3(0,1.0,0.2));
 
 	// ambient lighting
-	float ambient = 0.8f;
+	float ambient = 1.0f;
 
 	// diffuse lighting
-  float diffuseStrength = 0.9;
+    float diffuseStrength = 0.8;
 	vec3 normal = normalize(Normal);
 	float diffuse = diffuseStrength*max(dot(normal, lightDirection), 0.0f);
 
