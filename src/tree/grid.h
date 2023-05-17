@@ -60,11 +60,10 @@ public:
 
     Mesh<VertFlat> get_grid_geom() const;
     Mesh<VertFlat> get_bound_geom() const;
+    Mesh<Vertex> get_occupied_voxels(float threshold) const;
     Mesh<Vertex> get_occupied_geom(float threshold) const;
     Mesh<VertFlat> get_occupied_geom_points(float threshold) const;
     Mesh<VertFlat> get_normals_geom(float threshold) const;
-
-    void smooth_grid();
 
     void export_data(const char * filename);
 private:
@@ -89,3 +88,23 @@ private:
     };
 
 };
+
+namespace mc{
+  struct Sample{
+    glm::vec3 pos;
+    float val;
+    glm::vec3 norm;
+  };
+  /*
+  struct GridCell {
+    Sample verts[8];
+  };
+  */
+  using GridCell = std::array<Sample,8>;
+  extern const glm::ivec3 cell_order[8];
+  extern const int edge_table[256];
+  extern const int tri_table[256][16];
+  void polygonize(const GridCell &cell, float threshold,
+                  std::vector<Vertex> &verts, std::vector<GLuint> &indices);
+  Vertex vertex_interp(float threshold, const Sample& a, const Sample& b);
+  };

@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
     float surface_val = opt_data.at("mesh_iso");
     Mesh skeleton_geom = tree.get_mesh();
     Mesh tree_geom = gr.get_occupied_geom(surface_val);
+    //Mesh tree_geom = gr.get_occupied_voxels(surface_val);
     Mesh volume_geom = gr.get_occupied_geom_points(0.0f);
     Mesh strands_geom = detail.get_mesh();
     Mesh normals_geom = gr.get_normals_geom(surface_val);
