@@ -381,8 +381,6 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
       vec3 cube_col = random_color();
       for (int i_ = 0; i_ <= cube_verts.size(); i_++) {
         vertices.push_back(Vertex{current_pos + cube_verts[i_], random_brown(), normal});
-        //vertices.push_back(Vertex{current_pos + cube_verts[i_], col1, normal});
-        //vertices.push_back(Vertex{current_pos + cube_verts[i_], cube_col, normal});
       }
       // Generate Indices
       for (int i_ = 0; i_ < cube_indices.size(); i_++) {
@@ -401,37 +399,60 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
   std::cout.flush();
   vector<Vertex> verts;
   vector<GLuint> indices;
-  for (int z = 0; z < dimensions.z - 1; z++) {
-    for (int y = 0; y < dimensions.y - 1; y++) {
-      for (int x = 0; x < dimensions.x - 1; x++) {
-        ivec3 voxel = ivec3(x,y,z);
-        GridCell cell = {{
-          { .pos  = grid_to_pos(voxel+cell_order[0]),
-            .val  = get_in_grid(voxel+cell_order[0]),
-            .norm = get_norm_grid(voxel+cell_order[0]), },
-          { .pos  = grid_to_pos(voxel+cell_order[1]),
-            .val  = get_in_grid(voxel+cell_order[1]),
-            .norm = get_norm_grid(voxel+cell_order[1]), },
-          { .pos  = grid_to_pos(voxel+cell_order[2]),
-            .val  = get_in_grid(voxel+cell_order[2]),
-            .norm = get_norm_grid(voxel+cell_order[2]), },
-          { .pos  = grid_to_pos(voxel+cell_order[3]),
-            .val  = get_in_grid(voxel+cell_order[3]),
-            .norm = get_norm_grid(voxel+cell_order[3]), },
-          { .pos  = grid_to_pos(voxel+cell_order[4]),
-            .val  = get_in_grid(voxel+cell_order[4]),
-            .norm = get_norm_grid(voxel+cell_order[4]), },
-          { .pos  = grid_to_pos(voxel+cell_order[5]),
-            .val  = get_in_grid(voxel+cell_order[5]),
-            .norm = get_norm_grid(voxel+cell_order[5]), },
-          { .pos  = grid_to_pos(voxel+cell_order[6]),
-            .val  = get_in_grid(voxel+cell_order[6]),
-            .norm = get_norm_grid(voxel+cell_order[6]), },
-          { .pos  = grid_to_pos(voxel+cell_order[7]),
-            .val  = get_in_grid(voxel+cell_order[7]),
-            .norm = get_norm_grid(voxel+cell_order[7]), },
+  for (auto occupied : occupied){
+    for (int z = -1; z <= 0; z++) {
+      for (int y = -1; y <= 0; y++) {
+        for (int x = -1; x <= 0; x++) {
+          ivec3 offset(x, y, z);
+          ivec3 voxel = occupied + offset;
+          if (voxel != occupied && (!is_in_grid(voxel) || get_in_grid(voxel) > threshold)) {
+            continue;
+          }
+          GridCell cell = {{
+              {
+                  .pos = grid_to_pos(voxel + cell_order[0]),
+                  .val = get_in_grid(voxel + cell_order[0]),
+                  .norm = get_norm_grid(voxel + cell_order[0]),
+              },
+              {
+                  .pos = grid_to_pos(voxel + cell_order[1]),
+                  .val = get_in_grid(voxel + cell_order[1]),
+                  .norm = get_norm_grid(voxel + cell_order[1]),
+              },
+              {
+                  .pos = grid_to_pos(voxel + cell_order[2]),
+                  .val = get_in_grid(voxel + cell_order[2]),
+                  .norm = get_norm_grid(voxel + cell_order[2]),
+              },
+              {
+                  .pos = grid_to_pos(voxel + cell_order[3]),
+                  .val = get_in_grid(voxel + cell_order[3]),
+                  .norm = get_norm_grid(voxel + cell_order[3]),
+              },
+              {
+                  .pos = grid_to_pos(voxel + cell_order[4]),
+                  .val = get_in_grid(voxel + cell_order[4]),
+                  .norm = get_norm_grid(voxel + cell_order[4]),
+              },
+              {
+                  .pos = grid_to_pos(voxel + cell_order[5]),
+                  .val = get_in_grid(voxel + cell_order[5]),
+                  .norm = get_norm_grid(voxel + cell_order[5]),
+              },
+              {
+                  .pos = grid_to_pos(voxel + cell_order[6]),
+                  .val = get_in_grid(voxel + cell_order[6]),
+                  .norm = get_norm_grid(voxel + cell_order[6]),
+              },
+              {
+                  .pos = grid_to_pos(voxel + cell_order[7]),
+                  .val = get_in_grid(voxel + cell_order[7]),
+                  .norm = get_norm_grid(voxel + cell_order[7]),
+              },
           }};
-        polygonize(cell, threshold, verts, indices);
+          polygonize(cell, threshold, verts, indices);
+
+        }
       }
     }
   }
@@ -543,7 +564,7 @@ void mc::polygonize(const GridCell& cell, float threshold, vector<Vertex>& verts
   // Find index
   cubeindex = 0;
   for (int i = 0; i < 8; i++) {
-    if (cell[i].val < threshold) cubeindex |= 1 << i;
+    if (cell[i].val > threshold) cubeindex |= 1 << i;
   }
 
   // Fully in/out of isosurface
