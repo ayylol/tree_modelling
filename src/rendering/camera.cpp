@@ -1,6 +1,8 @@
 #include "rendering/camera.h"
 #include "glm/geometric.hpp"
+#include <cmath>
 #include <iostream>
+#include <string>
 
 //
 Camera::Camera(glm::vec3 start_focus, float start_distance, float start_theta,
@@ -46,7 +48,7 @@ void Camera::move_distance(float amount) {
 void Camera::rotate_vert(float amount) {
   phi = std::clamp(phi + amount, -max_phi, max_phi);
 }
-void Camera::rotate_horz(float amount) { theta += amount; }
+void Camera::rotate_horz(float amount) { theta = std::fmod(theta + amount, 6.24f); }
 
 // Get camera transform matrix
 glm::mat4 Camera::get_matrix() const {
@@ -64,4 +66,10 @@ glm::vec3 Camera::get_position() const {
   glm::vec3 camera_loc =
       glm::vec3(rot_mat * glm::vec4(0.f, 0.f, -distance, 1.f)) + focus;
   return camera_loc;
+}
+
+std::string Camera::to_string(){
+  return "focus: (" + std::to_string(focus.x) + " " + std::to_string(focus.y) +
+         " " + std::to_string(focus.z) + ")\ndistance: " + std::to_string(distance) +
+         "\ntheta:" + std::to_string(theta) + "\nphi: " + std::to_string(phi);
 }

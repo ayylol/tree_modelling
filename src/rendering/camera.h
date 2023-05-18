@@ -1,12 +1,15 @@
 #pragma once
 
 #include <algorithm>
+#include <string>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/constants.hpp>
+
+#include <json.hpp>
 
 const float max_phi = glm::half_pi<float>()-0.1f;
 
@@ -19,6 +22,14 @@ class Camera
              int start_height)
           : Camera(start_focus, distance, glm::pi<float>(), 0, start_width,
                    start_height){};
+      Camera(nlohmann::json cam_def, float start_width, float start_height)
+          : Camera(glm::vec3(cam_def.at("focus")[0], cam_def.at("focus")[1],
+                             cam_def.at("focus")[2]),
+                   cam_def.at("dist"), cam_def.at("theta"),
+                   cam_def.at("phi"), start_width, start_height){};
+
+      // For DEBUG
+      std::string to_string();
 
       // Movement
       void reset();
