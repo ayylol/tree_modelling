@@ -11,7 +11,8 @@ skeleton. These primitives collide and blend with one another, thus building
 up the thickness of the branches lower on the tree.
 
 ## Building And Running
-This Program has only been tested on Linux.
+This Program has only been tested on Linux. imagemagick is required for
+screenshotting
 
 **To Build:** create a `build` folder, and run `cmake ..` and `make` while 
 inside the `build` folder.

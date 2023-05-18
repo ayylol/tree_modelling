@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include <glad/glad.h>
@@ -28,6 +29,7 @@
 #include "util/stopwatch.h"
 #include "util/geometry.h"
 
+
 #define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)
 
 using json = nlohmann::json;
@@ -41,6 +43,7 @@ unsigned int height = DEFAULT_HEIGHT;
 GLFWwindow *openGLInit();
 void framebuffer_size_callback(GLFWwindow *window, int w, int h);
 void processInput(GLFWwindow *window);
+void save_image(const char* file_name);
 
 Camera* camera;
 
@@ -148,6 +151,8 @@ int main(int argc, char *argv[]) {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+    save_image("tree.png");
+ 
     shader.cleanup();
 
     glfwTerminate();
@@ -189,7 +194,8 @@ GLFWwindow *openGLInit() {
 
     // OpenGL drawing settings
     glPointSize(2.f);
-    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    //glPolygonMode( GL_BACK, GL_LINE );
+    //glPolygonMode( GL_FRONT, GL_POINT );
     glEnable(GL_DEPTH_TEST);
 
     return window;
@@ -200,6 +206,32 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
     height = h;
     glViewport(0, 0, width, height);
     camera->set_aspect_ratio(width, height);
+}
+
+void save_image(const char* file_name){
+  const char* temp_file = "/tmp/tree_model.ppm";
+
+  std::ofstream out(temp_file);
+  out<<"P3\n# "<<"test.ppm"<<"\n"<<width<<" "<<height<<"\n255"<<std::endl;
+  GLubyte* pixels = new GLubyte[3 * width * height];
+  glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+  for (int i = height - 1; i >= 0; i--) {
+        for (int j = 0; j < width; j++) {
+          int ptr = (i * width + j) * 3;
+          out << (int)pixels[ptr] << " " 
+              << (int)pixels[ptr + 1] << " "
+              << (int)pixels[ptr + 2] << " ";
+        }
+  }
+  out.close();
+  delete [] pixels;
+
+  // Make PNG
+  std::string convert_cmd =  "convert ";
+  convert_cmd.append(temp_file);
+  convert_cmd.append(" ");
+  convert_cmd.append(file_name);
+  system(convert_cmd.c_str());
 }
 
 #define SENS 0.5f
@@ -278,3 +310,4 @@ void processInput(GLFWwindow *window) {
     }
     if (glfwGetKey(window, GLFW_KEY_7) == GLFW_RELEASE && pressed7) pressed7 = false;
 }
+

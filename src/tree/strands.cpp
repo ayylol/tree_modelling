@@ -45,6 +45,7 @@ void Strands::add_strands(unsigned int amount) {
     std::cout << "Generating Strands...";
     std::cout.flush();
 
+    /*
     std::vector<std::pair<size_t,size_t>> paths(shoot_paths.size());
     for (int i = 0; i < paths.size(); i++) {
         paths[i].first = i;
@@ -89,8 +90,8 @@ void Strands::add_strands(unsigned int amount) {
         std::pair<size_t,size_t> path = paths[i % (paths.size())];
         add_strand(path.first, path.second);
     }
+    */
 
-    /*
     // OLD RANDOM APPROACH
     std::vector<size_t> shoot_indices(shoot_paths.size());
     std::iota(shoot_indices.begin(),shoot_indices.end(),0);
@@ -106,7 +107,6 @@ void Strands::add_strands(unsigned int amount) {
         add_strand(shoot_indices[i % (shoot_indices.size())],
                    root_indices[i % (root_indices.size())]);
     }
-    */
 
     std::cout << " Done" << std::endl;
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;

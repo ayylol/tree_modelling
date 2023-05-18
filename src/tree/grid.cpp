@@ -456,6 +456,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
       }
     }
   }
+  std::cout<<"VERTS: " <<verts.size()<<std::endl;
   std::cout << "Done" << std::endl;
   return Mesh<Vertex>(verts,indices);
 }
