@@ -45,7 +45,14 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h);
 void processInput(GLFWwindow *window);
 void save_image(const char* file_name);
 
-Camera* camera;
+std::vector<Camera> cameras;
+size_t curr_cam = 0;
+void cycle_camera(int dir) { 
+  curr_cam += dir; 
+  if (curr_cam<0) curr_cam = cameras.size()-1;
+  if (curr_cam>=cameras.size()) curr_cam = 0;
+}
+#define CAMERA cameras[curr_cam]
 
 // Toggles
 bool view_mesh = true, 
@@ -89,8 +96,13 @@ int main(int argc, char *argv[]) {
     Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
 
     // Make camera according to grid
-    Camera cam(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height);
-    camera = &cam;
+    //Camera cam(opt_data.at("cameras")[0],width, height);
+    cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
+    if (opt_data.contains("cameras")){
+      for (auto cam_data : opt_data.at("cameras")){
+        cameras.push_back(Camera(cam_data, width, height));
+      }
+    }
 
     // Tree detail
     Implicit *df;
@@ -133,6 +145,8 @@ int main(int argc, char *argv[]) {
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+        #define SHOW_CAM_POS 0
+        if (SHOW_CAM_POS) std::cout<<CAMERA.to_string()<<"\n"<<std::endl;
         processInput(window);
 
         // Render here
@@ -140,13 +154,13 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        if (view_mesh) tree_geom.draw(shader, *camera, GL_TRIANGLES);
-        if (view_volume) volume_geom.draw(flat_shader, *camera, GL_POINTS);
-        if (view_strands) strands_geom.draw(flat_shader, *camera, GL_LINES);
-        if (view_normals) normals_geom.draw(flat_shader, *camera, GL_LINES);
-        if (view_skeleton) skeleton_geom.draw(flat_shader, *camera, GL_LINES);
-        if (view_ground) ground.draw(shader, *camera, GL_TRIANGLES);
-        if (view_bound) bound_geom.draw(flat_shader, *camera, GL_LINES);
+        if (view_mesh) tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
+        if (view_volume) volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
+        if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
+        if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
+        if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
+        if (view_ground) ground.draw(shader, CAMERA, GL_TRIANGLES);
+        if (view_bound) bound_geom.draw(flat_shader, CAMERA, GL_LINES);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -205,7 +219,9 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
     width = w;
     height = h;
     glViewport(0, 0, width, height);
-    camera->set_aspect_ratio(width, height);
+    for (auto cam : cameras){
+      cam.set_aspect_ratio(width, height);
+    }
 }
 
 void save_image(const char* file_name){
@@ -236,37 +252,44 @@ void save_image(const char* file_name){
 
 #define SENS 0.5f
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
-     pressed5 = false, pressed6 = false, pressed7 = false;
+     pressed5 = false, pressed6 = false, pressed7 = false, pressedperiod = false;
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     // Camera Movement
     // RESET
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // RESET VIEW
-        camera->reset();
+        CAMERA.reset();
     // ROTATE AROUND FOCUS
     if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) // ROTATE UP
-        camera->rotate_vert(0.1f * SENS);
+        CAMERA.rotate_vert(0.1f * SENS);
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) // ROTATE DOWN
-        camera->rotate_vert(-0.1f * SENS);
+        CAMERA.rotate_vert(-0.1f * SENS);
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) // ROTATE LEFT
-        camera->rotate_horz(-0.1f * SENS);
+        CAMERA.rotate_horz(-0.1f * SENS);
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) // ROTATE RIGHT
-        camera->rotate_horz(0.1f * SENS);
+        CAMERA.rotate_horz(0.1f * SENS);
     // ZOOM BOOM ARM
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) // ZOOM OUT
-        camera->move_distance(0.2f * SENS);
+        CAMERA.move_distance(0.2f * SENS);
     if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) // ZOOM IN
-        camera->move_distance(-0.2f * SENS);
+        CAMERA.move_distance(-0.2f * SENS);
+
+    if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS && !pressedperiod){ // Go through cameras
+        cycle_camera(1);
+        pressedperiod = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_RELEASE && pressedperiod) pressedperiod = false;
+
     // PAN FOCUS
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // PAN UP
-        camera->move_focus(glm::vec3(0.f, 0.05f, 0.f) * SENS);
+        CAMERA.move_focus(glm::vec3(0.f, 0.05f, 0.f) * SENS);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // PAN DOWN
-        camera->move_focus(glm::vec3(0.f, -0.05f, 0.f) * SENS);
+        CAMERA.move_focus(glm::vec3(0.f, -0.05f, 0.f) * SENS);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // PAN LEFT
-        camera->pan_side(-0.05f * SENS);
+        CAMERA.pan_side(-0.05f * SENS);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // PAN RIGHT
-        camera->pan_side(0.05f * SENS);
+        CAMERA.pan_side(0.05f * SENS);
     // Mesh view modes 
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !pressed1){ // Toggle
         view_mesh = !view_mesh;
