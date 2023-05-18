@@ -63,7 +63,8 @@ bool view_mesh = true,
      view_normals = false,
      view_skeleton = false,
      view_ground = false,
-     view_bound = false;
+     view_bound = false,
+     interactive = true;
 
 int main(int argc, char *argv[]) {
 
@@ -148,11 +149,18 @@ int main(int argc, char *argv[]) {
     std::vector<GLuint> ground_indices{0, 1, 3, 0, 3, 2};
     Mesh ground(ground_verts, ground_indices);
 
+    // Toggle interactive mode
+    if (opt_data.contains("interactive_mode")) {
+      interactive = opt_data.at("interactive_mode");
+    }
+    bool done_screenshots = false;
+
     // Render loop
-    while (!glfwWindowShouldClose(window)) {
+    while ((interactive && !glfwWindowShouldClose(window))||
+            (!interactive && !done_screenshots)) {
         #define SHOW_CAM_POS 0
         if (SHOW_CAM_POS) std::cout<<CAMERA.to_string()<<"\n"<<std::endl;
-        processInput(window);
+        if(interactive) processInput(window);
 
         // Render here
         glClearColor(SKY_COLOR[0], SKY_COLOR[1], SKY_COLOR[2], SKY_COLOR[3]);
@@ -168,9 +176,14 @@ int main(int argc, char *argv[]) {
         if (view_bound) bound_geom.draw(flat_shader, CAMERA, GL_LINES);
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
+        if (interactive) glfwPollEvents();
+        else{
+          save_image();
+          cycle_camera(1);
+          if (curr_cam == 0) done_screenshots = true;
+        }
     }
- 
+
     shader.cleanup();
 
     glfwTerminate();
