@@ -43,7 +43,7 @@ unsigned int height = DEFAULT_HEIGHT;
 GLFWwindow *openGLInit();
 void framebuffer_size_callback(GLFWwindow *window, int w, int h);
 void processInput(GLFWwindow *window);
-void save_image(const char* path_prefix);
+void save_image();
 
 std::vector<Camera> cameras;
 size_t curr_cam = 0;
@@ -53,6 +53,8 @@ void cycle_camera(int dir) {
   if (curr_cam>=cameras.size()) curr_cam = 0;
 }
 #define CAMERA cameras[curr_cam]
+
+std::string image_prefix = "./tree";
 
 // Toggles
 bool view_mesh = true, 
@@ -96,12 +98,15 @@ int main(int argc, char *argv[]) {
     Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
 
     // Make camera according to grid
-    //Camera cam(opt_data.at("cameras")[0],width, height);
     cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
     if (opt_data.contains("cameras")){
       for (auto cam_data : opt_data.at("cameras")){
         cameras.push_back(Camera(cam_data, width, height));
       }
+    }
+    // Set up output file
+    if (opt_data.contains("image_path")) {
+      image_prefix = opt_data.at("image_path");
     }
 
     // Tree detail
@@ -224,12 +229,13 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 }
 
 int images_taken = 0;
-void save_image(const char* path_prefix){
-  std::string file_name = path_prefix + std::to_string(images_taken) + ".png";
-  const char* temp_file = "/tmp/tree_model.ppm";
+void save_image(){
+  std::string file_name = image_prefix + std::to_string(images_taken) + ".png";
 
+  // Make temporary ppm file
+  std::string temp_file = "/tmp/tree_image.ppm";
   std::ofstream out(temp_file);
-  out<<"P3\n# "<<"test.ppm"<<"\n"<<width<<" "<<height<<"\n255"<<std::endl;
+  out<<"P3\n# "<<temp_file<<"\n"<<width<<" "<<height<<"\n255"<<std::endl;
   GLubyte* pixels = new GLubyte[3 * width * height];
   glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
   for (int i = height - 1; i >= 0; i--) {
@@ -244,9 +250,7 @@ void save_image(const char* path_prefix){
   delete [] pixels;
 
   // Make PNG
-  std::string convert_cmd =  "convert ";
-  convert_cmd.append(temp_file);
-  convert_cmd.append(" " + file_name);
+  std::string convert_cmd =  "convert " + temp_file + " " + file_name;
   system(convert_cmd.c_str());
   std::cout<<"Saved image: "<<file_name<<std::endl;
   images_taken++;
@@ -295,7 +299,7 @@ void processInput(GLFWwindow *window) {
 
     // SCREENSHOTS
     if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && !pressedenter){
-        save_image("tree");
+        save_image();
         pressedenter = true;
     }
     if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_RELEASE && pressedenter) pressedenter = false;
