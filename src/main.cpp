@@ -43,7 +43,7 @@ unsigned int height = DEFAULT_HEIGHT;
 GLFWwindow *openGLInit();
 void framebuffer_size_callback(GLFWwindow *window, int w, int h);
 void processInput(GLFWwindow *window);
-void save_image(const char* file_name);
+void save_image(const char* path_prefix);
 
 std::vector<Camera> cameras;
 size_t curr_cam = 0;
@@ -165,7 +165,6 @@ int main(int argc, char *argv[]) {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    save_image("tree.png");
  
     shader.cleanup();
 
@@ -224,7 +223,9 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
     }
 }
 
-void save_image(const char* file_name){
+int images_taken = 0;
+void save_image(const char* path_prefix){
+  std::string file_name = path_prefix + std::to_string(images_taken) + ".png";
   const char* temp_file = "/tmp/tree_model.ppm";
 
   std::ofstream out(temp_file);
@@ -245,14 +246,16 @@ void save_image(const char* file_name){
   // Make PNG
   std::string convert_cmd =  "convert ";
   convert_cmd.append(temp_file);
-  convert_cmd.append(" ");
-  convert_cmd.append(file_name);
+  convert_cmd.append(" " + file_name);
   system(convert_cmd.c_str());
+  std::cout<<"Saved image: "<<file_name<<std::endl;
+  images_taken++;
 }
 
 #define SENS 0.5f
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
-     pressed5 = false, pressed6 = false, pressed7 = false, pressedperiod = false;
+     pressed5 = false, pressed6 = false, pressed7 = false, pressedperiod = false,
+     pressedenter = false;
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -274,13 +277,6 @@ void processInput(GLFWwindow *window) {
         CAMERA.move_distance(0.2f * SENS);
     if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) // ZOOM IN
         CAMERA.move_distance(-0.2f * SENS);
-
-    if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS && !pressedperiod){ // Go through cameras
-        cycle_camera(1);
-        pressedperiod = true;
-    }
-    if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_RELEASE && pressedperiod) pressedperiod = false;
-
     // PAN FOCUS
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // PAN UP
         CAMERA.move_focus(glm::vec3(0.f, 0.05f, 0.f) * SENS);
@@ -290,6 +286,20 @@ void processInput(GLFWwindow *window) {
         CAMERA.pan_side(-0.05f * SENS);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // PAN RIGHT
         CAMERA.pan_side(0.05f * SENS);
+    // Cycle camera
+    if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS && !pressedperiod){
+        cycle_camera(1);
+        pressedperiod = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_RELEASE && pressedperiod) pressedperiod = false;
+
+    // SCREENSHOTS
+    if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && !pressedenter){
+        save_image("tree");
+        pressedenter = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_RELEASE && pressedenter) pressedenter = false;
+
     // Mesh view modes 
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !pressed1){ // Toggle
         view_mesh = !view_mesh;
