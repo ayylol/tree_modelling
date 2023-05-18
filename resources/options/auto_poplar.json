@@ -1,0 +1,35 @@
+{
+  "tree_file": "./resources/tree_data/poplaresque1.data",
+  "root_file": "./resources/tree_data/roots.data",
+  "grid_scale": 0.75,
+  "implicit":{
+    "type": "metaballs", 
+    "max_val": 3.0,
+    "range": 0.015
+  },
+  "strands":{
+    "segment_length": 0.028,
+    "num_trials": 300,
+    "max_angle": 180.0,
+    "alpha": 0.5,
+    "segment_offset": 0.38,
+    "reject_iso": 10.0
+  },
+  "mesh_iso": 2.5,
+  "image_path": "./images/tree",
+  "interactive_mode": true,
+  "cameras":
+  [{
+    "focus": [0.0,0.0,0.0],
+    "dist": 4.0,
+    "theta": 0.0,
+    "phi": 0.0
+  },
+  {
+    "focus": [0.0,1.0,0.0],
+    "dist": 2.0,
+    "theta": 1.0,
+    "phi": 0.4
+  }
+  ]
+}
