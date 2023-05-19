@@ -1,35 +1,83 @@
 {
   "tree_file": "./resources/tree_data/poplaresque1.data",
-  "root_file": "./resources/tree_data/roots.data",
-  "grid_scale": 0.75,
-  "implicit":{
-    "type": "metaballs", 
+  "grid_scale": 1.0,
+  "image_path": "./images/",
+  "implicit": {
     "max_val": 3.0,
-    "range": 0.015
+    "range": 0.015,
+    "type": "metaballs"
   },
-  "strands":{
-    "segment_length": 0.028,
-    "num_trials": 300,
-    "max_angle": 180.0,
-    "alpha": 0.5,
-    "segment_offset": 0.38,
-    "reject_iso": 10.0
-  },
+  "interactive_mode": false,
   "mesh_iso": 2.5,
-  "image_path": "./images/tree",
-  "interactive_mode": true,
-  "cameras":
-  [{
-    "focus": [0.0,0.0,0.0],
-    "dist": 4.0,
-    "theta": 0.0,
-    "phi": 0.0
+  "root_file": "./resources/tree_data/roots.data",
+  "strands": {
+    "alpha": 0.5,
+    "max_angle": 180,
+    "num_trials": 200,
+    "reject_iso": 10,
+    "segment_length": 0.02800000086426735,
+    "segment_offset": 0.38
   },
-  {
-    "focus": [0.0,1.0,0.0],
-    "dist": 2.0,
-    "theta": 1.0,
-    "phi": 0.4
-  }
+  "cameras": [
+    {
+      "dist": 4.468918323516846,
+      "focus": [
+        0.22708499431610107,
+        1.2564923763275146,
+        -0.04314500093460083
+      ],
+      "phi": 0.09999999403953552,
+      "theta": 2.841593027114868
+    },
+    {
+      "dist": 0.5689202547073364,
+      "focus": [
+        0.10204770416021347,
+        -0.01850699447095394,
+        -0.040415048599243164
+      ],
+      "phi": 0.5,
+      "theta": 3.091592788696289
+    },
+    {
+      "dist": 0.5689202547073364,
+      "focus": [
+        0.077907033264637,
+        0.28149303793907166,
+        0.007665316574275494
+      ],
+      "phi": 0.8000000715255737,
+      "theta": 4.091592311859131
+    },
+    {
+      "dist": 0.4000000059604645,
+      "focus": [
+        0.3387979567050934,
+        0.28149303793907166,
+        0.10774092376232147
+      ],
+      "phi": -0.1000000387430191,
+      "theta": -1.6983988285064697
+    },
+    {
+      "dist": 1.7000001668930054,
+      "focus": [
+        0.1844988614320755,
+        2.6314940452575684,
+        -0.23404379189014435
+      ],
+      "phi": -0.1000000387430191,
+      "theta": -1.2983992099761963
+    },
+    {
+      "dist": 1.1689203977584839,
+      "focus": [
+        0.13063254952430725,
+        -0.2435069978237152,
+        0.26144838333129883
+      ],
+      "phi": 0.6000000238418579,
+      "theta": -2.0383918285369873
+    }
   ]
 }
