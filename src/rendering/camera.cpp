@@ -73,3 +73,12 @@ std::string Camera::to_string(){
          " " + std::to_string(focus.z) + ")\ndistance: " + std::to_string(distance) +
          "\ntheta:" + std::to_string(theta) + "\nphi: " + std::to_string(phi);
 }
+nlohmann::json Camera::get_json(){
+  using json = nlohmann::json;
+  json cam_data=json::parse("{ \"focus\": [0.0,0.0,0.0], \"dist\": 4.0, \"theta\": 0.0, \"phi\": 0.0 }");
+  cam_data.at("focus") = {focus.x,focus.y,focus.z};
+  cam_data.at("dist") = distance;
+  cam_data.at("theta") = theta;
+  cam_data.at("phi") = phi;
+  return cam_data;
+}
