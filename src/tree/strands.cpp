@@ -1,5 +1,6 @@
 #include "strands.h"
 #include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "glm/gtx/vector_angle.hpp"
 #include "tree/implicit.h"
 #include "util/geometry.h"
@@ -45,27 +46,26 @@ void Strands::add_strands(unsigned int amount) {
     std::cout << "Generating Strands...";
     std::cout.flush();
 
-    /*
     std::vector<std::pair<size_t,size_t>> paths(shoot_paths.size());
     for (int i = 0; i < paths.size(); i++) {
         paths[i].first = i;
     }
     std::shuffle(paths.begin(), paths.end(), rng);
 
-    std::vector<float> root_angles(root_paths.size());
-    for (size_t i = 0; i<root_angles.size(); i++){
+    std::vector<glm::vec3> root_vecs(root_paths.size());
+    for (size_t i = 0; i<root_vecs.size(); i++){
         glm::vec3 angle_vec = root_paths[i][root_paths[i].size() - 1] - tree.get_com();
-        float angle = glm::orientedAngle(glm::vec2(1.f, 0.f),
-                                         glm::vec2(angle_vec.x, angle_vec.z));
-        root_angles[i] = angle;
+        angle_vec.y=0.f;
+        angle_vec = glm::normalize(angle_vec);
+        root_vecs[i] = angle_vec;
     }
     std::vector<size_t> root_pool;
     root_pool.reserve(root_paths.size());
     for (size_t i = 0; i < paths.size(); i++){
         // Finding matching root
         glm::vec3 angle_vec = shoot_paths[paths[i].first][0] - tree.get_com();
-        float angle = glm::orientedAngle(glm::vec2(1.f, 0.f),
-                                         glm::vec2(angle_vec.x, angle_vec.z));
+        angle_vec.y=0.f;
+        angle_vec = glm::normalize(angle_vec);
         //size_t closest_index = 0;
         if (root_pool.empty()){
           for (size_t i=0; i<root_paths.size(); i++){
@@ -73,13 +73,13 @@ void Strands::add_strands(unsigned int amount) {
           }
         }
         paths[i].second = 0;
-        float smallest_diff = FLT_MAX;
+        float largest_cos = -1.f;
         size_t closest_root = 0;
         for (size_t j = 0; j < root_pool.size(); j++) {
-          float angle_diff = std::abs(angle-root_angles[root_pool[j]]);
-          if (angle_diff < smallest_diff){
+          float cos= glm::dot(angle_vec, root_vecs[root_pool[j]]);
+          if (cos > largest_cos){
             paths[i].second = root_pool[j];
-            smallest_diff = angle_diff;
+            largest_cos = cos;
             closest_root = j;
           }
         }
@@ -90,9 +90,9 @@ void Strands::add_strands(unsigned int amount) {
         std::pair<size_t,size_t> path = paths[i % (paths.size())];
         add_strand(path.first, path.second);
     }
-    */
 
     // OLD RANDOM APPROACH
+    /*
     std::vector<size_t> shoot_indices(shoot_paths.size());
     std::iota(shoot_indices.begin(),shoot_indices.end(),0);
     std::vector<size_t> root_indices(root_paths.size());
@@ -107,6 +107,7 @@ void Strands::add_strands(unsigned int amount) {
         add_strand(shoot_indices[i % (shoot_indices.size())],
                    root_indices[i % (root_indices.size())]);
     }
+    */
 
     std::cout << " Done" << std::endl;
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
