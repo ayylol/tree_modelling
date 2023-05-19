@@ -7,24 +7,31 @@ in vec3 crntPos;
 
 uniform vec3 camPos;
 
+struct Light{
+  vec3 dir;
+  float diff_strength;
+  float spec_strength;
+  int specular_pow;
+};
+
 vec4 directionalLight()
 {
-	vec3 lightDirection = normalize(vec3(0,1.0,0.2));
+  struct Light lights[2] = struct Light[2](Light(normalize(vec3(0,1.0,0.2)),0.8,0.2,2), Light(normalize(vec3(0,-1.0,0.0)),0.4,0.0,2));
 
-	// ambient lighting
-	float ambient = 1.0f;
+  // Constants
 
-	// diffuse lighting
-    float diffuseStrength = 0.8;
-	vec3 normal = normalize(Normal);
-	float diffuse = diffuseStrength*max(dot(normal, lightDirection), 0.0f);
-
-	// specular lighting
-	float specularStrength = 0.2;
-	vec3 viewDirection = normalize(camPos - crntPos);
-	vec3 reflectionDirection = reflect(-lightDirection, normal);
-	float specular = specularStrength*pow(max(dot(viewDirection, reflectionDirection), 0.0f), 2);
-
+  float ambient = 1.0f;
+  float diffuse=0.0f;
+  float specular=0.0f;
+  for (int i = 0; i<lights.length();i++){
+    // diffuse lighting
+    vec3 normal = normalize(Normal);
+    diffuse = diffuse + lights[i].diff_strength*max(dot(normal, lights[i].dir), 0.0f);
+    // specular lighting
+    vec3 viewDirection = normalize(camPos - crntPos);
+    vec3 reflectionDirection = reflect(-lights[i].dir, normal);
+    specular = specular + lights[i].diff_strength*pow(max(dot(viewDirection, reflectionDirection), 0.0f), lights[i].specular_pow);
+  }
 
 	return vec4(Color * (diffuse + ambient + specular),1.f);
 }
