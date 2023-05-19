@@ -54,7 +54,8 @@ void Strands::add_strands(unsigned int amount) {
 
     std::vector<glm::vec3> root_vecs(root_paths.size());
     for (size_t i = 0; i<root_vecs.size(); i++){
-        glm::vec3 angle_vec = root_paths[i][root_paths[i].size() - 1] - tree.get_com();
+        //glm::vec3 angle_vec = root_paths[i][root_paths[i].size() - 1] - tree.get_com();
+        glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/8] - tree.get_com();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs[i] = angle_vec;
