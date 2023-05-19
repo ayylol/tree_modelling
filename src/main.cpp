@@ -152,6 +152,7 @@ int main(int argc, char *argv[]) {
     // Toggle interactive mode
     if (opt_data.contains("interactive_mode")) {
       interactive = opt_data.at("interactive_mode");
+      cycle_camera(1);
     }
     bool done_screenshots = false;
 
@@ -271,11 +272,16 @@ void save_image(){
 
 #define SENS 0.5f
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
-     pressed5 = false, pressed6 = false, pressed7 = false, pressedperiod = false,
-     pressedenter = false;
+     pressed5 = false, pressed6 = false, pressed7 = false,
+     pressedperiod = false, pressedenter = false, pressedga = false;
 void processInput(GLFWwindow *window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    // OUTPUT CAMERA JSON
+    if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT) == GLFW_PRESS && !pressedga){
+        std::cout<<CAMERA.get_json()<<std::endl;
+        pressedga=true;
+    } if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT) == GLFW_RELEASE && pressedga) pressedga = false;
     // Camera Movement
     // RESET
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // RESET VIEW
@@ -360,4 +366,3 @@ void processInput(GLFWwindow *window) {
     }
     if (glfwGetKey(window, GLFW_KEY_7) == GLFW_RELEASE && pressed7) pressed7 = false;
 }
-

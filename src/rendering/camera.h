@@ -29,6 +29,7 @@ class Camera
                    cam_def.at("phi"), start_width, start_height){};
 
       // For DEBUG
+      nlohmann::json get_json();
       std::string to_string();
 
       // Movement
