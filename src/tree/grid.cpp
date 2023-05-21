@@ -552,7 +552,8 @@ void Grid::export_data(const char *filename) {
   std::cout << " Done" << std::endl;
 }
 
-// Marching Cube
+// Marching Cubes
+// BOURKE, P., 1994. Polygonising a Scalar Field (accessed on May 16, 2023). URL: http://paulbourke.net/geometry/polygonise/
 void mc::polygonize(const GridCell& cell, float threshold, vector<Vertex>& verts, vector<GLuint>& indices){
   int i;
   int cubeindex;
