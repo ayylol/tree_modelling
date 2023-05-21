@@ -1,0 +1,15 @@
+#!/bin/bash
+
+for FOLDER in auto_files/*; do 
+    IMGFOLDER=$(echo $FOLDER | awk -F '/' '{print "images/" $2}')
+    mkdir $IMGFOLDER
+    for FILE in $FOLDER/*; do 
+        echo $FILE
+        ./tree_strands $FILE
+    done
+    for IMG in $(seq 0 5); do
+        mkdir ./images/$IMG
+        mv ./images/*$IMG.png ./images/$IMG/
+        mv ./images/$IMG $IMGFOLDER/
+    done
+done
