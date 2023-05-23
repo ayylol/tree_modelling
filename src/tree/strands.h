@@ -26,8 +26,9 @@ public:
   Mesh<Vertex> get_mesh() const;
   void add_strands(nlohmann::json& options);
 private:
-  void add_strand(size_t shoot_index, size_t root_index);
   void add_strands(unsigned int amount);
+  void add_strand(size_t shoot_index);
+  size_t match_root(glm::vec3 pos);
   Implicit &evalfunc;
   const Skeleton& tree;
   std::vector<std::vector<glm::vec3>> shoot_paths;
@@ -41,6 +42,9 @@ private:
   float alpha;
   float offset;
   float reject_iso;
+
+  std::vector<size_t> root_pool; // TODO: change this name to remove the g
+  std::vector<glm::vec3> root_vecs;
 
   int strands_terminated = 0;
 };

@@ -9,6 +9,7 @@ size_t Skeleton::leafs_size() const {return leafs.size();}
 size_t Skeleton::roots_size() const {return root_tips.size();}
 std::pair<glm::vec3,glm::vec3> Skeleton::get_bounds() const {return bounds;}
 glm::vec3 Skeleton::get_com() const {return center_of_mass;}
+glm::vec3 Skeleton::get_root_pos() const {return shoot_root->position;}
 float Skeleton::get_average_length() const {return average_length;}
 
 

@@ -31,6 +31,7 @@ class Skeleton{
         size_t roots_size() const;
         std::pair<glm::vec3,glm::vec3> get_bounds() const;
         glm::vec3 get_com() const;
+        glm::vec3 get_root_pos() const;
         float get_average_length() const;
 
         enum path_type{

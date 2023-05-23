@@ -26,6 +26,18 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
     }
     root_paths.push_back(root_path);
   }
+  // Initialize Root Angle Vectors
+  root_vecs.reserve(root_paths.size());
+  for (size_t i = 0; i<root_paths.size(); i++){
+      //glm::vec3 angle_vec = root_paths[i][0] - tree.get_root_pos();
+      //glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/4] - tree.get_root_pos();
+      //glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/2] - tree.get_root_pos();
+      //glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)*3/4] - tree.get_root_pos();
+      glm::vec3 angle_vec = root_paths[i][root_paths[i].size()-1] - tree.get_root_pos();
+      angle_vec.y=0.f;
+      angle_vec = glm::normalize(angle_vec);
+      root_vecs.push_back(angle_vec);
+  }
 }
 void Strands::add_strands(nlohmann::json& options){
     int num_strands = tree.leafs_size();
@@ -45,81 +57,36 @@ void Strands::add_strands(nlohmann::json& options){
 void Strands::add_strands(unsigned int amount) {
     std::cout << "Generating Strands...";
     std::cout.flush();
-
-    std::vector<std::pair<size_t,size_t>> paths(shoot_paths.size());
-    for (int i = 0; i < paths.size(); i++) {
-        paths[i].first = i;
-    }
+    std::vector<size_t> paths(shoot_paths.size());
+    std::iota(paths.begin(),paths.end(),0);
     std::shuffle(paths.begin(), paths.end(), rng);
-
-    std::vector<glm::vec3> root_vecs(root_paths.size());
-    for (size_t i = 0; i<root_vecs.size(); i++){
-        //glm::vec3 angle_vec = root_paths[i][root_paths[i].size() - 1] - tree.get_com();
-        glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/8] - tree.get_com();
-        angle_vec.y=0.f;
-        angle_vec = glm::normalize(angle_vec);
-        root_vecs[i] = angle_vec;
-    }
-    std::vector<size_t> root_pool;
-    root_pool.reserve(root_paths.size());
-    for (size_t i = 0; i < paths.size(); i++){
-        // Finding matching root
-        glm::vec3 angle_vec = shoot_paths[paths[i].first][0] - tree.get_com();
-        angle_vec.y=0.f;
-        angle_vec = glm::normalize(angle_vec);
-        //size_t closest_index = 0;
-        if (root_pool.empty()){
-          for (size_t i=0; i<root_paths.size(); i++){
-            root_pool.push_back(i);
-          }
-        }
-        paths[i].second = 0;
-        float largest_cos = -1.f;
-        size_t closest_root = 0;
-        for (size_t j = 0; j < root_pool.size(); j++) {
-          float cos= glm::dot(angle_vec, root_vecs[root_pool[j]]);
-          if (cos > largest_cos){
-            paths[i].second = root_pool[j];
-            largest_cos = cos;
-            closest_root = j;
-          }
-        }
-        root_pool.erase(root_pool.begin()+closest_root);
-    }
-
     for (size_t i = 0; i < amount; i++) {
-        std::pair<size_t,size_t> path = paths[i % (paths.size())];
-        add_strand(path.first, path.second);
+        add_strand(paths[i%paths.size()]);
     }
-
-    // OLD RANDOM APPROACH
-    /*
-    std::vector<size_t> shoot_indices(shoot_paths.size());
-    std::iota(shoot_indices.begin(),shoot_indices.end(),0);
-    std::vector<size_t> root_indices(root_paths.size());
-    std::iota(root_indices.begin(),root_indices.end(),0);
-    for (size_t i = 0; i < amount; i++) {
-        if (shoot_indices[i % (shoot_indices.size())] == 0){
-          std::shuffle(shoot_indices.begin(), shoot_indices.end(), rng);
-        }
-        if (root_indices[i % (root_indices.size())] == 0){
-          std::shuffle(root_indices.begin(), root_indices.end(), rng);
-        }
-        add_strand(shoot_indices[i % (shoot_indices.size())],
-                   root_indices[i % (root_indices.size())]);
-    }
-    */
-
     std::cout << " Done" << std::endl;
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
 
+// ROOT SELECTION CONSTANTS
+// Selection method
+#define ATRANDOM 0
+#define WITHANGLE 1
+#define SELECTMETHOD WITHANGLE
+
+// When should a root be selected
+#define ATLEAF 0
+#define ATROOT 1
+#define SELECTPOS ATROOT
+
+// What roots can be selected
+#define ALL 0
+#define POOL 1
+#define POOLSELECT ALL
+
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
 // TODO: Extract to seperate smaller functions
-void Strands::add_strand(size_t shoot_index, size_t root_index) {
-
-  if (shoot_index >= shoot_paths.size()||
-      root_index >= root_paths.size()){
+void Strands::add_strand(size_t shoot_index) {
+  if (shoot_index >= shoot_paths.size()){
     return;
   }
 
@@ -129,8 +96,14 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
   glm::vec3 last_closest = (*path)[closest_index];
   std::vector<glm::vec3> strand{(*path)[closest_index]};
 
+  // Set up root path (if selectpos is at leaf)
+  size_t root_index = 0;
+  if (SELECTPOS == ATLEAF){
+    root_index = match_root(last_closest); 
+  }
+
+  // Loop until on root, and target node is the end
   bool on_root = false;
-  // Loop until closest node is last node
   bool done = false;
   while (!done) {
     //std::cout <<"Closest Index: "<<closest_index<<std::endl;
@@ -148,6 +121,9 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
     while (!found_target) {
       if (target_index == path->size() - 1) {
         if (!on_root){
+          if (SELECTPOS == ATROOT){
+            root_index = match_root(start);
+          }
           path=&(root_paths[root_index]);
           target_index=0;
           on_root=true;
@@ -226,6 +202,34 @@ void Strands::add_strand(size_t shoot_index, size_t root_index) {
   if (strand.size()<=2) return;
   strands.push_back(strand);
   grid.fill_path(strand, evalfunc, offset);
+}
+
+size_t Strands::match_root(glm::vec3 position){
+  if (root_pool.empty()) {
+    root_pool.resize(root_paths.size());
+    std::iota(root_pool.begin(), root_pool.end(), 0);
+  }
+  size_t match_index = 0;
+  if (SELECTMETHOD == ATRANDOM) {
+    match_index = rng() % root_pool.size();
+  } else if (SELECTMETHOD == WITHANGLE) {
+    glm::vec3 angle_vec = position - tree.get_root_pos();
+    angle_vec.y = 0.f;
+    angle_vec = glm::normalize(angle_vec);
+    float largest_cos = -1.f;
+    for (size_t j = 0; j < root_pool.size(); j++) {
+      float cos = glm::dot(angle_vec, root_vecs[root_pool[j]]);
+      if (cos > largest_cos) {
+        largest_cos = cos;
+        match_index = j;
+      }
+    }
+  }
+  size_t match = root_pool[match_index];
+  if (POOLSELECT == POOL) {
+    root_pool.erase(root_pool.begin() + match_index);
+  }
+  return match;
 }
 
 Mesh<Vertex> Strands::get_mesh() const {
