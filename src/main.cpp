@@ -85,18 +85,21 @@ int main(int argc, char *argv[]) {
             "resources/shaders/default.frag");
 
     Stopwatch sw; // Performance stopwatch
+ 
+#define STOPWATCH(ACTION, ...)                                                 \
+  std::cout << ACTION << "..." << std::endl;                                   \
+  TIME(sw, __VA_ARGS__);                                                       \
+  std::cout << std::endl
 
     // Parse options
     json opt_data = json::parse(std::ifstream(argv[1]));
 
 
     // Creating tree
-    sw.start();
-    Skeleton tree(opt_data);
-    sw.stop();
+    STOPWATCH("Parsing Skeleton", Skeleton tree(opt_data););
 
     // Grid
-    Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+    STOPWATCH("Initializing Grid",Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale")););
 
     // Make camera according to grid
     cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
@@ -121,23 +124,19 @@ int main(int argc, char *argv[]) {
       return 1;
     }
     Strands detail(tree, gr, *df);
-    sw.start();
-    detail.add_strands(opt_data.at("strands"));
-    sw.stop();
+    STOPWATCH("Adding Strands",detail.add_strands(opt_data.at("strands")););
     delete df;
 
     // Creating Meshes
-    sw.start();
     float surface_val = opt_data.at("mesh_iso");
-    Mesh skeleton_geom = tree.get_mesh();
-    Mesh tree_geom = gr.get_occupied_geom(surface_val);
-    //Mesh tree_geom = gr.get_occupied_voxels(surface_val);
-    Mesh volume_geom = gr.get_occupied_geom_points(0.0f);
-    Mesh strands_geom = detail.get_mesh();
-    Mesh normals_geom = gr.get_normals_geom(surface_val);
-    Mesh bound_geom = gr.get_bound_geom();
-    sw.stop();
-    gr.export_data("data.txt");
+    STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
+    STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val););
+    // Mesh tree_geom = gr.get_occupied_voxels(surface_val);
+    STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
+    STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
+    STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
+    STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
+    STOPWATCH("Exporting Data", gr.export_data("data.txt"););
 
     // GROUND PLANE
     glm::vec3 ground_color = glm::vec3(0, 0.3, 0.02);

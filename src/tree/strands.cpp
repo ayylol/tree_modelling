@@ -57,7 +57,7 @@ void Strands::add_strands(nlohmann::json& options){
     add_strands(num_strands);
 }
 void Strands::add_strands(unsigned int amount) {
-    std::cout << "Generating Strands...";
+    //std::cout << "Generating Strands...";
     std::cout.flush();
     std::vector<size_t> paths(shoot_paths.size());
     std::iota(paths.begin(),paths.end(),0);
@@ -65,8 +65,8 @@ void Strands::add_strands(unsigned int amount) {
     for (size_t i = 0; i < amount; i++) {
         add_strand(paths[i%paths.size()]);
     }
-    std::cout << " Done" << std::endl;
-    std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
+    //std::cout << " Done" << std::endl;
+    //std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
 
 // ROOT SELECTION CONSTANTS

@@ -395,8 +395,8 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
 // TODO: IMPLEMENT MARCHING CUBES
 Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
   using namespace mc;
-  std::cout << "Creating Geometry... ";
-  std::cout.flush();
+  //std::cout << "Creating Geometry... ";
+  //std::cout.flush();
   vector<Vertex> verts;
   vector<GLuint> indices;
   for (auto occupied : occupied){
@@ -457,7 +457,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
     }
   }
   std::cout<<"VERTS: " <<verts.size()<<std::endl;
-  std::cout << "Done" << std::endl;
+  //std::cout << "Done" << std::endl;
   return Mesh<Vertex>(verts,indices);
 }
 
@@ -541,7 +541,6 @@ Mesh<VertFlat> Grid::get_grid_geom() const {
 }
 
 void Grid::export_data(const char *filename) {
-  std::cout << "Exporting Data... ";
   std::cout.flush();
   std::ofstream out(filename);
   for (glm::ivec3 voxel : occupied) {
@@ -549,7 +548,6 @@ void Grid::export_data(const char *filename) {
         << get_in_grid(voxel) << "\n";
   }
   out.close();
-  std::cout << " Done" << std::endl;
 }
 
 // Marching Cubes
