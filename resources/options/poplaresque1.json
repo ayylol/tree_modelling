@@ -1,4 +1,5 @@
 {
+  "sectorality": true,
   "tree_file": "./resources/tree_data/poplaresque1.data",
   "root_file": "./resources/tree_data/roots.data",
   "grid_scale": 0.75,

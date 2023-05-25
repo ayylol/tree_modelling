@@ -26,9 +26,11 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
     }
     root_paths.push_back(root_path);
   }
+
   // Initialize Root Angle Vectors
   root_vecs.reserve(root_paths.size());
   for (size_t i = 0; i<root_paths.size(); i++){
+      // TODO: Make this an option
       //glm::vec3 angle_vec = root_paths[i][0] - tree.get_root_pos();
       //glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/4] - tree.get_root_pos();
       //glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/2] - tree.get_root_pos();
@@ -68,6 +70,7 @@ void Strands::add_strands(unsigned int amount) {
 }
 
 // ROOT SELECTION CONSTANTS
+// TODO: add into options file
 // Selection method
 #define ATRANDOM 0
 #define WITHANGLE 1
@@ -124,9 +127,9 @@ void Strands::add_strand(size_t shoot_index) {
           if (SELECTPOS == ATROOT){
             root_index = match_root(start);
           }
-          path=&(root_paths[root_index]);
-          target_index=0;
-          on_root=true;
+          path = &(root_paths[root_index]);
+          target_index = 0;
+          on_root = true;
         }else{
           // Bound target point to last point on root
           target_point = (*path)[target_index];
@@ -135,7 +138,7 @@ void Strands::add_strand(size_t shoot_index) {
         }
       } else if (travelled > distance_to_travel) {
         // Backtrack and travel exactly distance needed
-        if(target_index!=0) target_index--;
+        if(target_index != 0) target_index--;
         glm::vec3 last_step = (*path)[target_index + 1] - (*path)[target_index];
         travelled -= glm::length(last_step);
         float left_to_travel = distance_to_travel - travelled;
