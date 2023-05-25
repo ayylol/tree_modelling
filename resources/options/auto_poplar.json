@@ -7,6 +7,7 @@
     "range": 0.015,
     "type": "metaballs"
   },
+  "sectorality":false,
   "interactive_mode": false,
   "mesh_iso": 2.5,
   "root_file": "./resources/tree_data/roots.data",
