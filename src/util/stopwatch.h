@@ -1,6 +1,10 @@
 #pragma once
 
 #include <chrono>
+#define TIME(X, ...)                                                           \
+  X.start();                                                                   \
+  __VA_ARGS__                                                                  \
+  X.stop()
 
 class Stopwatch{
     public:
