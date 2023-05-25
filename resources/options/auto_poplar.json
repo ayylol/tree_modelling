@@ -7,11 +7,11 @@
     "range": 0.015,
     "type": "metaballs"
   },
-  "sectorality":false,
   "interactive_mode": false,
   "mesh_iso": 2.5,
   "root_file": "./resources/tree_data/roots.data",
   "strands": {
+    "sectorality":false,
     "alpha": 0.5,
     "max_angle": 180,
     "num_trials": 200,

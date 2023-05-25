@@ -1,5 +1,4 @@
 {
-  "sectorality": true,
   "tree_file": "./resources/tree_data/poplaresque1.data",
   "root_file": "./resources/tree_data/roots.data",
   "grid_scale": 0.75,
@@ -9,6 +8,7 @@
     "range": 0.015
   },
   "strands":{
+    "sectorality": true,
     "segment_length": 0.028,
     "num_trials": 300,
     "max_angle": 180.0,

@@ -36,12 +36,30 @@ private:
   std::vector<std::vector<glm::vec3>> strands;
   Grid &grid;
 
+  // Strand Creation Vars
   float segment_length;
   int num_trials;
   float max_angle;
   float alpha;
   float offset;
   float reject_iso;
+  // Root Matching Vars
+  enum SelectMethod{
+    AtRandom,
+    WithAngle,
+  };
+  SelectMethod select_method = WithAngle;
+  enum SelectPos{
+    AtLeaf,
+    AtRoot,
+  };
+  SelectPos select_pos = AtRoot;
+  enum SelectPool{
+    All,
+    NotSelected,
+  };
+  SelectPool select_pool = NotSelected;
+
 
   std::vector<size_t> root_pool; // TODO: change this name to remove the g
   std::vector<glm::vec3> root_vecs;

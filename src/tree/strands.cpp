@@ -32,10 +32,10 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
   for (size_t i = 0; i<root_paths.size(); i++){
       // TODO: Make this an option
       //glm::vec3 angle_vec = root_paths[i][0] - tree.get_root_pos();
-      //glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/4] - tree.get_root_pos();
+      glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/4] - tree.get_root_pos();
       //glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/2] - tree.get_root_pos();
       //glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)*3/4] - tree.get_root_pos();
-      glm::vec3 angle_vec = root_paths[i][root_paths[i].size()-1] - tree.get_root_pos();
+      //glm::vec3 angle_vec = root_paths[i][root_paths[i].size()-1] - tree.get_root_pos();
       angle_vec.y=0.f;
       angle_vec = glm::normalize(angle_vec);
       root_vecs.push_back(angle_vec);
@@ -48,6 +48,9 @@ void Strands::add_strands(nlohmann::json& options){
     } else if (options.contains("num_per")) {
         num_strands *= (int)options.at("num_per");
     }
+    if (options.contains("sectorality")) {
+        select_method = options.at("sectorality") ? WithAngle : AtRandom;
+    }
     segment_length = options.at("segment_length");
     num_trials = options.at("num_trials");
     max_angle = options.at("max_angle");
@@ -57,34 +60,14 @@ void Strands::add_strands(nlohmann::json& options){
     add_strands(num_strands);
 }
 void Strands::add_strands(unsigned int amount) {
-    //std::cout << "Generating Strands...";
-    std::cout.flush();
     std::vector<size_t> paths(shoot_paths.size());
     std::iota(paths.begin(),paths.end(),0);
     std::shuffle(paths.begin(), paths.end(), rng);
     for (size_t i = 0; i < amount; i++) {
         add_strand(paths[i%paths.size()]);
     }
-    //std::cout << " Done" << std::endl;
-    //std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
+    std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
-
-// ROOT SELECTION CONSTANTS
-// TODO: add into options file
-// Selection method
-#define ATRANDOM 0
-#define WITHANGLE 1
-#define SELECTMETHOD WITHANGLE
-
-// When should a root be selected
-#define ATLEAF 0
-#define ATROOT 1
-#define SELECTPOS ATROOT
-
-// What roots can be selected
-#define ALL 0
-#define POOL 1
-#define POOLSELECT ALL
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
 // TODO: Extract to seperate smaller functions
@@ -101,7 +84,7 @@ void Strands::add_strand(size_t shoot_index) {
 
   // Set up root path (if selectpos is at leaf)
   size_t root_index = 0;
-  if (SELECTPOS == ATLEAF){
+  if (select_pos == AtLeaf){
     root_index = match_root(last_closest); 
   }
 
@@ -109,7 +92,6 @@ void Strands::add_strand(size_t shoot_index) {
   bool on_root = false;
   bool done = false;
   while (!done) {
-    //std::cout <<"Closest Index: "<<closest_index<<std::endl;
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
 
@@ -124,7 +106,7 @@ void Strands::add_strand(size_t shoot_index) {
     while (!found_target) {
       if (target_index == path->size() - 1) {
         if (!on_root){
-          if (SELECTPOS == ATROOT){
+          if (select_pos == AtRoot){
             root_index = match_root(start);
           }
           path = &(root_paths[root_index]);
@@ -213,9 +195,9 @@ size_t Strands::match_root(glm::vec3 position){
     std::iota(root_pool.begin(), root_pool.end(), 0);
   }
   size_t match_index = 0;
-  if (SELECTMETHOD == ATRANDOM) {
+  if (select_method == AtRandom) {
     match_index = rng() % root_pool.size();
-  } else if (SELECTMETHOD == WITHANGLE) {
+  } else if (select_method == WithAngle) {
     glm::vec3 angle_vec = position - tree.get_root_pos();
     angle_vec.y = 0.f;
     angle_vec = glm::normalize(angle_vec);
@@ -229,7 +211,7 @@ size_t Strands::match_root(glm::vec3 position){
     }
   }
   size_t match = root_pool[match_index];
-  if (POOLSELECT == POOL) {
+  if (select_pool == NotSelected) {
     root_pool.erase(root_pool.begin() + match_index);
   }
   return match;
