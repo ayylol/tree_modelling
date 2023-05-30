@@ -48,9 +48,9 @@ void save_image();
 std::vector<Camera> cameras;
 size_t curr_cam = 0;
 void cycle_camera(int dir) { 
-  curr_cam += dir; 
-  if (curr_cam<0) curr_cam = cameras.size()-1;
-  if (curr_cam>=cameras.size()) curr_cam = 0;
+    curr_cam += dir; 
+    if (curr_cam<0) curr_cam = cameras.size()-1;
+    if (curr_cam>=cameras.size()) curr_cam = 0;
 }
 #define CAMERA cameras[curr_cam]
 
@@ -67,7 +67,6 @@ bool view_mesh = true,
      interactive = true;
 
 int main(int argc, char *argv[]) {
-
     // Validating input
     if (argc != 2) {
         std::cerr << "input an options file" << std::endl;
@@ -87,13 +86,12 @@ int main(int argc, char *argv[]) {
     Stopwatch sw; // Performance stopwatch
  
 #define STOPWATCH(ACTION, ...)                                                 \
-  std::cout << ACTION << "..." << std::endl;                                   \
-  TIME(sw, __VA_ARGS__);                                                       \
-  std::cout << std::endl
+    std::cout << ACTION << "..." << std::endl;                                 \
+    TIME(sw, __VA_ARGS__);                                                     \
+    std::cout << std::endl
 
     // Parse options
     json opt_data = json::parse(std::ifstream(argv[1]));
-
 
     // Creating tree
     STOPWATCH("Parsing Skeleton", Skeleton tree(opt_data););
@@ -104,24 +102,24 @@ int main(int argc, char *argv[]) {
     // Make camera according to grid
     cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
     if (opt_data.contains("cameras")){
-      for (auto cam_data : opt_data.at("cameras")){
-        cameras.push_back(Camera(cam_data, width, height));
-      }
+        for (auto cam_data : opt_data.at("cameras")){
+            cameras.push_back(Camera(cam_data, width, height));
+        }
     }
     // Set up output file
     if (opt_data.contains("image_path")) {
-      image_prefix = opt_data.at("image_path");
+        image_prefix = opt_data.at("image_path");
     }
 
     // Tree detail
     Implicit *df;
     if(opt_data.at("implicit").at("type")=="metaballs"){
-      df = new MetaBalls(opt_data.at("implicit"));
+        df = new MetaBalls(opt_data.at("implicit"));
     }else if(opt_data.at("implicit").at("type")=="blinn"){
-      df = new Blinn(opt_data.at("implicit"));
+        df = new Blinn(opt_data.at("implicit"));
     }else{
-      std::cerr << "did not recognize implicit type" << std::endl;
-      return 1;
+        std::cerr << "did not recognize implicit type" << std::endl;
+        return 1;
     }
     Strands detail(tree, gr, *df);
     STOPWATCH("Adding Strands",detail.add_strands(opt_data.at("strands")););
@@ -142,16 +140,16 @@ int main(int argc, char *argv[]) {
     glm::vec3 ground_color = glm::vec3(0, 0.3, 0.02);
     std::vector<Vertex> ground_verts{
         Vertex{glm::vec3(50, 0, 50), ground_color},
-            Vertex{glm::vec3(50, 0, -50), ground_color},
-            Vertex{glm::vec3(-50, 0, 50), ground_color},
-            Vertex{glm::vec3(-50, 0, -50), ground_color}};
+        Vertex{glm::vec3(50, 0, -50), ground_color},
+        Vertex{glm::vec3(-50, 0, 50), ground_color},
+        Vertex{glm::vec3(-50, 0, -50), ground_color}};
     std::vector<GLuint> ground_indices{0, 1, 3, 0, 3, 2};
     Mesh ground(ground_verts, ground_indices);
 
     // Toggle interactive mode
     if (opt_data.contains("interactive_mode")) {
-      interactive = opt_data.at("interactive_mode");
-      cycle_camera(1);
+        interactive = opt_data.at("interactive_mode");
+        cycle_camera(1);
     }
     bool done_screenshots = false;
 
@@ -178,9 +176,9 @@ int main(int argc, char *argv[]) {
         glfwSwapBuffers(window);
         if (interactive) glfwPollEvents();
         else{
-          save_image();
-          cycle_camera(1);
-          if (curr_cam == 0) done_screenshots = true;
+            save_image();
+            cycle_camera(1);
+            if (curr_cam == 0) done_screenshots = true;
         }
     }
 
@@ -237,36 +235,34 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
     height = h;
     glViewport(0, 0, width, height);
     for (auto cam : cameras){
-      cam.set_aspect_ratio(width, height);
+        cam.set_aspect_ratio(width, height);
     }
 }
 
 int images_taken = 0;
 void save_image(){
-  std::string file_name = image_prefix + std::to_string(images_taken) + ".png";
-
-  // Make temporary ppm file
-  std::string temp_file = "/tmp/tree_image.ppm";
-  std::ofstream out(temp_file);
-  out<<"P3\n# "<<temp_file<<"\n"<<width<<" "<<height<<"\n255"<<std::endl;
-  GLubyte* pixels = new GLubyte[3 * width * height];
-  glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-  for (int i = height - 1; i >= 0; i--) {
+    std::string file_name = image_prefix + std::to_string(images_taken) + ".png";
+    // Make temporary ppm file
+    std::string temp_file = "/tmp/tree_image.ppm";
+    std::ofstream out(temp_file);
+    out<<"P3\n# "<<temp_file<<"\n"<<width<<" "<<height<<"\n255"<<std::endl;
+    GLubyte* pixels = new GLubyte[3 * width * height];
+    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    for (int i = height - 1; i >= 0; i--) {
         for (int j = 0; j < width; j++) {
-          int ptr = (i * width + j) * 3;
-          out << (int)pixels[ptr] << " " 
-              << (int)pixels[ptr + 1] << " "
-              << (int)pixels[ptr + 2] << " ";
+            int ptr = (i * width + j) * 3;
+            out << (int)pixels[ptr] << " " 
+                << (int)pixels[ptr + 1] << " " 
+                << (int)pixels[ptr + 2] << " ";
         }
-  }
-  out.close();
-  delete [] pixels;
-
-  // Make PNG
-  std::string convert_cmd =  "convert " + temp_file + " " + file_name;
-  system(convert_cmd.c_str());
-  std::cout<<"Saved image: "<<file_name<<std::endl;
-  images_taken++;
+    }
+    out.close();
+    delete [] pixels;
+    // Make PNG
+    std::string convert_cmd =  "convert " + temp_file + " " + file_name;
+    system(convert_cmd.c_str());
+    std::cout<<"Saved image: "<<file_name<<std::endl;
+    images_taken++;
 }
 
 #define SENS 0.5f
