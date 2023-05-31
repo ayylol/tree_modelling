@@ -20,8 +20,6 @@ float Skeleton::get_average_length() const {return average_length;}
 Skeleton::Skeleton(json& options){
     auto shoot_stats = parse(shoot_root, leafs, options.at("tree_file"));
     auto root_stats = parse(root_root, root_tips, options.at("root_file"),shoot_root->frame,BACKWARDS);
-    std::cout<<frame_position(shoot_root->frame)<<std::endl;
-    std::cout<<frame_position(root_root->frame)<<std::endl;
     center_of_mass = shoot_stats.center_of_mass;
     average_length = (shoot_stats.total_length+root_stats.total_length)/(shoot_stats.num_nodes+root_stats.num_nodes);
     bounds.first.x =  fmin(shoot_stats.extent.first.x, root_stats.extent.first.x);
