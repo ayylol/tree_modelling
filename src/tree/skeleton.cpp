@@ -1,21 +1,30 @@
 #include "tree/skeleton.h"
-#include <iostream>
+#include "glm/gtx/quaternion.hpp"
+#include "glm/gtx/transform.hpp"
+#include "glm/gtx/vector_angle.hpp"
 #include <glm/gtx/io.hpp>
+#include <iostream>
 #include <utility>
 
 using json = nlohmann::json;
+
+static inline glm::vec3 frame_position(const glm::mat4& t){
+    return glm::vec3(t*glm::vec4(0,0,0,1));
+}
 
 size_t Skeleton::leafs_size() const {return leafs.size();}
 size_t Skeleton::roots_size() const {return root_tips.size();}
 std::pair<glm::vec3,glm::vec3> Skeleton::get_bounds() const {return bounds;}
 glm::vec3 Skeleton::get_com() const {return center_of_mass;}
-glm::vec3 Skeleton::get_root_pos() const {return shoot_root->position;}
+glm::vec3 Skeleton::get_root_pos() const {return frame_position(shoot_root->frame);}
 float Skeleton::get_average_length() const {return average_length;}
 
 
 Skeleton::Skeleton(json& options){
     auto shoot_stats = parse(shoot_root, leafs, options.at("tree_file"));
-    auto root_stats = parse(root_root, root_tips, options.at("root_file"));
+    auto root_stats = parse(root_root, root_tips, options.at("root_file"),shoot_root->frame,BACKWARDS);
+    std::cout<<frame_position(shoot_root->frame)<<std::endl;
+    std::cout<<frame_position(root_root->frame)<<std::endl;
     center_of_mass = shoot_stats.center_of_mass;
     average_length = (shoot_stats.total_length+root_stats.total_length)/(shoot_stats.num_nodes+root_stats.num_nodes);
     bounds.first.x =  fmin(shoot_stats.extent.first.x, root_stats.extent.first.x);
@@ -26,7 +35,7 @@ Skeleton::Skeleton(json& options){
     bounds.second.z = fmax(shoot_stats.extent.second.z,root_stats.extent.second.z);
 
     std::cout<<"---- Skeleton Stats ----"<<std::endl;
-    std::cout<<"Root Position: "<<shoot_root->position<<std::endl;
+    std::cout<<"Root Position: "<<frame_position(shoot_root->frame)<<std::endl;
     std::cout<<"Number of Leafs: "<< leafs_size()<<std::endl;
     std::cout<<"Number of Roots: "<< roots_size()<<std::endl;
     std::cout<<"Average Segment Length: "<< average_length<<std::endl;
@@ -36,6 +45,12 @@ Skeleton::Skeleton(json& options){
 
 Mesh<VertFlat> Skeleton::get_mesh(){
     // Initialize mesh verts and indices
+    const float axis_scale=0.003f;
+    const VertFlat axis[6] = {
+        {glm::vec3(0,0,0),glm::vec3(1,0,0)},{axis_scale*glm::vec3(1,0,0),glm::vec3(1,0,0)},
+        {glm::vec3(0,0,0),glm::vec3(0,1,0)},{axis_scale*glm::vec3(0,1,0),glm::vec3(0,1,0)},
+        {glm::vec3(0,0,0),glm::vec3(0,0,1)},{axis_scale*glm::vec3(0,0,1),glm::vec3(0,0,1)}
+    };
     std::vector<VertFlat> vertices;
     std::vector<GLuint> indices;
     struct Info{
@@ -54,9 +69,15 @@ Mesh<VertFlat> Skeleton::get_mesh(){
         unsigned int explored = last_node.children_explored;
         // Add node to vertices (first time node is reached)
         if (explored==0){
-            vertices.push_back(VertFlat{last_node.node->position,random_color()});
-            indices.push_back(last_node.parent_index);
-            indices.push_back(last_node.index);
+            if (!done_shoot){
+                //std::cout<<frame_position(last_node.node->frame)<<std::endl;
+            }
+            for (auto vert : axis){
+                VertFlat v=vert;
+                v.position = glm::vec3(last_node.node->frame*glm::vec4(v.position,1.f));
+                vertices.push_back(v);
+                indices.push_back(vertices.size()-1);
+            }
         }
 
         // See how to continue
@@ -107,7 +128,7 @@ std::vector<glm::vec3> Skeleton::get_strand(size_t index, path_type type) const
     std::vector<glm::vec3> strand;
     std::shared_ptr<Node> current = paths[index];
     while ( current != nullptr){
-        strand.push_back(current->position);
+        strand.push_back(frame_position(current->frame));
         current = current->parent;
     }
     return strand;
@@ -116,7 +137,9 @@ std::vector<glm::vec3> Skeleton::get_strand(size_t index, path_type type) const
 
 Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
                                   std::vector<std::shared_ptr<Node>>& leafs,
-                                  std::string filename) {
+                                  std::string filename, 
+                                  glm::mat4 init_frame,
+                                  Direction dir) {
     // Initialize file stream, and string token
     std::ifstream in(filename);
     std::string token;
@@ -139,7 +162,9 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
     GET_NEXT(token);
     if (token.find("(")==std::string::npos)
         throw std::invalid_argument( "Incorrect file format: Opening parentheses for position not found" );
-    PARSE_POINT(token, root->position);
+    glm::vec3 position;
+    PARSE_POINT(token, position);
+    root->frame = glm::translate(position);
 
     std::stack<std::shared_ptr<Skeleton::Node>> last_split;
     last_split.push(root);
@@ -147,12 +172,12 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
 
     // Setting up stats
     ParseInfo stats = {
-            .extent = std::make_pair(root->position, root->position),
-            .center_of_mass = root->position,
+            .extent = std::make_pair(frame_position(root->frame), frame_position(root->frame)),
+            .center_of_mass = frame_position(root->frame),
             .num_nodes = 1,
             .total_length = 0
     };
-
+    bool after_root = true;
     for (std::string token; GET_NEXT(token);) 
     {
         // Branch starting
@@ -171,14 +196,62 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
         // Point being specified
         if(token.find("(")!=std::string::npos){
             // Define position of the node  
-            glm::vec3 position;
             PARSE_POINT(token,position);
-            std::shared_ptr<Node>next=std::make_shared<Node>(Node{position,last_node,{}});
+            std::shared_ptr<Node>next=
+                std::make_shared<Node>(Node{
+                        .frame = glm::translate(position),
+                        .parent = last_node,
+                        .children = {}
+                        });
 
             // Define node's relationship
             next->parent = last_node;
             last_node->children.push_back(next);
-            // Update last_node
+            // Update Frame
+            if (after_root) {
+                after_root = false;
+                if (init_frame != glm::mat4(0.f)){
+                    last_node->frame = init_frame; 
+                } else { // Calculate Frame
+                    // Get prev and this tangent
+                    glm::vec3 tangent = glm::normalize(dir == FORWARDS ? 
+                        position-frame_position(next->parent->frame) : 
+                        frame_position(next->parent->frame)-position);
+                    // Transform N and B to new frame
+                    glm::vec3 normal = glm::vec3(1,0,0);
+                    glm::vec3 binormal = glm::cross(tangent,normal);
+                    normal = glm::cross(tangent,binormal);
+                    // Update new frame
+                    last_node->frame = last_node->frame*glm::mat4(
+                            glm::vec4(normal,0),
+                            glm::vec4(tangent,0),
+                            glm::vec4(binormal,0),
+                            glm::vec4(0,0,0,1));
+                }
+            }
+            // Get prev and this tangent
+            glm::vec3 tangent = glm::normalize(dir == FORWARDS ? 
+                position-frame_position(next->parent->frame) : 
+                frame_position(next->parent->frame)-position);
+            glm::vec3 last_tangent = next->parent->frame*glm::vec4(0,1,0,0);
+            // Get rotation to new frame
+            glm::vec3 rot_axis = glm::cross(last_tangent,tangent);
+            float angle = glm::angle(last_tangent,tangent);
+            glm::mat4 rotation = glm::rotate(glm::mat4(1.f),angle,rot_axis);
+            if (rot_axis==glm::vec3(0,0,0)){
+               rotation=glm::mat4(1.f); 
+            }
+            // Transform N and B to new frame
+            glm::vec3 normal = rotation*next->parent->frame*glm::vec4(1,0,0,0);
+            glm::vec3 binormal = rotation*next->parent->frame*glm::vec4(0,0,1,0);
+            // Update new frame
+            next->frame = next->frame*glm::mat4(
+                    glm::vec4(normal,0),
+                    glm::vec4(tangent,0),
+                    glm::vec4(binormal,0),
+                    glm::vec4(0,0,0,1));
+
+            // Update last node
             last_node=next;
 
             // Updates for stats
@@ -192,11 +265,12 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
             // COM
             stats.center_of_mass += position;
             // length
-            stats.total_length += glm::distance(position, next->parent->position);
+            //std::cout<<glm::distance(position,frame_position(next->parent->frame))<<std::endl;
+            stats.total_length += glm::distance(position, frame_position(next->parent->frame));
             stats.num_nodes++;
-
         }
     }
+    //std::cout<<std::endl;
     leafs.push_back(last_node);
     in.close();
     stats.center_of_mass *= (1.f/stats.num_nodes);
