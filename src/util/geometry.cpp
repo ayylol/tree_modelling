@@ -5,11 +5,11 @@
 
 // TODO DELETE THIS
 std::pair<size_t, glm::vec3>
-closest_node_on_path(glm::vec3 point, const std::vector<glm::vec3> &path,
+closest_node_on_path(glm::vec3 point, const std::vector<glm::mat4> &path,
                      int start_index, int overshoot) {
   // Initialize vars for hill-climb
   int current_closest_index = start_index;
-  glm::vec3 current_closest_point = path[start_index];
+  glm::vec3 current_closest_point = frame_position(path[start_index]);
   float lowest_dist2 = glm::distance2(point, current_closest_point);
 
   int point_checking = 1;
@@ -18,18 +18,16 @@ closest_node_on_path(glm::vec3 point, const std::vector<glm::vec3> &path,
   // Look for closest point on path
   while (overshoot >= overshot) {
     float last_lowest_dist2 = lowest_dist2;
-    // std::cout<<"checking "<<start_index + point_checking <<" and
-    // "<<start_index-point_checking<<std::endl;
     if (start_index + point_checking <= path.size() - 1 &&
-        glm::distance2(point, path[start_index + point_checking]) <
+        glm::distance2(point, frame_position(path[start_index + point_checking])) <
             lowest_dist2) {
-      lowest_dist2 = glm::distance2(point, path[start_index + point_checking]);
+      lowest_dist2 = glm::distance2(point, frame_position(path[start_index + point_checking]));
       current_closest_index = start_index + point_checking;
     }
     if (start_index - point_checking >= 0 &&
-        glm::distance2(point, path[start_index - point_checking]) <
+        glm::distance2(point, frame_position(path[start_index - point_checking])) <
             lowest_dist2) {
-      lowest_dist2 = glm::distance2(point, path[start_index - point_checking]);
+      lowest_dist2 = glm::distance2(point, frame_position(path[start_index - point_checking]));
       current_closest_index = start_index - point_checking;
     }
 
@@ -41,7 +39,7 @@ closest_node_on_path(glm::vec3 point, const std::vector<glm::vec3> &path,
     }
     point_checking++;
   }
-  current_closest_point = path[current_closest_index];
+  current_closest_point = frame_position(path[current_closest_index]);
   return std::make_pair(current_closest_index, current_closest_point);
 }
 

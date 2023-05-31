@@ -31,8 +31,8 @@ private:
   size_t match_root(glm::vec3 pos);
   Implicit &evalfunc;
   const Skeleton& tree;
-  std::vector<std::vector<glm::vec3>> shoot_paths;
-  std::vector<std::vector<glm::vec3>> root_paths;
+  std::vector<std::vector<glm::mat4>> shoot_frames;
+  std::vector<std::vector<glm::mat4>> root_frames;
   std::vector<std::vector<glm::vec3>> strands;
   Grid &grid;
 
