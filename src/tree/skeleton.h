@@ -42,7 +42,8 @@ class Skeleton{
 
     private:
         struct Node{
-            glm::vec3 position; 
+            //glm::vec3 position; 
+            glm::mat4 frame;
             std::shared_ptr<Node> parent;
             std::vector<std::shared_ptr<Node>>children;
         }; 
@@ -57,9 +58,15 @@ class Skeleton{
             int num_nodes;
             float total_length;
         };
+        enum Direction{
+            FORWARDS,
+            BACKWARDS
+        };
         static ParseInfo parse(std::shared_ptr<Node>& root,  
             std::vector<std::shared_ptr<Node>>& leafs,
-            std::string filename);
+            std::string filename,
+            glm::mat4 init_frame=glm::mat4(0.f),
+            Direction dir=FORWARDS);
 
         std::pair<glm::vec3,glm::vec3> bounds;
         glm::vec3 center_of_mass;
