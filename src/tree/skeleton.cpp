@@ -40,7 +40,7 @@ Skeleton::Skeleton(json& options){
 
 Mesh<VertFlat> Skeleton::get_mesh(){
     // Initialize mesh verts and indices
-    const float axis_scale=0.003f;
+    const float axis_scale=0.005f;
     const VertFlat axis[6] = {
         {glm::vec3(0,0,0),glm::vec3(1,0,0)},{axis_scale*glm::vec3(1,0,0),glm::vec3(1,0,0)},
         {glm::vec3(0,0,0),glm::vec3(0,1,0)},{axis_scale*glm::vec3(0,1,0),glm::vec3(0,1,0)},
