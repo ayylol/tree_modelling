@@ -15,23 +15,23 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
     grid(grid),evalfunc(evalfunc), tree(tree)
 {
     for (size_t i = 0; i < tree.leafs_size(); i++) {
-        shoot_paths.push_back(tree.get_strand(i, Skeleton::LEAF));
+        shoot_frames.push_back(tree.get_strand(i, Skeleton::LEAF));
     }
     for (size_t i = 0; i < tree.roots_size(); i++) {
-        std::vector<glm::vec3> root_path = tree.get_strand(i, Skeleton::ROOT);
+        std::vector<glm::mat4> root_frame = tree.get_strand(i, Skeleton::ROOT);
         // Reverse the path
-        for (size_t i = 0; i < root_path.size()/2; i++) {
-            size_t j = root_path.size()-1-i;
-            std::swap(root_path[i],root_path[j]);
+        for (size_t i = 0; i < root_frame.size()/2; i++) {
+            size_t j = root_frame.size()-1-i;
+            std::swap(root_frame[i],root_frame[j]);
         }
-        root_paths.push_back(root_path);
+        root_frames.push_back(root_frame);
     }
 
     // Initialize Root Angle Vectors
-    root_vecs.reserve(root_paths.size());
-    for (size_t i = 0; i<root_paths.size(); i++){
+    root_vecs.reserve(root_frames.size());
+    for (size_t i = 0; i<root_frames.size(); i++){
         // TODO: make the index used for the angle vector a parameter
-        glm::vec3 angle_vec = root_paths[i][(root_paths[i].size()-1)/4] - tree.get_root_pos();
+        glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/4]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
@@ -56,7 +56,7 @@ void Strands::add_strands(nlohmann::json& options){
     add_strands(num_strands);
 }
 void Strands::add_strands(unsigned int amount) {
-    std::vector<size_t> paths(shoot_paths.size());
+    std::vector<size_t> paths(shoot_frames.size());
     std::iota(paths.begin(),paths.end(),0);
     std::shuffle(paths.begin(), paths.end(), rng);
     for (size_t i = 0; i < amount; i++) {
@@ -68,15 +68,15 @@ void Strands::add_strands(unsigned int amount) {
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
 // TODO: Extract to seperate smaller functions
 void Strands::add_strand(size_t shoot_index) {
-    if (shoot_index >= shoot_paths.size()){
+    if (shoot_index >= shoot_frames.size()){
         return;
     }
 
     // Set up strand
-    const std::vector<glm::vec3> *path = &(shoot_paths[shoot_index]);
+    const std::vector<glm::mat4> *path = &(shoot_frames[shoot_index]);
     size_t closest_index = 0;
-    glm::vec3 last_closest = (*path)[closest_index];
-    std::vector<glm::vec3> strand{(*path)[closest_index]};
+    glm::vec3 last_closest = frame_position((*path)[closest_index]);
+    std::vector<glm::vec3> strand{last_closest};
 
     // Set up root path (if selectpos is at leaf)
     size_t root_index = 0;
@@ -93,7 +93,7 @@ void Strands::add_strand(size_t shoot_index) {
 
         // Find Target point
         size_t target_index = closest_index;
-        glm::vec3 target_point = (*path)[target_index];
+        glm::vec3 target_point = frame_position((*path)[target_index]);
         float travelled = 0.f;
         float distance_to_travel =
             segment_length + glm::distance(target_point, start);
@@ -105,27 +105,27 @@ void Strands::add_strand(size_t shoot_index) {
                     if (select_pos == AtRoot){
                         root_index = match_root(start);
                     }
-                    path = &(root_paths[root_index]);
+                    path = &(root_frames[root_index]);
                     target_index = 0;
                     on_root = true;
                 }else{
                     // Bound target point to last point on root
-                    target_point = (*path)[target_index];
+                    target_point = frame_position((*path)[target_index]);
                     found_target = true;
                     done = true;
                 }
             } else if (travelled > distance_to_travel) {
                 // Backtrack and travel exactly distance needed
                 if(target_index != 0) target_index--;
-                glm::vec3 last_step = (*path)[target_index + 1] - (*path)[target_index];
+                glm::vec3 last_step = frame_position((*path)[target_index + 1]) - frame_position((*path)[target_index]);
                 travelled -= glm::length(last_step);
                 float left_to_travel = distance_to_travel - travelled;
                 target_point =
-                    (*path)[target_index] + glm::normalize(last_step) * left_to_travel;
+                    frame_position((*path)[target_index]) + glm::normalize(last_step) * left_to_travel;
                 found_target = true;
             } else {
                 // Travel down the path
-                travelled += glm::distance((*path)[target_index], (*path)[target_index + 1]);
+                travelled += glm::distance(frame_position((*path)[target_index]), frame_position((*path)[target_index + 1]));
                 target_index++;
             }
         }
@@ -176,6 +176,7 @@ void Strands::add_strand(size_t shoot_index) {
             }
         }
         strand.push_back(trials[best_trial].head);
+        // FIXME: Remove/Refactor this function call
         closest_index = closest_node_on_path(strand.back(), *path, target_index, 5).first;
     }
     // Occupy strand path
@@ -186,7 +187,7 @@ void Strands::add_strand(size_t shoot_index) {
 
 size_t Strands::match_root(glm::vec3 position){
     if (root_pool.empty()) {
-        root_pool.resize(root_paths.size());
+        root_pool.resize(root_frames.size());
         std::iota(root_pool.begin(), root_pool.end(), 0);
     }
     size_t match_index = 0;

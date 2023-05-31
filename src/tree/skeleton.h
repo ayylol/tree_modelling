@@ -38,7 +38,7 @@ class Skeleton{
           LEAF,
           ROOT
         };
-        std::vector<glm::vec3> get_strand(size_t index, path_type type=LEAF) const;
+        std::vector<glm::mat4> get_strand(size_t index, path_type type=LEAF) const;
 
     private:
         struct Node{
