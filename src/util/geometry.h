@@ -5,6 +5,13 @@
 
 // NOTE: IMPLEMENTED IN STRANDS FILE
 // TODO put in a namespace
+
+struct PathInterp{
+    size_t index;
+    float interp;
+};
+std::pair<float,float> quadratic_solver(float a, float b, float c);
+
 std::pair<std::size_t, glm::vec3>
 closest_node_on_path(glm::vec3 point, const std::vector<glm::mat4> &path,
                      int start_index, int overshoot);

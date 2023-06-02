@@ -3,7 +3,6 @@
 #include "glm/geometric.hpp"
 #include "glm/gtx/vector_angle.hpp"
 #include "tree/implicit.h"
-#include "util/geometry.h"
 #include <glm/gtx/io.hpp>
 
 std::default_random_engine
@@ -37,6 +36,29 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
         root_vecs.push_back(angle_vec);
     }
 }
+
+Mesh<Vertex> Strands::get_mesh() const {
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+    glm::vec3 blue(0,0,1);  // Placed Earlier
+    glm::vec3 red(1,0,0);   // Placed Later
+    int i = 0;
+    for (auto path : strands) {
+        glm::vec3 color = (1-((float)i/strands.size()))*blue+((float)i/strands.size())*red;
+        size_t start_index = vertices.size();
+        for (auto position : path) {
+            vertices.push_back(Vertex{position, color});
+        }
+        size_t end_index = vertices.size();
+        for (int i = start_index; i < end_index - 1; i++) {
+            indices.push_back(i);
+            indices.push_back(i + 1);
+        }
+        i++;
+    }
+    return Mesh(vertices, indices);
+}
+
 void Strands::add_strands(nlohmann::json& options){
     int num_strands = tree.leafs_size();
     if (options.contains("num_abs")) {
@@ -91,45 +113,22 @@ void Strands::add_strand(size_t shoot_index) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
 
-        // Find Target point
-        size_t target_index = closest_index;
-        glm::vec3 target_point = frame_position((*path)[target_index]);
-        float travelled = 0.f;
-        float distance_to_travel =
-            segment_length + glm::distance(target_point, start);
-        bool found_target = false;
-        // TODO: look at this closer, and extract to function
-        while (!found_target) {
-            if (target_index == path->size() - 1) {
-                if (!on_root){
-                    if (select_pos == AtRoot){
-                        root_index = match_root(start);
-                    }
-                    path = &(root_frames[root_index]);
-                    target_index = 0;
-                    on_root = true;
-                }else{
-                    // Bound target point to last point on root
-                    target_point = frame_position((*path)[target_index]);
-                    found_target = true;
-                    done = true;
+        float distance_to_travel = segment_length + glm::distance(frame_position((*path)[closest_index]), start);
+        TargetResult target = find_target(*path, closest_index, distance_to_travel);
+        if (target.index == path->size()-1) {
+            if (!on_root){ // switch path
+                if (select_pos == AtRoot){
+                    root_index = match_root(start);
                 }
-            } else if (travelled > distance_to_travel) {
-                // Backtrack and travel exactly distance needed
-                if(target_index != 0) target_index--;
-                glm::vec3 last_step = frame_position((*path)[target_index + 1]) - frame_position((*path)[target_index]);
-                travelled -= glm::length(last_step);
-                float left_to_travel = distance_to_travel - travelled;
-                target_point =
-                    frame_position((*path)[target_index]) + glm::normalize(last_step) * left_to_travel;
-                found_target = true;
-            } else {
-                // Travel down the path
-                travelled += glm::distance(frame_position((*path)[target_index]), frame_position((*path)[target_index + 1]));
-                target_index++;
+                path = &(root_frames[root_index]);
+                on_root = true;
+                closest_index=0;
+                target = find_target(*path, closest_index, distance_to_travel-target.travelled);
+            }else {
+                done = true;
             }
         }
-        // use target point to calculate canonical direction
+        glm::vec3 target_point = frame_position(target.frame);
         glm::vec3 canonical_direction = glm::normalize(target_point - last_closest);
 
         // Generate trials
@@ -177,13 +176,42 @@ void Strands::add_strand(size_t shoot_index) {
         }
         strand.push_back(trials[best_trial].head);
         // FIXME: Remove/Refactor this function call
-        closest_index = closest_node_on_path(strand.back(), *path, target_index, 5).first;
+        closest_index = closest_node_on_path(strand.back(), *path, target.index, 5).first;
     }
     // Occupy strand path
     if (strand.size()<=2) return;
     strands.push_back(strand);
     grid.fill_path(strand, evalfunc, offset);
 }
+
+// Strand creation helper functions
+Strands::TargetResult 
+Strands::find_target(const std::vector<glm::mat4>& path, 
+                    size_t start_index, float travel_dist){
+    TargetResult result = {start_index, path[start_index],0.f};
+    glm::vec3 target_point = frame_position(path[result.index]);
+    while (result.travelled < travel_dist && result.index != path.size()-1) {
+        result.travelled += glm::distance(
+                frame_position(path[result.index]), 
+                frame_position(path[result.index + 1]));
+        result.index++;
+    }
+    // Travelled further than allowed
+    if (result.index == path.size()-1) {
+        result.frame = path[result.index];
+    } else if (result.travelled > travel_dist && result.index != 0) {
+        result.index--;
+        glm::vec3 p1 = frame_position(path[result.index]);
+        glm::vec3 p2 = frame_position(path[result.index+1]);
+        result.frame=path[result.index];
+        glm::vec3 last_step = p2 - p1;
+        float left_to_travel = result.travelled-travel_dist;
+        result.frame[3] = glm::vec4(p1 + glm::normalize(last_step) * left_to_travel,1.f);
+        result.travelled = travel_dist;
+    }
+    return result;
+}
+
 
 size_t Strands::match_root(glm::vec3 position){
     if (root_pool.empty()) {
@@ -212,29 +240,6 @@ size_t Strands::match_root(glm::vec3 position){
     }
     return match;
 }
-
-Mesh<Vertex> Strands::get_mesh() const {
-    std::vector<Vertex> vertices;
-    std::vector<GLuint> indices;
-    glm::vec3 blue(0,0,1);  // Placed Earlier
-    glm::vec3 red(1,0,0);   // Placed Later
-    int i = 0;
-    for (auto path : strands) {
-        glm::vec3 color = (1-((float)i/strands.size()))*blue+((float)i/strands.size())*red;
-        size_t start_index = vertices.size();
-        for (auto position : path) {
-            vertices.push_back(Vertex{position, color});
-        }
-        size_t end_index = vertices.size();
-        for (int i = start_index; i < end_index - 1; i++) {
-            indices.push_back(i);
-            indices.push_back(i + 1);
-        }
-        i++;
-    }
-    return Mesh(vertices, indices);
-}
-
 // Non-member helper functions
 glm::vec3 random_vector(glm::vec3 axis, float angle) {
     const glm::vec3 x_axis(1, 0, 0);

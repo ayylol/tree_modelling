@@ -2,6 +2,19 @@
 #include <algorithm>
 #include <glm/gtx/norm.hpp>
 #include <iostream>
+#include <math.h>
+#include <utility>
+
+#define ERR 0.0001f
+std::pair<float, float> quadratic_solver(float a, float b, float c){
+    double disc = b*b-4.f*a*c;
+    std::cout<<disc<<std::endl;
+    if (disc < -ERR) return std::make_pair(NAN, NAN);
+    if (disc >= -ERR && disc <= ERR ) disc = 0.f;
+    float r1 = (-b-sqrt(disc))/2.f*a;
+    float r2 = (-b+sqrt(disc))/2.f*a;
+    return std::make_pair(std::min(r1,r2),std::max(r1,r2));
+}
 
 // TODO DELETE THIS
 std::pair<size_t, glm::vec3>

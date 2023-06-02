@@ -17,52 +17,59 @@
 #include "tree/implicit.h"
 #include "tree/skeleton.h"
 
-#include "util/color.h"
+#include "util/geometry.h"
 
-glm::vec3 random_color();
 class Strands {
 public:
-  Strands(const Skeleton &tree, Grid &grid, Implicit& evalfunc);
-  Mesh<Vertex> get_mesh() const;
-  void add_strands(nlohmann::json& options);
+    Strands(const Skeleton &tree, Grid &grid, Implicit& evalfunc);
+    Mesh<Vertex> get_mesh() const;
+    void add_strands(nlohmann::json& options);
 private:
-  void add_strands(unsigned int amount);
-  void add_strand(size_t shoot_index);
-  size_t match_root(glm::vec3 pos);
-  Implicit &evalfunc;
-  const Skeleton& tree;
-  std::vector<std::vector<glm::mat4>> shoot_frames;
-  std::vector<std::vector<glm::mat4>> root_frames;
-  std::vector<std::vector<glm::vec3>> strands;
-  Grid &grid;
+    void add_strands(unsigned int amount);
+    void add_strand(size_t shoot_index);
+    size_t match_root(glm::vec3 pos);
+    Implicit &evalfunc;
+    const Skeleton& tree;
+    std::vector<std::vector<glm::mat4>> shoot_frames;
+    std::vector<std::vector<glm::mat4>> root_frames;
+    std::vector<std::vector<glm::vec3>> strands;
+    Grid &grid;
 
-  // Strand Creation Vars
-  float segment_length;
-  int num_trials;
-  float max_angle;
-  float alpha;
-  float offset;
-  float reject_iso;
-  // Root Matching Vars
-  enum SelectMethod{
-    AtRandom,
-    WithAngle,
-  };
-  SelectMethod select_method = WithAngle;
-  enum SelectPos{
-    AtLeaf,
-    AtRoot,
-  };
-  SelectPos select_pos = AtRoot;
-  enum SelectPool{
-    All,
-    NotSelected,
-  };
-  SelectPool select_pool = NotSelected;
+    // Strand Creation Helper Functions
 
+    struct TargetResult{
+        size_t index;
+        glm::mat4 frame;
+        float travelled;
+    }; 
+    TargetResult find_target(const std::vector<glm::mat4>& path, size_t start_index, float travel_dist);
 
-  std::vector<size_t> root_pool; // TODO: change this name to remove the g
-  std::vector<glm::vec3> root_vecs;
+    // Strand Creation Vars
+    float segment_length;
+    int num_trials;
+    float max_angle;
+    float alpha;
+    float offset;
+    float reject_iso;
+    // Root Matching Vars
+    enum SelectMethod{
+        AtRandom,
+        WithAngle,
+    };
+    SelectMethod select_method = WithAngle;
+    enum SelectPos{
+        AtLeaf,
+        AtRoot,
+    };
+    SelectPos select_pos = AtRoot;
+    enum SelectPool{
+        All,
+        NotSelected,
+    };
+    SelectPool select_pool = NotSelected;
 
-  int strands_terminated = 0;
+    std::vector<size_t> root_pool;
+    std::vector<glm::vec3> root_vecs;
+
+    int strands_terminated = 0;
 };
