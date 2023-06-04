@@ -6,6 +6,7 @@
 #include <random>
 #include <utility>
 #include <vector>
+#include <optional>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -43,6 +44,7 @@ private:
         float travelled;
     }; 
     TargetResult find_target(const std::vector<glm::mat4>& path, size_t start_index, float travel_dist);
+    std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
 
     // Strand Creation Vars
     float segment_length;
