@@ -106,7 +106,7 @@ void Strands::add_strand(size_t shoot_index) {
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-        float distance_to_travel = segment_length + glm::distance(frame_position((*path)[closest_index]), start);
+        float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
 
         // Find target
         TargetResult target = find_target(*path, closest_index, distance_to_travel);
@@ -124,13 +124,15 @@ void Strands::add_strand(size_t shoot_index) {
         }
 
         // Add extension
-        if (auto ext = find_extension(strand.back(), last_closest,target.frame)){
+        if (auto ext = find_extension(strand.back(), last_closest, target.frame)){
             strand.push_back(ext.value());
         }else{
             break;
         }
-        // FIXME: Remove/Refactor this function call
-        closest_index = closest_node_on_path(strand.back(), *path, target.index, 5).first;
+
+        TargetResult next = find_closest(strand.back(), *path, closest_index, 5);
+        closest_index = next.index;
+        last_closest = next.frame;
     }
     // Occupy strand path
     if (strand.size()<=2) return;
@@ -209,6 +211,36 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
     return trials[best_trial].head;
 }
 
+Strands::TargetResult 
+Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, 
+                        size_t start_index, int overshoot){
+    // Initialize vars for hill-climb
+    size_t closest_index = start_index;
+    float lowest_dist2 = glm::distance2(pos, frame_position(path[closest_index]));
+
+    int point_checking = start_index + 1;
+    int overshot = -1;
+
+    //std::cout<<point_checking<<"<="<<path.size()-1<<" "<<overshoot<<">="<<overshot<<std::endl;
+    // Look for closest point on path
+    while ((point_checking <= path.size()-1) && (overshoot >= overshot)) {
+        //std::cout<<"in loop"<<std::endl;
+        float last_lowest_dist2 = lowest_dist2;
+        float dist2 = glm::distance2(pos, frame_position(path[point_checking]));
+        if (dist2 < lowest_dist2) {
+            lowest_dist2 = dist2;
+            closest_index = point_checking;
+        }
+        // Increase overshot counter or reset it
+        if (lowest_dist2 == last_lowest_dist2) {
+            overshot++;
+        } else {
+            overshot = -1;
+        }
+        point_checking++;
+    }
+    return {closest_index, path[closest_index], 0.f};
+}
 
 size_t Strands::match_root(glm::vec3 position){
     if (root_pool.empty()) {
