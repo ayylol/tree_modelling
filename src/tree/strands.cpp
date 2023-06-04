@@ -90,36 +90,30 @@ void Strands::add_strands(unsigned int amount) {
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
 // TODO: Extract to seperate smaller functions
 void Strands::add_strand(size_t shoot_index) {
-    if (shoot_index >= shoot_frames.size()){
-        return;
-    }
-
+    if (shoot_index >= shoot_frames.size()) return;
     // Set up strand
     const std::vector<glm::mat4> *path = &(shoot_frames[shoot_index]);
     size_t closest_index = 0;
-    glm::vec3 last_closest = frame_position((*path)[closest_index]);
-    std::vector<glm::vec3> strand{last_closest};
-
+    glm::mat4 last_closest = (*path)[closest_index];
+    std::vector<glm::vec3> strand{frame_position(last_closest)};
     // Set up root path (if selectpos is at leaf)
-    size_t root_index = 0;
-    if (select_pos == AtLeaf){
-        root_index = match_root(last_closest); 
-    }
-
+    size_t root_index;
+    if (select_pos == AtLeaf) 
+        root_index = match_root(strand[0]); 
     // Loop until on root, and target node is the end
     bool on_root = false;
     bool done = false;
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-
         float distance_to_travel = segment_length + glm::distance(frame_position((*path)[closest_index]), start);
+
+        // Find target
         TargetResult target = find_target(*path, closest_index, distance_to_travel);
         if (target.index == path->size()-1) {
             if (!on_root){ // switch path
-                if (select_pos == AtRoot){
+                if (select_pos == AtRoot) 
                     root_index = match_root(start);
-                }
                 path = &(root_frames[root_index]);
                 on_root = true;
                 closest_index=0;
@@ -128,53 +122,13 @@ void Strands::add_strand(size_t shoot_index) {
                 done = true;
             }
         }
-        glm::vec3 target_point = frame_position(target.frame);
-        glm::vec3 canonical_direction = glm::normalize(target_point - last_closest);
 
-        // Generate trials
-        struct Trial {
-            glm::vec3 head;
-            float distance;
-            float angle;
-        };
-        std::vector<Trial> trials;
-        float max_trial_distance = 0.f;
-        float min_trial_distance = FLT_MAX;
-        float max_trial_angle = 0.f;
-        for (int i = 0; i < num_trials; i++) {
-            glm::vec3 trial_head = start + segment_length * 
-                random_vector(canonical_direction, glm::radians(max_angle));
-            float val = grid.get_in_pos(trial_head);
-            if (val<=reject_iso) {
-                float distance = glm::distance(trial_head, target_point);
-                float angle = glm::angle(trial_head - start, canonical_direction);
-                trials.push_back({trial_head, distance, angle});
-                max_trial_distance = fmax(max_trial_distance, distance);
-                min_trial_distance = fmin(min_trial_distance, distance);
-                max_trial_angle = fmax(max_trial_angle, angle);
-            }
-        }
-
-        // If no valid trials add strand up to this moment
-        if (trials.empty()){ //TODO: could change this to back up
-            strands_terminated++;
+        // Add extension
+        if (auto ext = find_extension(strand.back(), last_closest,target.frame)){
+            strand.push_back(ext.value());
+        }else{
             break;
         }
-
-        //  Evaluate trials
-        int best_trial = 0;
-        float best_fitness = 0.f;
-        for (int i = 1; i < trials.size(); i++) {
-            float distance_metric = 1 - (trials[i].distance - min_trial_distance) 
-                                        / (max_trial_distance - min_trial_distance);
-            float direction_metric = 1 - (trials[i].angle / max_trial_angle);
-            float fitness = alpha * distance_metric + (1 - alpha) * direction_metric;
-            if (fitness >= best_fitness) {
-                best_trial = i;
-                best_fitness = fitness;
-            }
-        }
-        strand.push_back(trials[best_trial].head);
         // FIXME: Remove/Refactor this function call
         closest_index = closest_node_on_path(strand.back(), *path, target.index, 5).first;
     }
@@ -210,6 +164,49 @@ Strands::find_target(const std::vector<glm::mat4>& path,
         result.travelled = travel_dist;
     }
     return result;
+}
+std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
+    glm::vec3 target_point = frame_position(frame_to);
+    glm::vec3 canonical_direction = glm::normalize(target_point - frame_position(frame_from));
+    // Generate trials
+    struct Trial {
+        glm::vec3 head;
+        float distance;
+        float angle;
+    };
+    std::vector<Trial> trials;
+    float max_trial_distance = 0.f;
+    float min_trial_distance = FLT_MAX;
+    float max_trial_angle = 0.f;
+    for (int i = 0; i < num_trials; i++) {
+        glm::vec3 trial_head = from + segment_length * 
+            random_vector(canonical_direction, glm::radians(max_angle));
+        float val = grid.get_in_pos(trial_head);
+        if (val<=reject_iso) {
+            float distance = glm::distance(trial_head, target_point);
+            float angle = glm::angle(trial_head - from, canonical_direction);
+            trials.push_back({trial_head, distance, angle});
+            max_trial_distance = fmax(max_trial_distance, distance);
+            min_trial_distance = fmin(min_trial_distance, distance);
+            max_trial_angle = fmax(max_trial_angle, angle);
+        }
+    }
+    // If no valid trials add strand up to this moment
+    if (trials.empty()) return {};
+    //  Evaluate trials
+    int best_trial = 0;
+    float best_fitness = 0.f;
+    for (int i = 1; i < trials.size(); i++) {
+        float distance_metric = 1 - (trials[i].distance - min_trial_distance) 
+                                    / (max_trial_distance - min_trial_distance);
+        float direction_metric = 1 - (trials[i].angle / max_trial_angle);
+        float fitness = alpha * distance_metric + (1 - alpha) * direction_metric;
+        if (fitness >= best_fitness) {
+            best_trial = i;
+            best_fitness = fitness;
+        }
+    }
+    return trials[best_trial].head;
 }
 
 
