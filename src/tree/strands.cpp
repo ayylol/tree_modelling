@@ -1,6 +1,8 @@
 #include "strands.h"
+#include "glm/ext/scalar_constants.hpp"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
+#include "glm/gtx/quaternion.hpp"
 #include "glm/gtx/vector_angle.hpp"
 #include "tree/implicit.h"
 #include <glm/gtx/io.hpp>
@@ -9,6 +11,7 @@ std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
 
 glm::vec3 random_vector(glm::vec3 axis, float angle);
+glm::vec2 random_vec2();
 
 Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) : 
     grid(grid),evalfunc(evalfunc), tree(tree)
@@ -124,9 +127,10 @@ void Strands::add_strand(size_t shoot_index) {
         }
 
         // Add extension
-        if (auto ext = find_extension(strand.back(), last_closest, target.frame)){
+        if (auto ext = find_extension_fs(strand.back(), last_closest, target.frame)){
             strand.push_back(ext.value());
         }else{
+            strands_terminated++;
             break;
         }
 
@@ -167,6 +171,7 @@ Strands::find_target(const std::vector<glm::mat4>& path,
     }
     return result;
 }
+
 std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
     glm::vec3 target_point = frame_position(frame_to);
     glm::vec3 canonical_direction = glm::normalize(target_point - frame_position(frame_from));
@@ -209,6 +214,56 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         }
     }
     return trials[best_trial].head;
+}
+
+// Local frame based sample finding
+std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
+    glm::mat4 inv_from = frame_inverse(frame_from);
+    glm::mat4 inv_to = frame_inverse(frame_to);
+    // Calculate Position in local frame
+    glm::vec3 local_pos = inv_from*glm::vec4(from,1.f);
+    //std::cout <<local_pos<<std::endl;
+    local_pos.y = 0.f;
+    // Generate samples
+    struct Trial {
+        glm::vec3 local;
+        glm::vec3 global;
+    };
+    std::vector<Trial> trials;
+    for (int i = 0; i < num_trials; i++) {
+        glm::vec2 sample = 0.03f*random_vec2();
+        glm::vec3 local_sample = local_pos;
+        local_sample.x+=sample.x;
+        local_sample.z+=sample.y;
+        glm::vec3 global_sample = frame_to*glm::vec4(local_sample,1.f);
+        float val = grid.get_in_pos(global_sample);
+        if (val<reject_iso){
+            trials.push_back({local_sample,global_sample});
+        }
+    }
+    if(trials.empty()) return {};
+
+    Trial best_trial = trials[0];
+    float least_len2 = glm::length2(best_trial.local);
+    for (auto trial : trials){
+        float len2 = glm::length2(trial.local);
+        if(len2<least_len2){
+            best_trial = trial;
+            least_len2 = len2;
+        }
+    }
+
+    /*
+    // TODO: Should the extensions all be the same length???? or just go to the exect position
+    //glm::vec3 extension = from+segment_length*glm::normalize(glm::vec3(frame_to*glm::vec4(local_pos,1.f))-from);
+    //return extension;
+    //return frame_to*glm::vec4(local_pos,1.f);
+    */
+
+    // return best sample
+    //return best_trial.global;
+    glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
+    return extension;
 }
 
 Strands::TargetResult 
@@ -286,4 +341,13 @@ glm::vec3 random_vector(glm::vec3 axis, float angle) {
     float z = glm::cos(a) * r;
     return rotation * glm::vec3(x, y, z);
     // CODE CITED
+}
+glm::vec2 random_vec2(){
+    std::uniform_real_distribution<float> r_rand(0.f, 1.f);
+    std::uniform_real_distribution<float> theta_rand(0.f, 2*glm::pi<float>());
+    float r = std::sqrt(r_rand(rng));
+    float theta = theta_rand(rng);
+    float x = r*cos(theta);
+    float y = r*sin(theta);
+    return glm::vec2(x,y);
 }
