@@ -29,3 +29,16 @@ float distance(glm::vec3 p, const std::vector<glm::vec3> &strand,
 inline glm::vec3 frame_position(const glm::mat4& t){
     return glm::vec3(t*glm::vec4(0,0,0,1));
 }
+
+// TODO: Change to more efficiently calculate
+inline glm::mat4 frame_inverse(const glm::mat4& t){
+    return glm::inverse(t);
+    /*
+    glm::vec3 inv_pos = -t[4];
+    glm::mat3 inv_rot = glm::transpose(glm::mat3(t));
+    return glm::mat4(glm::vec4(inv_rot[0],0),
+                     glm::vec4(inv_rot[1],0),
+                     glm::vec4(inv_rot[2],0),
+                     glm::vec4(inv_pos,1));
+                     */
+}

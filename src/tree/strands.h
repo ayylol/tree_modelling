@@ -43,8 +43,14 @@ private:
         glm::mat4 frame;
         float travelled;
     }; 
+    struct Trial {
+        glm::vec3 head;
+        float distance;
+        float angle;
+    };
     TargetResult find_target(const std::vector<glm::mat4>& path, size_t start_index, float travel_dist);
     std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
+    std::optional<glm::vec3> find_extension_fs(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
 
     // Strand Creation Vars
