@@ -109,6 +109,7 @@ void Strands::add_strand(size_t shoot_index) {
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
+        //float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
         float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
 
         // Find target
@@ -231,7 +232,7 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     };
     std::vector<Trial> trials;
     for (int i = 0; i < num_trials; i++) {
-        glm::vec2 sample = 0.03f*random_vec2();
+        glm::vec2 sample = 0.05f*random_vec2();
         glm::vec3 local_sample = local_pos;
         local_sample.x+=sample.x;
         local_sample.z+=sample.y;
@@ -244,9 +245,11 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     if(trials.empty()) return {};
 
     Trial best_trial = trials[0];
-    float least_len2 = glm::length2(best_trial.local);
+    //float least_len2 = glm::length2(best_trial.local);
+    float least_len2 = glm::distance2(best_trial.local, local_pos);
     for (auto trial : trials){
-        float len2 = glm::length2(trial.local);
+        //float len2 = glm::length2(trial.local);
+        float len2 = glm::distance2(trial.local, local_pos);
         if(len2<least_len2){
             best_trial = trial;
             least_len2 = len2;
@@ -261,9 +264,9 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     */
 
     // return best sample
-    //return best_trial.global;
-    glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
-    return extension;
+    //glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
+    //return extension;
+    return best_trial.global;
 }
 
 Strands::TargetResult 
