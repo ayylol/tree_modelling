@@ -109,8 +109,8 @@ void Strands::add_strand(size_t shoot_index) {
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-        //float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
         float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
+        //float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
 
         // Find target
         TargetResult target = find_target(*path, closest_index, distance_to_travel);
@@ -135,7 +135,7 @@ void Strands::add_strand(size_t shoot_index) {
             break;
         }
 
-        TargetResult next = find_closest(strand.back(), *path, closest_index, 5);
+        TargetResult next = find_closest(strand.back(), *path, closest_index+1, 5);
         closest_index = next.index;
         last_closest = next.frame;
     }
@@ -151,11 +151,13 @@ Strands::find_target(const std::vector<glm::mat4>& path,
                     size_t start_index, float travel_dist){
     TargetResult result = {start_index, path[start_index],0.f};
     glm::vec3 target_point = frame_position(path[result.index]);
-    while (result.travelled < travel_dist && result.index != path.size()-1) {
+    //glm::distance2(frame_position(path[start_index]),frame_position(result.frame))<=std::pow(segment_length,2)
+    while ( result.travelled < travel_dist && result.index != path.size()-1){ 
         result.travelled += glm::distance(
                 frame_position(path[result.index]), 
                 frame_position(path[result.index + 1]));
         result.index++;
+        result.frame = path[result.index];
     }
     // Travelled further than allowed
     if (result.index == path.size()-1) {
@@ -223,12 +225,25 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     glm::mat4 inv_to = frame_inverse(frame_to);
     // Calculate Position in local frame
     glm::vec3 local_pos = inv_from*glm::vec4(from,1.f);
-    //std::cout <<local_pos<<std::endl;
     local_pos.y = 0.f;
+
+    // Init Eval Bounds
+#define TARGET_ISO reject_iso-1.f
+#define ISO_WEIGHT 0.000f
+#define LOCAL_WEIGHT (1.f - alpha)
+#define FRAME_WEIGHT alpha
+    float max_val_diff = 0.f;
+    float min_val_diff = FLT_MAX;
+    float max_local_dist2 = 0.f;
+    float min_local_dist2 = FLT_MAX;
+    float max_frame_dist2 = 0.f;
+    float min_frame_dist2 = FLT_MAX;
+
     // Generate samples
     struct Trial {
         glm::vec3 local;
         glm::vec3 global;
+        float val;
     };
     std::vector<Trial> trials;
     for (int i = 0; i < num_trials; i++) {
@@ -239,20 +254,31 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
         glm::vec3 global_sample = frame_to*glm::vec4(local_sample,1.f);
         float val = grid.get_in_pos(global_sample);
         if (val<reject_iso){
-            trials.push_back({local_sample,global_sample});
+            trials.push_back({local_sample,global_sample, val});
+            // Update Evaluation Bounds
+            max_val_diff = std::max(max_val_diff,std::abs(val-TARGET_ISO));
+            min_val_diff = std::min(min_val_diff,std::abs(val-TARGET_ISO));
+            max_local_dist2 = std::max(max_local_dist2,glm::distance2(local_sample,local_pos));
+            min_local_dist2 = std::min(min_local_dist2,glm::distance2(local_sample,local_pos));
+            max_frame_dist2 = std::max(max_frame_dist2,glm::length2(local_sample));
+            min_frame_dist2 = std::min(min_frame_dist2,glm::length2(local_sample));
         }
     }
     if(trials.empty()) return {};
 
     Trial best_trial = trials[0];
-    //float least_len2 = glm::length2(best_trial.local);
-    float least_len2 = glm::distance2(best_trial.local, local_pos);
+    float best_fitness = -1.f;
     for (auto trial : trials){
-        //float len2 = glm::length2(trial.local);
-        float len2 = glm::distance2(trial.local, local_pos);
-        if(len2<least_len2){
+        float iso_metric=ISO_WEIGHT*(max_val_diff-(std::abs(trial.val-TARGET_ISO))/(max_val_diff-min_val_diff)); 
+        if(iso_metric!=iso_metric) iso_metric=0.f;
+        float local_metric=LOCAL_WEIGHT*((max_local_dist2-glm::distance2(trial.local,local_pos))/(max_local_dist2-min_local_dist2));
+        if(local_metric!=local_metric) local_metric=0.f;
+        float frame_metric=FRAME_WEIGHT*((max_frame_dist2-glm::length2(trial.local))/(max_frame_dist2-min_frame_dist2));
+        if(frame_metric!=frame_metric) frame_metric=0.f;
+        float fitness = iso_metric+local_metric+frame_metric;
+        if (best_fitness <= fitness){
+            best_fitness = fitness;
             best_trial = trial;
-            least_len2 = len2;
         }
     }
 
@@ -264,9 +290,9 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     */
 
     // return best sample
-    //glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
-    //return extension;
-    return best_trial.global;
+    glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
+    return extension;
+    //return best_trial.global;
 }
 
 Strands::TargetResult 
