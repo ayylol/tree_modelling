@@ -266,7 +266,10 @@ void save_image(){
     images_taken++;
 }
 
-#define SENS 0.5f
+#define PANSENS 0.38f
+#define ROTSENS 0.5f
+#define ZOOMSENS 0.5f
+float speed_factor = 1.f;
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
      pressed5 = false, pressed6 = false, pressed7 = false,
      pressedperiod = false, pressedenter = false, pressedga = false;
@@ -280,31 +283,38 @@ void processInput(GLFWwindow *window) {
     } if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT) == GLFW_RELEASE && pressedga) pressedga = false;
     // Camera Movement
     // RESET
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) // RESET VIEW
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){ // RESET VIEW
         CAMERA.reset();
+        speed_factor=1.f;
+    }
     // ROTATE AROUND FOCUS
     if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) // ROTATE UP
-        CAMERA.rotate_vert(0.1f * SENS);
+        CAMERA.rotate_vert(0.1f * ROTSENS * speed_factor);
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) // ROTATE DOWN
-        CAMERA.rotate_vert(-0.1f * SENS);
+        CAMERA.rotate_vert(-0.1f * ROTSENS * speed_factor);
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) // ROTATE LEFT
-        CAMERA.rotate_horz(-0.1f * SENS);
+        CAMERA.rotate_horz(-0.1f * ROTSENS * speed_factor);
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) // ROTATE RIGHT
-        CAMERA.rotate_horz(0.1f * SENS);
+        CAMERA.rotate_horz(0.1f * ROTSENS * speed_factor);
     // ZOOM BOOM ARM
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) // ZOOM OUT
-        CAMERA.move_distance(0.2f * SENS);
+        CAMERA.move_distance(0.2f * ZOOMSENS * speed_factor);
     if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) // ZOOM IN
-        CAMERA.move_distance(-0.2f * SENS);
+        CAMERA.move_distance(-0.2f * ZOOMSENS * speed_factor);
     // PAN FOCUS
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // PAN UP
-        CAMERA.move_focus(glm::vec3(0.f, 0.05f, 0.f) * SENS);
+        CAMERA.move_focus(glm::vec3(0.f, 0.05f, 0.f) * PANSENS * speed_factor);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // PAN DOWN
-        CAMERA.move_focus(glm::vec3(0.f, -0.05f, 0.f) * SENS);
+        CAMERA.move_focus(glm::vec3(0.f, -0.05f, 0.f) * PANSENS * speed_factor);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // PAN LEFT
-        CAMERA.pan_side(-0.05f * SENS);
+        CAMERA.pan_side(-0.05f * PANSENS * speed_factor);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // PAN RIGHT
-        CAMERA.pan_side(0.05f * SENS);
+        CAMERA.pan_side(0.05f * PANSENS * speed_factor);
+    // Change Camera Sens
+    if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS) // ROTATE UP
+        speed_factor = std::clamp(speed_factor+0.01f,0.1f,2.f);
+    if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) // ROTATE DOWN
+        speed_factor = std::clamp(speed_factor-0.01f,0.1f,2.f);
     // Cycle camera
     if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS && !pressedperiod){
         cycle_camera(1);
