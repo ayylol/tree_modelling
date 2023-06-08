@@ -230,9 +230,9 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
 
     // Init Eval Bounds
 #define TARGET_ISO reject_iso-1.f
-#define ISO_WEIGHT 0.000f
-#define LOCAL_WEIGHT (1.f - alpha)
-#define FRAME_WEIGHT alpha
+#define ISO_WEIGHT 0.0f
+#define LOCAL_WEIGHT (1.f - alpha-(ISO_WEIGHT/2.f))
+#define FRAME_WEIGHT (alpha-(ISO_WEIGHT/2.f))
     float max_val_diff = 0.f;
     float min_val_diff = FLT_MAX;
     float max_local_dist2 = 0.f;
@@ -270,12 +270,9 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     Trial best_trial = trials[0];
     float best_fitness = -1.f;
     for (auto trial : trials){
-        float iso_metric=ISO_WEIGHT*(max_val_diff-(std::abs(trial.val-TARGET_ISO))/(max_val_diff-min_val_diff)); 
-        if(iso_metric!=iso_metric) iso_metric=0.f;
+        float iso_metric=max_val_diff != min_val_diff ? ISO_WEIGHT*(max_val_diff-(std::abs(trial.val-TARGET_ISO))/(max_val_diff-min_val_diff)) : 0.f; 
         float local_metric=LOCAL_WEIGHT*((max_local_dist2-glm::distance2(trial.local,local_pos))/(max_local_dist2-min_local_dist2));
-        if(local_metric!=local_metric) local_metric=0.f;
         float frame_metric=FRAME_WEIGHT*((max_frame_dist2-glm::length2(trial.local))/(max_frame_dist2-min_frame_dist2));
-        if(frame_metric!=frame_metric) frame_metric=0.f;
         float fitness = iso_metric+local_metric+frame_metric;
         if (best_fitness <= fitness){
             best_fitness = fitness;
