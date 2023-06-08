@@ -57,9 +57,13 @@ private:
     float segment_length;
     int num_trials;
     float max_angle;
-    float alpha;
-    float offset;
     float reject_iso;
+    float offset;
+    // Eval Weights
+    float iso_eval;
+    float target_iso;
+    float local_eval;
+    float frame_eval;
     // Root Matching Vars
     enum SelectMethod{
         AtRandom,
