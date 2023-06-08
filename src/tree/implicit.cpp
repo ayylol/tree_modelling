@@ -1,9 +1,10 @@
 #include "tree/implicit.h"
-#include "glm/geometric.hpp"
-#include "util/geometry.h"
 #include <cmath>
+#include <glm/geometric.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <iostream>
+#include "util/geometry.h"
 
 using std::pow;
 using std::sqrt;
@@ -16,6 +17,7 @@ float DistanceField::eval(glm::vec3 p1, glm::vec3 p2) {
     return 0.f;
   return potential(d);
 }
+
 float DistanceField::eval(glm::vec3 p1, glm::vec3 a, glm::vec3 b) {
   float d = distance(p1, a, b);
   if (d >= cutoff)
@@ -44,4 +46,20 @@ Blinn::Blinn(float radius, float blobiness, float cutoff_val)
 
 float Blinn::potential(float distance) {
   return exp(blobiness * (pow(distance, 2) / pow(radius, 2) - 1));
+}
+
+float Convolution::eval(glm::vec3 r, glm::vec3 p0, glm::vec3 p1){
+    float dist = distance(r,p0,p1);
+    if(dist>= cutoff) return 0.f;
+
+    glm::vec3 a = glm::normalize(p1-p0);
+    glm::vec3 d = r-p0;
+
+    float l = glm::distance(p0,p1);
+    float x = glm::dot(d,a);
+    float p = sqrt(1+pow(s,2)*(glm::length2(d)-pow(x,2)));
+    float q = sqrt(1+pow(s,2)*(glm::length2(d)+pow(l,2)-2*l*x));
+    return x/(2*pow(p,2)*(pow(p,2)+pow(s,2)*pow(x,2)))+
+            (l-x)/(2*pow(p,2)*pow(q,2))+
+            (std::atan(s*x/p)+std::atan(s*(l-x)/p))/(2*s*pow(p,3));
 }

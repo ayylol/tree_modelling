@@ -15,6 +15,21 @@ public:
                      std::size_t hint = 0) = 0;
 };
 
+class Convolution : public Implicit{
+public:
+  Convolution(float max_val, float s, float cutoff): max_val(max_val), s(s){ this->cutoff=cutoff;};
+  // Point
+  float eval(glm::vec3 p1, glm::vec3 p2) {return 0.f;};
+  // LineSegment
+  float eval(glm::vec3 p1, glm::vec3 a, glm::vec3 b);
+  // Path
+  float eval(glm::vec3 position, const std::vector<glm::vec3> &strand,
+                     std::size_t hint = 0){return 0.f;}
+private:
+  float s;
+  float max_val;
+};
+
 class DistanceField : public Implicit {
 public:
   DistanceField(float cutoff) { this->cutoff = cutoff; };

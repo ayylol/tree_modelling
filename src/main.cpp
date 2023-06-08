@@ -113,6 +113,7 @@ int main(int argc, char *argv[]) {
 
     // Tree detail
     Implicit *df;
+    //df = new Convolution(3.4,1,0.015);
     if(opt_data.at("implicit").at("type")=="metaballs"){
         df = new MetaBalls(opt_data.at("implicit"));
     }else if(opt_data.at("implicit").at("type")=="blinn"){

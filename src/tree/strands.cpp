@@ -34,6 +34,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
     for (size_t i = 0; i<root_frames.size(); i++){
         // TODO: make the index used for the angle vector a parameter
         glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/4]) - tree.get_root_pos();
+        //glm::vec3 angle_vec = frame_position(root_frames[i][30]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
