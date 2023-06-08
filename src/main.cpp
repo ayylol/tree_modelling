@@ -311,9 +311,9 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // PAN RIGHT
         CAMERA.pan_side(0.05f * PANSENS * speed_factor);
     // Change Camera Sens
-    if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS) // ROTATE UP
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) // ROTATE UP
         speed_factor = std::clamp(speed_factor+0.01f,0.1f,2.f);
-    if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) // ROTATE DOWN
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) // ROTATE DOWN
         speed_factor = std::clamp(speed_factor-0.01f,0.1f,2.f);
     // Cycle camera
     if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS && !pressedperiod){
