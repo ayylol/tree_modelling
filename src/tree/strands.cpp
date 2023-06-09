@@ -86,6 +86,7 @@ void Strands::add_strands(nlohmann::json& options){
     iso_eval/=total_eval_weight;
     local_eval/=total_eval_weight;
     frame_eval/=total_eval_weight;
+    local_spread = options.at("local_spread");
     add_strands(num_strands);
 }
 void Strands::add_strands(unsigned int amount) {
@@ -261,7 +262,7 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     };
     std::vector<Trial> trials;
     for (int i = 0; i < num_trials; i++) {
-        glm::vec2 sample = 0.05f*random_vec2();
+        glm::vec2 sample = local_spread*random_vec2();
         glm::vec3 local_sample = local_pos;
         local_sample.x+=sample.x;
         local_sample.z+=sample.y;
