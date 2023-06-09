@@ -57,6 +57,7 @@ private:
     float segment_length;
     int num_trials;
     float max_angle;
+    float local_spread;
     float reject_iso;
     float offset;
     // Eval Weights
