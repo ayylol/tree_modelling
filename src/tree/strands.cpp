@@ -137,6 +137,7 @@ void Strands::add_strand(size_t shoot_index) {
 
         // Add extension
         if (auto ext = find_extension_fs(strand.back(), last_closest, target.frame)){
+        //if (auto ext = find_extension(strand.back(), last_closest, target.frame)){
             strand.push_back(ext.value());
         }else{
             strands_terminated++;
@@ -191,8 +192,11 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         glm::vec3 head;
         float distance;
         float angle;
+        float val;
     };
     std::vector<Trial> trials;
+    float max_val_diff = 0.f;
+    float min_val_diff = FLT_MAX;
     float max_trial_distance = 0.f;
     float min_trial_distance = FLT_MAX;
     float max_trial_angle = 0.f;
@@ -203,7 +207,9 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         if (val<=reject_iso) {
             float distance = glm::distance(trial_head, target_point);
             float angle = glm::angle(trial_head - from, canonical_direction);
-            trials.push_back({trial_head, distance, angle});
+            trials.push_back({trial_head, distance, angle,val});
+            max_val_diff = std::max(max_val_diff,std::abs(val-target_iso));
+            min_val_diff = std::min(min_val_diff,std::abs(val-target_iso));
             max_trial_distance = fmax(max_trial_distance, distance);
             min_trial_distance = fmin(min_trial_distance, distance);
             max_trial_angle = fmax(max_trial_angle, angle);
@@ -214,12 +220,15 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
     //  Evaluate trials
     int best_trial = 0;
     float best_fitness = 0.f;
-    // FIXME: Change this to use the new eval weights
     for (int i = 1; i < trials.size(); i++) {
-        float distance_metric = 1 - (trials[i].distance - min_trial_distance) 
-                                    / (max_trial_distance - min_trial_distance);
-        float direction_metric = 1 - (trials[i].angle / max_trial_angle);
-        float fitness = frame_eval * distance_metric + local_eval * direction_metric;
+        float iso_metric = max_val_diff != min_val_diff ? 
+            iso_eval*(max_val_diff-(std::abs(trials[i].val-target_iso))/(max_val_diff-min_val_diff)) 
+            : 0.f; 
+        float distance_metric = max_trial_distance!=min_trial_distance?
+            frame_eval*(1 - (trials[i].distance - min_trial_distance) / (max_trial_distance - min_trial_distance))
+            : 0.f;
+        float direction_metric = local_eval*(1 - (trials[i].angle / max_trial_angle));
+        float fitness = distance_metric+direction_metric+iso_metric;
         if (fitness >= best_fitness) {
             best_trial = i;
             best_fitness = fitness;
@@ -283,13 +292,6 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
             best_trial = trial;
         }
     }
-
-    /*
-    // TODO: Should the extensions all be the same length???? or just go to the exect position
-    //glm::vec3 extension = from+segment_length*glm::normalize(glm::vec3(frame_to*glm::vec4(local_pos,1.f))-from);
-    //return extension;
-    //return frame_to*glm::vec4(local_pos,1.f);
-    */
 
     // return best sample
     glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
