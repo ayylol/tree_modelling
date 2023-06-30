@@ -119,10 +119,10 @@ void Strands::add_strand(size_t shoot_index) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
         float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
-        //float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
 
         // Find target
-        TargetResult target = find_target(*path, closest_index, distance_to_travel);
+        //TargetResult target = find_target(*path, closest_index, distance_to_travel);
+        TargetResult target = {closest_index,(*path)[closest_index],0.0}; // HEADING METHOD
         if (target.index == path->size()-1) {
             if (!on_root){ // switch path
                 if (select_pos == AtRoot) 
@@ -130,15 +130,17 @@ void Strands::add_strand(size_t shoot_index) {
                 path = &(root_frames[root_index]);
                 on_root = true;
                 closest_index=0;
-                target = find_target(*path, closest_index, distance_to_travel-target.travelled);
+                //target = find_target(*path, closest_index, distance_to_travel-target.travelled);
+                target = {closest_index,(*path)[closest_index],0.0}; // HEADING METHOD
             }else {
                 done = true;
             }
         }
 
         // Add extension
-        if (auto ext = find_extension_fs(strand.back(), last_closest, target.frame)){
-        //if (auto ext = find_extension(strand.back(), last_closest, target.frame)){
+        //if (auto ext = find_extension(strand.back(), last_closest, target.frame)){ // Canonical direction approach
+        //if (auto ext = find_extension_fs(strand.back(), last_closest, target.frame)){ // Local position matching approach
+        if (auto ext = find_extension_heading(strand.back(), target.frame)){ // Heading stepping approach
             strand.push_back(ext.value());
         }else{
             strands_terminated++;
@@ -146,6 +148,7 @@ void Strands::add_strand(size_t shoot_index) {
         }
 
         TargetResult next = find_closest(strand.back(), *path, closest_index+1, 5);
+        //TargetResult next = find_closest(strand.back(), *path, closest_index, 5);
         closest_index = next.index;
         last_closest = next.frame;
     }
@@ -298,6 +301,28 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
     return extension;
     //return best_trial.global;
+}
+std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::mat4 frame){
+    glm::vec3 target_extension = frame*glm::vec4(0,segment_length,0,1);
+    glm::vec3 extension = from-(glm::mat3(frame)*glm::vec3(0,segment_length,0));
+    // Step along gradient
+    int num_steps = 0;
+    int max_steps = 10;
+    while(grid.get_in_pos(extension)>reject_iso&&num_steps<=max_steps){
+        glm::vec3 step = 0.001f*grid.get_norm_pos(extension);
+        extension += step;
+        //extension = from+segment_length*glm::normalize(extension-from);
+        num_steps++;
+    }
+    num_steps = 0;
+    glm::vec3 step =0.1f*(target_extension-extension);
+    while(grid.get_in_pos(extension)<=target_iso&&num_steps<=max_steps){
+        extension+=step;
+        num_steps++;
+    }
+    //}
+    //extension = from+segment_length*glm::normalize(extension-from);
+    return extension;
 }
 
 Strands::TargetResult 

@@ -64,12 +64,14 @@ float Grid::get_in_grid(ivec3 index) const {
 float Grid::get_in_pos(vec3 pos) const { return get_in_grid(pos_to_grid(pos)); }
 
 glm::vec3 Grid::get_norm_grid(glm::ivec3 index) const {
+    // Grid dependent normals
     return glm::normalize(glm::vec3((get_in_grid(index + ivec3(-1, 0, 0)) -
                                    get_in_grid(index + ivec3(1, 0, 0))),
                                   (get_in_grid(index + ivec3(0, -1, 0)) -
                                    get_in_grid(index + ivec3(0, 1, 0))),
                                   (get_in_grid(index + ivec3(0, 0, -1)) -
                                    get_in_grid(index + ivec3(0, 0, 1)))));
+    //return glm::normalize(gradient[index.x][index.y][index.z]);
 }
 glm::vec3 Grid::get_norm_pos(glm::vec3 pos) const { return get_norm_grid(pos_to_grid(pos)); }
 
@@ -315,11 +317,8 @@ Mesh<VertFlat> Grid::get_normals_geom(float threshold) const {
             if (!visible) continue;
             vec3 norm_start = back_bottom_left + vec3(voxel) * scale + vec3(1, 1, 1) * (scale / 2);
             vec3 norm_end = norm_start + get_norm_grid(voxel)*scale*2.0f;
-            vec3 norm_end2 = norm_start + glm::normalize(gradient[voxel.x][voxel.y][voxel.z])*scale*2.0f;
             vertices.push_back(VertFlat{norm_start, glm::vec3(0,1,0)});
             vertices.push_back(VertFlat{norm_end, glm::vec3(0,1,0)});
-            vertices.push_back(VertFlat{norm_start, glm::vec3(0,0,1)});
-            vertices.push_back(VertFlat{norm_end2, glm::vec3(0,0,1)});
         }
     }
     for (size_t i = 0; i < vertices.size(); i++) {
@@ -396,46 +395,56 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
                     continue;
                 }
                 // TODO: refactor this
+                ivec3 voxel_verts[8]={
+                    voxel+cell_order[0],
+                    voxel+cell_order[1],
+                    voxel+cell_order[2],
+                    voxel+cell_order[3],
+                    voxel+cell_order[4],
+                    voxel+cell_order[5],
+                    voxel+cell_order[6],
+                    voxel+cell_order[7],
+                };
                 GridCell cell = {{
                 {
-                    .pos = grid_to_pos(voxel + cell_order[0]),
-                    .val = get_in_grid(voxel + cell_order[0]),
-                    .norm = get_norm_grid(voxel + cell_order[0]),
+                    .pos = grid_to_pos(voxel_verts[0]),
+                    .val = get_in_grid(voxel_verts[0]),
+                    .norm = get_norm_grid(voxel_verts[0]),
                 },
                 {
-                    .pos = grid_to_pos(voxel + cell_order[1]),
-                    .val = get_in_grid(voxel + cell_order[1]),
-                    .norm = get_norm_grid(voxel + cell_order[1]),
+                    .pos = grid_to_pos(voxel_verts[1]),
+                    .val = get_in_grid(voxel_verts[1]),
+                    .norm = get_norm_grid(voxel_verts[1]),
                 },
                 {
-                    .pos = grid_to_pos(voxel + cell_order[2]),
-                    .val = get_in_grid(voxel + cell_order[2]),
-                    .norm = get_norm_grid(voxel + cell_order[2]),
+                    .pos = grid_to_pos(voxel_verts[2]),
+                    .val = get_in_grid(voxel_verts[2]),
+                    .norm = get_norm_grid(voxel_verts[2]),
                 },
                 {
-                    .pos = grid_to_pos(voxel + cell_order[3]),
-                    .val = get_in_grid(voxel + cell_order[3]),
-                    .norm = get_norm_grid(voxel + cell_order[3]),
+                    .pos = grid_to_pos(voxel_verts[3]),
+                    .val = get_in_grid(voxel_verts[3]),
+                    .norm = get_norm_grid(voxel_verts[3]),
                 },
                 {
-                    .pos = grid_to_pos(voxel + cell_order[4]),
-                    .val = get_in_grid(voxel + cell_order[4]),
-                    .norm = get_norm_grid(voxel + cell_order[4]),
+                    .pos = grid_to_pos(voxel_verts[4]),
+                    .val = get_in_grid(voxel_verts[4]),
+                    .norm = get_norm_grid(voxel_verts[4]),
                 },
                 {
-                    .pos = grid_to_pos(voxel + cell_order[5]),
-                    .val = get_in_grid(voxel + cell_order[5]),
-                    .norm = get_norm_grid(voxel + cell_order[5]),
+                    .pos = grid_to_pos(voxel_verts[5]),
+                    .val = get_in_grid(voxel_verts[5]),
+                    .norm = get_norm_grid(voxel_verts[5]),
                 },
                 {
-                    .pos = grid_to_pos(voxel + cell_order[6]),
-                    .val = get_in_grid(voxel + cell_order[6]),
-                    .norm = get_norm_grid(voxel + cell_order[6]),
+                    .pos = grid_to_pos(voxel_verts[6]),
+                    .val = get_in_grid(voxel_verts[6]),
+                    .norm = get_norm_grid(voxel_verts[6]),
                 },
                 {
-                    .pos = grid_to_pos(voxel + cell_order[7]),
-                    .val = get_in_grid(voxel + cell_order[7]),
-                    .norm = get_norm_grid(voxel + cell_order[7]),
+                    .pos = grid_to_pos(voxel_verts[7]),
+                    .val = get_in_grid(voxel_verts[7]),
+                    .norm = get_norm_grid(voxel_verts[7]),
                 },
                 }};
                 polygonize(cell, threshold, verts, indices);
