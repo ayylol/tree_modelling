@@ -308,16 +308,17 @@ std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::ma
     // Step along gradient
     int num_steps = 0;
     int max_steps = 10;
-    while(grid.get_in_pos(extension)>reject_iso&&num_steps<=max_steps){
-        glm::vec3 step = 0.001f*grid.get_norm_pos(extension);
-        extension += step;
+    glm::vec3 step =0.1f*(target_extension-extension);
+    while(grid.get_in_pos(extension)<target_iso&&num_steps<=max_steps){
+        extension+=step;
         //extension = from+segment_length*glm::normalize(extension-from);
         num_steps++;
     }
     num_steps = 0;
-    glm::vec3 step =0.1f*(target_extension-extension);
-    while(grid.get_in_pos(extension)<=target_iso&&num_steps<=max_steps){
-        extension+=step;
+    while(grid.get_in_pos(extension)>reject_iso&&num_steps<=max_steps){
+        glm::vec3 step = 0.001f*grid.get_norm_pos(extension);
+        extension += step;
+        //extension = from+segment_length*glm::normalize(extension-from);
         num_steps++;
     }
     //}
