@@ -22,9 +22,8 @@
 
 class Strands {
 public:
-    Strands(const Skeleton &tree, Grid &grid, Implicit& evalfunc);
+    Strands(const Skeleton &tree, Grid &grid, Implicit& evalfunc, nlohmann::json options);
     Mesh<Vertex> get_mesh() const;
-    void add_strands(nlohmann::json& options);
 private:
     void add_strands(unsigned int amount);
     void add_strand(size_t shoot_index);
@@ -55,6 +54,11 @@ private:
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
 
     // Strand Creation Vars
+    enum Method{
+        CanonDir,
+        LocalPosMatching,
+        HeadingDir
+    } method;
     float segment_length;
     int num_trials;
     float max_angle;
@@ -70,18 +74,15 @@ private:
     enum SelectMethod{
         AtRandom,
         WithAngle,
-    };
-    SelectMethod select_method = WithAngle;
+    } select_method = WithAngle;
     enum SelectPos{
         AtLeaf,
         AtRoot,
-    };
-    SelectPos select_pos = AtRoot;
+    } select_pos = AtRoot;
     enum SelectPool{
         All,
         NotSelected,
-    };
-    SelectPool select_pool = NotSelected;
+    } select_pool = NotSelected;
 
     std::vector<size_t> root_pool;
     std::vector<glm::vec3> root_vecs;
