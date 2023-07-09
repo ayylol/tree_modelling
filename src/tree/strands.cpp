@@ -13,9 +13,10 @@ std::default_random_engine
 glm::vec3 random_vector(glm::vec3 axis, float angle);
 glm::vec2 random_vec2();
 
-Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) : 
+Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, nlohmann::json options) : 
     grid(grid),evalfunc(evalfunc), tree(tree)
 {
+    // Set up root & shoot paths
     for (size_t i = 0; i < tree.leafs_size(); i++) {
         shoot_frames.push_back(tree.get_strand(i, Skeleton::LEAF));
     }
@@ -39,6 +40,39 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc) :
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
     }
+    // Set strand options
+    auto strand_options = options.at("strands");
+    if (strand_options.at("method")=="canon_dir"){
+        method = CanonDir;
+    }else if (strand_options.at("method")=="local_pos_matching"){
+        method = LocalPosMatching;
+    }else if (strand_options.at("method")=="heading_dir"){
+        method = HeadingDir;
+    }
+    int num_strands = tree.leafs_size();
+    if (strand_options.contains("num_abs")) {
+        num_strands = strand_options.at("num_abs");
+    } else if (strand_options.contains("num_per")) {
+        num_strands *= (int)strand_options.at("num_per");
+    }
+    if (strand_options.contains("sectorality")) {
+        select_method = strand_options.at("sectorality") ? WithAngle : AtRandom;
+    }
+    segment_length = strand_options.at("segment_length");
+    num_trials = strand_options.at("num_trials");
+    max_angle = strand_options.at("max_angle");
+    offset = strand_options.at("segment_offset");
+    reject_iso = strand_options.at("reject_iso");
+    target_iso = strand_options.at("target_iso");
+    iso_eval = strand_options.at("iso_eval");
+    local_eval = strand_options.at("local_eval");
+    frame_eval = strand_options.at("frame_eval");
+    float total_eval_weight = iso_eval+local_eval+frame_eval;
+    iso_eval/=total_eval_weight;
+    local_eval/=total_eval_weight;
+    frame_eval/=total_eval_weight;
+    local_spread = strand_options.at("local_spread");
+    add_strands(num_strands);
 }
 
 Mesh<Vertex> Strands::get_mesh() const {
@@ -63,32 +97,6 @@ Mesh<Vertex> Strands::get_mesh() const {
     return Mesh(vertices, indices);
 }
 
-void Strands::add_strands(nlohmann::json& options){
-    int num_strands = tree.leafs_size();
-    if (options.contains("num_abs")) {
-        num_strands = options.at("num_abs");
-    } else if (options.contains("num_per")) {
-        num_strands *= (int)options.at("num_per");
-    }
-    if (options.contains("sectorality")) {
-        select_method = options.at("sectorality") ? WithAngle : AtRandom;
-    }
-    segment_length = options.at("segment_length");
-    num_trials = options.at("num_trials");
-    max_angle = options.at("max_angle");
-    offset = options.at("segment_offset");
-    reject_iso = options.at("reject_iso");
-    target_iso = options.at("target_iso");
-    iso_eval = options.at("iso_eval");
-    local_eval = options.at("local_eval");
-    frame_eval = options.at("frame_eval");
-    float total_eval_weight = iso_eval+local_eval+frame_eval;
-    iso_eval/=total_eval_weight;
-    local_eval/=total_eval_weight;
-    frame_eval/=total_eval_weight;
-    local_spread = options.at("local_spread");
-    add_strands(num_strands);
-}
 void Strands::add_strands(unsigned int amount) {
     std::vector<size_t> paths(shoot_frames.size());
     std::iota(paths.begin(),paths.end(),0);
@@ -100,7 +108,6 @@ void Strands::add_strands(unsigned int amount) {
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
-// TODO: Extract to seperate smaller functions
 void Strands::add_strand(size_t shoot_index) {
     if (shoot_index >= shoot_frames.size()) return;
     // Set up strand
@@ -121,8 +128,12 @@ void Strands::add_strand(size_t shoot_index) {
         float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
 
         // Find target
-        //TargetResult target = find_target(*path, closest_index, distance_to_travel);
-        TargetResult target = {closest_index,(*path)[closest_index],0.0}; // HEADING METHOD
+        TargetResult target;
+        if(method==HeadingDir){
+            target = {closest_index,(*path)[closest_index],0.0};
+        }else{
+            target = find_target(*path, closest_index, distance_to_travel);
+        }
         if (target.index == path->size()-1) {
             if (!on_root){ // switch path
                 if (select_pos == AtRoot) 
@@ -130,17 +141,30 @@ void Strands::add_strand(size_t shoot_index) {
                 path = &(root_frames[root_index]);
                 on_root = true;
                 closest_index=0;
-                //target = find_target(*path, closest_index, distance_to_travel-target.travelled);
-                target = {closest_index,(*path)[closest_index],0.0}; // HEADING METHOD
+                if(method==HeadingDir){
+                    target = {closest_index,(*path)[closest_index],0.0};
+                }else{
+                    target = find_target(*path, closest_index, distance_to_travel-target.travelled);
+                }
             }else {
                 done = true;
             }
         }
 
         // Add extension
-        //if (auto ext = find_extension(strand.back(), last_closest, target.frame)){ // Canonical direction approach
-        //if (auto ext = find_extension_fs(strand.back(), last_closest, target.frame)){ // Local position matching approach
-        if (auto ext = find_extension_heading(strand.back(), target.frame)){ // Heading stepping approach
+        std::optional<glm::vec3> ext;
+        switch (method){
+            case CanonDir:
+                ext = find_extension(strand.back(), last_closest, target.frame);
+                break;
+            case LocalPosMatching:
+                ext = find_extension_fs(strand.back(), last_closest, target.frame);
+                break;
+            case HeadingDir:
+                ext = find_extension_heading(strand.back(), target.frame);
+                break;
+        }
+        if (ext){
             strand.push_back(ext.value());
         }else{
             strands_terminated++;

@@ -122,8 +122,7 @@ int main(int argc, char *argv[]) {
         std::cerr << "did not recognize implicit type" << std::endl;
         return 1;
     }
-    Strands detail(tree, gr, *df);
-    STOPWATCH("Adding Strands",detail.add_strands(opt_data.at("strands")););
+    STOPWATCH("Adding Strands",Strands detail(tree, gr, *df, opt_data););
     delete df;
 
     // Creating Meshes
