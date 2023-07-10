@@ -114,6 +114,7 @@ int main(int argc, char *argv[]) {
     // Tree detail
     Implicit *df;
     //df = new Convolution(3.4,1,0.015);
+    //df = new MetaBalls(10.0,0.05);
     if(opt_data.at("implicit").at("type")=="metaballs"){
         df = new MetaBalls(opt_data.at("implicit"));
     }else if(opt_data.at("implicit").at("type")=="blinn"){
@@ -122,6 +123,12 @@ int main(int argc, char *argv[]) {
         std::cerr << "did not recognize implicit type" << std::endl;
         return 1;
     }
+
+    //std::vector<glm::vec3> path = {glm::vec3(1.0,0.0,0.0),glm::vec3(0.0,0.0,0.0),glm::vec3(0.707,0.707,0.0),glm::vec3(0.866,0.5,0.0)};
+    //gr.fill_path(path, *df, 0.0f);
+    //gr.fill_line(path[0],path[1], *df);
+    //gr.fill_line(path[1],path[3], *df);
+
     STOPWATCH("Adding Strands",Strands detail(tree, gr, *df, opt_data););
     delete df;
 

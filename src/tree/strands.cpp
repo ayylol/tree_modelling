@@ -327,9 +327,26 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     //return best_trial.global;
 }
 std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::mat4 frame){
-    glm::vec3 target_extension = frame*glm::vec4(0,segment_length,0,1);
+    glm::vec3 target_extension = frame*glm::vec4(0,-segment_length,0,1);
     glm::vec3 extension = from-(glm::mat3(frame)*glm::vec3(0,segment_length,0));
     // Step along gradient
+    // NEW 
+    int num_steps = 0;
+    int max_steps = 10;
+    glm::vec3 step =0.1f*(target_extension-extension);
+    while (glm::all(glm::isnan(grid.get_norm_pos(extension))) && num_steps<=max_steps){
+        extension+=step;
+        num_steps++;
+    }
+    num_steps = 0;
+    max_steps = 20;
+    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
+        glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
+        extension += step;
+        num_steps++;
+    }
+    /*
+    // OLD
     int num_steps = 0;
     int max_steps = 10;
     glm::vec3 step =0.1f*(target_extension-extension);
@@ -345,8 +362,8 @@ std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::ma
         //extension = from+segment_length*glm::normalize(extension-from);
         num_steps++;
     }
-    //}
-    //extension = from+segment_length*glm::normalize(extension-from);
+    */
+    extension = from+segment_length*glm::normalize(extension-from);
     return extension;
 }
 
@@ -360,10 +377,8 @@ Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path,
     int point_checking = start_index + 1;
     int overshot = -1;
 
-    //std::cout<<point_checking<<"<="<<path.size()-1<<" "<<overshoot<<">="<<overshot<<std::endl;
     // Look for closest point on path
     while ((point_checking <= path.size()-1) && (overshoot >= overshot)) {
-        //std::cout<<"in loop"<<std::endl;
         float last_lowest_dist2 = lowest_dist2;
         float dist2 = glm::distance2(pos, frame_position(path[point_checking]));
         if (dist2 < lowest_dist2) {
