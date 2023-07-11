@@ -51,13 +51,15 @@ private:
     std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_fs(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_heading(glm::vec3 from, glm::mat4 frame);
+    std::optional<glm::vec3> find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
 
     // Strand Creation Vars
     enum Method{
         CanonDir,
         LocalPosMatching,
-        HeadingDir
+        HeadingDir,
+        CanonIso,
     } method;
     float segment_length;
     int num_trials;

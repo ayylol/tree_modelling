@@ -48,6 +48,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, nlohmann:
         method = LocalPosMatching;
     }else if (strand_options.at("method")=="heading_dir"){
         method = HeadingDir;
+    }else if (strand_options.at("method")=="canon_iso"){
+        method = CanonIso;
     }
     int num_strands = tree.leafs_size();
     if (strand_options.contains("num_abs")) {
@@ -125,7 +127,7 @@ void Strands::add_strand(size_t shoot_index) {
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-        float distance_to_travel = segment_length + glm::distance(frame_position(last_closest), start);
+        float distance_to_travel = 2*(segment_length + glm::distance(frame_position(last_closest), start));
 
         // Find target
         TargetResult target;
@@ -162,6 +164,9 @@ void Strands::add_strand(size_t shoot_index) {
                 break;
             case HeadingDir:
                 ext = find_extension_heading(strand.back(), target.frame);
+                break;
+            case CanonIso:
+                ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
                 break;
         }
         if (ext){
@@ -329,8 +334,7 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
 std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::mat4 frame){
     glm::vec3 target_extension = frame*glm::vec4(0,-segment_length,0,1);
     glm::vec3 extension = from-(glm::mat3(frame)*glm::vec3(0,segment_length,0));
-    // Step along gradient
-    // NEW 
+    // Step until gradient is found
     int num_steps = 0;
     int max_steps = 10;
     glm::vec3 step =0.1f*(target_extension-extension);
@@ -340,31 +344,38 @@ std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::ma
     }
     num_steps = 0;
     max_steps = 20;
+    // Step along gradient
     while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
         glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
         extension += step;
         num_steps++;
     }
-    /*
-    // OLD
+    extension = from+segment_length*glm::normalize(extension-from);
+    return extension;
+}
+
+std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
+    glm::vec3 target_extension = frame_position(frame_to);
+    glm::vec3 extension = from+segment_length*glm::normalize(frame_position(frame_to)-frame_position(frame_from));
+    // Step until gradient is found
     int num_steps = 0;
     int max_steps = 10;
     glm::vec3 step =0.1f*(target_extension-extension);
-    while(grid.get_in_pos(extension)<target_iso&&num_steps<=max_steps){
+    while (glm::all(glm::isnan(grid.get_norm_pos(extension))) && num_steps<=max_steps){
         extension+=step;
-        //extension = from+segment_length*glm::normalize(extension-from);
         num_steps++;
     }
+    // Step along gradient
     num_steps = 0;
-    while(grid.get_in_pos(extension)>reject_iso&&num_steps<=max_steps){
-        glm::vec3 step = 0.001f*grid.get_norm_pos(extension);
+    max_steps = 20;
+    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
+        glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
         extension += step;
-        //extension = from+segment_length*glm::normalize(extension-from);
         num_steps++;
     }
-    */
     extension = from+segment_length*glm::normalize(extension-from);
     return extension;
+    return {};
 }
 
 Strands::TargetResult 
