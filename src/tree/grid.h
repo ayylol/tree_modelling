@@ -61,7 +61,7 @@ public:
     Mesh<VertFlat> get_grid_geom() const;
     Mesh<VertFlat> get_bound_geom() const;
     Mesh<Vertex> get_occupied_voxels(float threshold) const;
-    Mesh<Vertex> get_occupied_geom(float threshold) const;
+    Mesh<Vertex> get_occupied_geom(float threshold, std::pair<glm::vec3,glm::vec3> vis_bounds={glm::vec3(),glm::vec3()}) const;
     Mesh<VertFlat> get_occupied_geom_points(float threshold) const;
     Mesh<VertFlat> get_normals_geom(float threshold) const;
 

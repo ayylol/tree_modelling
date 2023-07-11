@@ -381,8 +381,12 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
     return Mesh(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
+Mesh<Vertex> Grid::get_occupied_geom(float threshold,std::pair<glm::vec3,glm::vec3>vis_bounds) const {
     using namespace mc;
+    if (vis_bounds.first==glm::vec3() && vis_bounds.second==glm::vec3()){
+        vis_bounds.first = back_bottom_left;
+        vis_bounds.second = back_bottom_left + scale*glm::vec3(dimensions);
+    }
     vector<Vertex> verts;
     vector<GLuint> indices;
     for (auto occupied : occupied){
@@ -391,6 +395,10 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) const {
                 for (int x = -1; x <= 0; x++) {
                 ivec3 offset(x, y, z);
                 ivec3 voxel = occupied + offset;
+                vec3 voxel_pos = back_bottom_left+scale*glm::vec3(voxel);
+                if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
+                    voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
+                    voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
                 if (voxel != occupied && (!is_in_grid(voxel) || get_in_grid(voxel) > threshold)) {
                     continue;
                 }

@@ -135,6 +135,7 @@ int main(int argc, char *argv[]) {
     // Creating Meshes
     float surface_val = opt_data.at("mesh_iso");
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
+    //STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val,{glm::vec3(-0.5,0.05,-0.5),glm::vec3(0.75,0.23,0.75)}););
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val););
     // Mesh tree_geom = gr.get_occupied_voxels(surface_val);
     STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
