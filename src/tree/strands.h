@@ -67,6 +67,7 @@ private:
     float local_spread;
     float reject_iso;
     float offset;
+    float lookahead_factor;
     // Eval Weights
     float iso_eval;
     float target_iso;

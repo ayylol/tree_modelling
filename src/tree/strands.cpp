@@ -64,6 +64,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, nlohmann:
     num_trials = strand_options.at("num_trials");
     max_angle = strand_options.at("max_angle");
     offset = strand_options.at("segment_offset");
+    lookahead_factor = strand_options.at("lookahead_factor");
     reject_iso = strand_options.at("reject_iso");
     target_iso = strand_options.at("target_iso");
     iso_eval = strand_options.at("iso_eval");
@@ -127,7 +128,7 @@ void Strands::add_strand(size_t shoot_index) {
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-        float distance_to_travel = 2*(segment_length + glm::distance(frame_position(last_closest), start));
+        float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
 
         // Find target
         TargetResult target;
