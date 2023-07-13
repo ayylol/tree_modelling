@@ -114,14 +114,15 @@ void Strands::add_strands(unsigned int amount) {
 void Strands::add_strand(size_t shoot_index) {
     if (shoot_index >= shoot_frames.size()) return;
     // Set up strand
-    const std::vector<glm::mat4> *path = &(shoot_frames[shoot_index]);
+    const std::vector<glm::mat4> *shoot_path=&(shoot_frames[shoot_index]);
+    const std::vector<glm::mat4> *root_path=nullptr;
+    const std::vector<glm::mat4> *path = shoot_path;
     size_t closest_index = 0;
     glm::mat4 last_closest = (*path)[closest_index];
     std::vector<glm::vec3> strand{frame_position(last_closest)};
     // Set up root path (if selectpos is at leaf)
-    size_t root_index;
     if (select_pos == AtLeaf) 
-        root_index = match_root(strand[0]); 
+        root_path = &(root_frames[match_root(strand[0])]); 
     // Loop until on root, and target node is the end
     bool on_root = false;
     bool done = false;
@@ -139,15 +140,13 @@ void Strands::add_strand(size_t shoot_index) {
         }
         if (target.index == path->size()-1) {
             if (!on_root){ // switch path
-                if (select_pos == AtRoot) 
-                    root_index = match_root(start);
-                path = &(root_frames[root_index]);
-                on_root = true;
-                closest_index=0;
+                if (select_pos == AtRoot && root_path == nullptr) 
+                    root_path = &(root_frames[match_root(strand[0])]); 
                 if(method==HeadingDir){
-                    target = {closest_index,(*path)[closest_index],0.0};
+                    // FIXME????? I don't think this makes sense
+                    target = {closest_index,(*root_path)[0],0.0};
                 }else{
-                    target = find_target(*path, closest_index, distance_to_travel-target.travelled);
+                    target = find_target(*root_path, 0, distance_to_travel-target.travelled);
                 }
             }else {
                 done = true;
@@ -177,8 +176,13 @@ void Strands::add_strand(size_t shoot_index) {
             break;
         }
 
-        TargetResult next = find_closest(strand.back(), *path, closest_index+1, 5);
-        //TargetResult next = find_closest(strand.back(), *path, closest_index, 5);
+        TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10);
+        if (!on_root && next.index >= path->size()-1) {
+            path = root_path;
+            on_root = true;
+            closest_index=0;
+            next = find_closest(strand.back(), *path, 0, 10);
+        }
         closest_index = next.index;
         last_closest = next.frame;
     }
