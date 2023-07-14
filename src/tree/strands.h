@@ -85,7 +85,8 @@ private:
     enum SelectPool{
         All,
         NotSelected,
-    } select_pool = All;
+        AtLeastOnce,
+    } select_pool = AtLeastOnce;
 
     std::vector<size_t> root_pool;
     std::vector<glm::vec3> root_vecs;
