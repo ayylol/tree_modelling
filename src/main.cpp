@@ -123,14 +123,24 @@ int main(int argc, char *argv[]) {
         std::cerr << "did not recognize implicit type" << std::endl;
         return 1;
     }
+    Implicit *df2;
+    if(opt_data.at("implicit2").at("type")=="metaballs"){
+        df2 = new MetaBalls(opt_data.at("implicit2"));
+    }else if(opt_data.at("implicit2").at("type")=="blinn"){
+        df2 = new Blinn(opt_data.at("implicit2"));
+    }else{
+        std::cerr << "did not recognize implicit type" << std::endl;
+        return 1;
+    }
 
     //std::vector<glm::vec3> path = {glm::vec3(1.0,0.0,0.0),glm::vec3(0.0,0.0,0.0),glm::vec3(0.707,0.707,0.0),glm::vec3(0.866,0.5,0.0)};
     //gr.fill_path(path, *df, 0.0f);
     //gr.fill_line(path[0],path[1], *df);
     //gr.fill_line(path[1],path[3], *df);
 
-    STOPWATCH("Adding Strands",Strands detail(tree, gr, *df, opt_data););
+    STOPWATCH("Adding Strands",Strands detail(tree, gr, *df, *df2, opt_data););
     delete df;
+    delete df2;
 
     // Creating Meshes
     float surface_val = opt_data.at("mesh_iso");

@@ -37,9 +37,7 @@ class Skeleton{
         };
         std::vector<glm::mat4> get_strand(size_t index, path_type type=LEAF) const;
 
-    private:
         struct Node{
-            //glm::vec3 position; 
             glm::mat4 frame;
             std::shared_ptr<Node> parent;
             std::vector<std::shared_ptr<Node>>children;
@@ -49,6 +47,7 @@ class Skeleton{
         std::shared_ptr<Node> root_root;
         std::vector<std::shared_ptr<Node>> root_tips;
 
+    private:
         struct ParseInfo{
             std::pair<glm::vec3,glm::vec3> extent;
             glm::vec3 center_of_mass;

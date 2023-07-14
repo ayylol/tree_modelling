@@ -22,7 +22,7 @@
 
 class Strands {
 public:
-    Strands(const Skeleton &tree, Grid &grid, Implicit& evalfunc, nlohmann::json options);
+    Strands(const Skeleton &tree, Grid &grid, Implicit& evalfunc, Implicit& initialevalfunc, nlohmann::json options);
     Mesh<Vertex> get_mesh() const;
 private:
     void add_strands(unsigned int amount);

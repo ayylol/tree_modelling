@@ -13,7 +13,7 @@ std::default_random_engine
 glm::vec3 random_vector(glm::vec3 axis, float angle);
 glm::vec2 random_vec2();
 
-Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, nlohmann::json options) : 
+Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit  &initialevalfunc, nlohmann::json options) : 
     grid(grid),evalfunc(evalfunc), tree(tree)
 {
     // Set up root & shoot paths
@@ -75,6 +75,9 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, nlohmann:
     local_eval/=total_eval_weight;
     frame_eval/=total_eval_weight;
     local_spread = strand_options.at("local_spread");
+
+    //grid.fill_skeleton(*tree.shoot_root, initialevalfunc);
+    //grid.fill_skeleton(*tree.root_root, initialevalfunc);
     add_strands(num_strands);
 }
 
@@ -130,6 +133,7 @@ void Strands::add_strand(size_t shoot_index) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
         float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
+        //float distance_to_travel = lookahead_factor*(segment_length);
 
         // Find target
         TargetResult target;
@@ -149,7 +153,7 @@ void Strands::add_strand(size_t shoot_index) {
                     target = find_target(*root_path, 0, distance_to_travel-target.travelled);
                 }
             }else {
-                done = true;
+                //done = true;
             }
         }
 
@@ -177,11 +181,16 @@ void Strands::add_strand(size_t shoot_index) {
         }
 
         TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10);
-        if (!on_root && next.index >= path->size()-1) {
-            path = root_path;
-            on_root = true;
-            closest_index=0;
-            next = find_closest(strand.back(), *path, 0, 10);
+        //if (!on_root && next.index >= path->size()-1) {
+        if (next.index >= path->size()-1) {
+            if (on_root){
+                done = true;
+            }else{
+                path = root_path;
+                on_root = true;
+                closest_index=0;
+                next = find_closest(strand.back(), *path, 0, 10);
+            }
         }
         closest_index = next.index;
         last_closest = next.frame;
@@ -380,7 +389,6 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     }
     extension = from+segment_length*glm::normalize(extension-from);
     return extension;
-    return {};
 }
 
 Strands::TargetResult 

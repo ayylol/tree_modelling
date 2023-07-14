@@ -204,8 +204,18 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
 
 void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit, float offset){
     fill_line(path[0], path[1], implicit);
-    for (int i = 1; i<path.size()-1;i++){
+    for (int i = 1; i<path.size()-1; i++){
         fill_line(path[i]+offset*(path[i+1]-path[i]), path[i + 1], implicit);
+    }
+}
+
+// For making initial implicit field
+void Grid::fill_skeleton(const Skeleton::Node& node, Implicit& implicit){ 
+    if (node.parent != nullptr){  
+        fill_line(frame_position(node.frame),frame_position(node.parent->frame), implicit);
+    }
+    for (auto child : node.children){
+        Grid::fill_skeleton(*child, implicit);
     }
 }
 
