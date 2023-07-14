@@ -442,8 +442,11 @@ size_t Strands::match_root(glm::vec3 position){
         }
     }
     size_t match = root_pool[match_index];
-    if (select_pool == NotSelected) {
+    if (select_pool == NotSelected || select_pool == AtLeastOnce) {
         root_pool.erase(root_pool.begin() + match_index);
+        if (root_pool.empty() && select_pool == AtLeastOnce){
+            select_pool=All;
+        }
     }
     return match;
 }
