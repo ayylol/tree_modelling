@@ -50,12 +50,14 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
         method = HeadingDir;
     }else if (strand_options.at("method")=="canon_iso"){
         method = CanonIso;
+    } else if (strand_options.at("method")=="ptf_iso"){
+        method = PTFIso;
     }
     int num_strands = tree.leafs_size();
     if (strand_options.contains("num_abs")) {
         num_strands = strand_options.at("num_abs");
     } else if (strand_options.contains("num_per")) {
-        num_strands *= (int)strand_options.at("num_per");
+        num_strands = (int)(num_strands*(float)strand_options.at("num_per"));
     }
     if (strand_options.contains("sectorality")) {
         select_method = strand_options.at("sectorality") ? WithAngle : AtRandom;
@@ -171,6 +173,9 @@ void Strands::add_strand(size_t shoot_index) {
                 break;
             case CanonIso:
                 ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
+                break;
+            case PTFIso:
+                ext = find_extension_ptfiso(strand.back(), last_closest, target.frame);
                 break;
         }
         if (ext){
@@ -385,6 +390,42 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
         glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
         extension += step;
+        num_steps++;
+    }
+    extension = from+segment_length*glm::normalize(extension-from);
+    return extension;
+}
+std::optional<glm::vec3> Strands::find_extension_ptfiso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
+    glm::mat4 inv_from = frame_inverse(frame_from);
+    glm::mat4 inv_to = frame_inverse(frame_to);
+    // Calculate Position in local frame
+    glm::vec3 local_pos = inv_from*glm::vec4(from,1.f);
+    local_pos.y = 0.f;
+    glm::vec3 extension_local = local_pos;
+    glm::vec3 extension = frame_to*glm::vec4(extension_local,1.f);
+    int num_steps = 0; 
+    int max_steps = 20;
+    while (glm::all(glm::isnan(grid.get_norm_pos(extension))) && num_steps<=max_steps){
+        extension_local -= (1.f/max_steps)*local_pos;
+        extension = frame_to*glm::vec4(extension_local,1.f);
+        num_steps++;
+    }
+    glm::vec3 direction = extension_local;
+    if ( glm::length2(extension_local) < 0.000001f ){
+        glm::vec2 rand_dir = random_vec2();
+        direction.x = rand_dir.x;
+        direction.z = rand_dir.y;
+    }
+    direction = 0.0001f*glm::normalize(direction);
+    num_steps = 0;
+    max_steps = 50;
+    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
+        if (grid.get_in_pos(extension)>=reject_iso){
+            extension_local += direction;
+        }else{
+            extension_local -= direction;
+        }
+        extension = frame_to*glm::vec4(extension_local,1.f);
         num_steps++;
     }
     extension = from+segment_length*glm::normalize(extension-from);
