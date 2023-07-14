@@ -40,9 +40,13 @@ const unsigned int DEFAULT_HEIGHT = 600;
 unsigned int width = DEFAULT_WIDTH;
 unsigned int height = DEFAULT_HEIGHT;
 
+double mouse_x, mouse_y;
+double scroll_amount=0.f;
+
 GLFWwindow *openGLInit();
 void framebuffer_size_callback(GLFWwindow *window, int w, int h);
 void processInput(GLFWwindow *window);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void save_image();
 
 std::vector<Camera> cameras;
@@ -123,6 +127,7 @@ int main(int argc, char *argv[]) {
         std::cerr << "did not recognize implicit type" << std::endl;
         return 1;
     }
+    /*
     Implicit *df2;
     if(opt_data.at("implicit2").at("type")=="metaballs"){
         df2 = new MetaBalls(opt_data.at("implicit2"));
@@ -132,15 +137,16 @@ int main(int argc, char *argv[]) {
         std::cerr << "did not recognize implicit type" << std::endl;
         return 1;
     }
+    */
 
     //std::vector<glm::vec3> path = {glm::vec3(1.0,0.0,0.0),glm::vec3(0.0,0.0,0.0),glm::vec3(0.707,0.707,0.0),glm::vec3(0.866,0.5,0.0)};
     //gr.fill_path(path, *df, 0.0f);
     //gr.fill_line(path[0],path[1], *df);
     //gr.fill_line(path[1],path[3], *df);
 
-    STOPWATCH("Adding Strands",Strands detail(tree, gr, *df, *df2, opt_data););
+    STOPWATCH("Adding Strands",Strands detail(tree, gr, *df, *df, opt_data););
     delete df;
-    delete df2;
+    //delete df2;
 
     // Creating Meshes
     float surface_val = opt_data.at("mesh_iso");
@@ -239,6 +245,10 @@ GLFWwindow *openGLInit() {
     glViewport(0, 0, width, height);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    // Initializing mouse position
+    glfwGetCursorPos(window, &mouse_x, &mouse_y);
+    glfwSetScrollCallback(window, scroll_callback);
+
     // OpenGL drawing settings
     glPointSize(2.f);
     //glPolygonMode( GL_BACK, GL_LINE );
@@ -286,12 +296,33 @@ void save_image(){
 #define PANSENS 0.38f
 #define ROTSENS 0.5f
 #define ZOOMSENS 0.5f
+#define MOUSESENS 0.01f
 float speed_factor = 1.f;
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
      pressed5 = false, pressed6 = false, pressed7 = false,
      pressedperiod = false, pressedenter = false, pressedga = false;
 void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    // Mouse input
+    double mouse_current_x, mouse_current_y;
+    glfwGetCursorPos(window, &mouse_current_x, &mouse_current_y);
+    double x_diff = mouse_current_x-mouse_x;
+    double y_diff = mouse_current_y-mouse_y;
+    if ( glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) ){
+        CAMERA.rotate_vert(y_diff * ROTSENS * MOUSESENS * speed_factor);
+        CAMERA.rotate_horz(-x_diff * ROTSENS * MOUSESENS * speed_factor);
+    }
+    if ( glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) ){
+        CAMERA.move_focus(glm::vec3(0.f, (float)y_diff, 0.f) * PANSENS * MOUSESENS * speed_factor);
+        CAMERA.pan_side(-x_diff * PANSENS * MOUSESENS * speed_factor);
+    }
+    if(scroll_amount!=0.f){
+        CAMERA.move_distance(-scroll_amount * ZOOMSENS * speed_factor);
+        scroll_amount=0.f;
+    }
+    mouse_x=mouse_current_x;
+    mouse_y=mouse_current_y;
+    // Keyboard input
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     // OUTPUT CAMERA JSON
     if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT) == GLFW_PRESS && !pressedga){
@@ -388,4 +419,8 @@ void processInput(GLFWwindow *window) {
         pressed7 = true;
     }
     if (glfwGetKey(window, GLFW_KEY_7) == GLFW_RELEASE && pressed7) pressed7 = false;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
+    scroll_amount=yoffset;
 }
