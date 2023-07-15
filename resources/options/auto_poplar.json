@@ -11,6 +11,8 @@
   "mesh_iso": 2.5,
   "root_file": "./resources/tree_data/roots.data",
   "strands": {
+    "method": "canon_iso",
+    "lookahead_factor":1.0,
     "sectorality":false,
     "alpha": 0.5,
     "max_angle": 180,
