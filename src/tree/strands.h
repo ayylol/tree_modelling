@@ -53,6 +53,8 @@ private:
     std::optional<glm::vec3> find_extension_heading(glm::vec3 from, glm::mat4 frame);
     std::optional<glm::vec3> find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_ptfiso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
+    std::optional<glm::vec3> find_extension_canonptfeval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
+    std::optional<glm::vec3> find_extension_ptfcanoneval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
 
     // Strand Creation Vars
@@ -62,7 +64,9 @@ private:
         HeadingDir,
         CanonIso,
         PTFIso,
-    } method;
+        CanonPTFEval,
+        PTFCanonEval,
+    } method = CanonDir;
     float segment_length;
     int num_trials;
     float max_angle;
@@ -70,6 +74,7 @@ private:
     float reject_iso;
     float offset;
     float lookahead_factor;
+    float lookahead_factor_max = 3.5;
     // Eval Weights
     float iso_eval;
     float target_iso;
