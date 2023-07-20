@@ -12,6 +12,7 @@ std::default_random_engine
 
 glm::vec3 random_vector(glm::vec3 axis, float angle);
 glm::vec2 random_vec2();
+float lookahead_frame(float dist);
 
 Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit  &initialevalfunc, nlohmann::json options) : 
     grid(grid),evalfunc(evalfunc), tree(tree)
@@ -140,6 +141,8 @@ void Strands::add_strand(size_t shoot_index) {
         glm::vec3 start(strand[strand.size() - 1]);
         float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
         //float distance_to_travel = lookahead_factor*(segment_length);
+        //float dist_to_frame = glm::distance(frame_position(last_closest), start);
+        //float distance_to_travel = lookahead_factor*(segment_length) + lookahead_frame(dist_to_frame);
 
         // Find target
         TargetResult target;
@@ -658,4 +661,9 @@ glm::vec2 random_vec2(){
     float x = r*cos(theta);
     float y = r*sin(theta);
     return glm::vec2(x,y);
+}
+
+float lookahead_frame(float dist){
+    float u = dist/0.05f;
+    return (u+1)*2*dist;
 }

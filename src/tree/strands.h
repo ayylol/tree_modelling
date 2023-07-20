@@ -74,7 +74,7 @@ private:
     float reject_iso;
     float offset;
     float lookahead_factor;
-    float lookahead_factor_max = 3.5;
+    float lookahead_factor_max = 3.5f;
     // Eval Weights
     float iso_eval;
     float target_iso;
