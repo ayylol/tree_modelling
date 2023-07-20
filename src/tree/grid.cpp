@@ -18,7 +18,7 @@ using std::vector;
 Grid::Grid(ivec3 dimensions, float scale, vec3 back_bottom_left)
     : dimensions(dimensions),
       grid(dimensions.x, vector<vector<float>>(dimensions.y, vector<float>(dimensions.z, 0))),
-      gradient(dimensions.x, vector<vector<glm::vec3>>(dimensions.y, vector<glm::vec3>(dimensions.z, glm::vec3(0,0,0)))),
+      //gradient(dimensions.x, vector<vector<glm::vec3>>(dimensions.y, vector<glm::vec3>(dimensions.z, glm::vec3(0,0,0)))),
       scale(scale), back_bottom_left(back_bottom_left),
       center(back_bottom_left + (scale / 2.f) * (vec3)dimensions) {}
 
@@ -34,9 +34,10 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     grid = std::vector<std::vector<std::vector<float>>>(dimensions.x, 
             vector<vector<float>>(dimensions.y, 
             vector<float>(dimensions.z, 0))); 
-    gradient = std::vector<std::vector<std::vector<vec3>>>(dimensions.x, 
+    /*gradient = std::vector<std::vector<std::vector<vec3>>>(dimensions.x, 
             vector<vector<vec3>>(dimensions.y, 
             vector<vec3>(dimensions.z, vec3(0, 0, 0))));
+            */
     std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 
@@ -65,12 +66,7 @@ float Grid::get_in_pos(vec3 pos) const { return get_in_grid(pos_to_grid(pos)); }
 
 glm::vec3 Grid::get_norm_grid(glm::ivec3 index) const {
     // Grid dependent normals
-    return glm::normalize(glm::vec3((get_in_grid(index + ivec3(-1, 0, 0)) -
-                                   get_in_grid(index + ivec3(1, 0, 0))),
-                                  (get_in_grid(index + ivec3(0, -1, 0)) -
-                                   get_in_grid(index + ivec3(0, 1, 0))),
-                                  (get_in_grid(index + ivec3(0, 0, -1)) -
-                                   get_in_grid(index + ivec3(0, 0, 1)))));
+    return glm::normalize(glm::vec3((get_in_grid(index + ivec3(-1, 0, 0)) - get_in_grid(index + ivec3(1, 0, 0))), (get_in_grid(index + ivec3(0, -1, 0)) - get_in_grid(index + ivec3(0, 1, 0))), (get_in_grid(index + ivec3(0, 0, -1)) - get_in_grid(index + ivec3(0, 0, 1)))));
     //return glm::normalize(gradient[index.x][index.y][index.z]);
 }
 glm::vec3 Grid::get_norm_pos(glm::vec3 pos) const { return get_norm_grid(pos_to_grid(pos)); }
@@ -114,7 +110,7 @@ void Grid::add_gradient(ivec3 slot, glm::vec3 val) {
     if (!is_in_grid(slot)) {
         return;
     }
-    gradient[slot.x][slot.y][slot.z] += val;
+    //gradient[slot.x][slot.y][slot.z] += val;
 }
 
 void Grid::occupy_line(vec3 start, vec3 end, float val) {
@@ -187,7 +183,8 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
                 if (val != 0) {
                     add_slot(slot_to_fill, val);
                     //calculate gradient
-                    const float step = 0.000001f;
+                    /*
+                    const float step = 0.00001f;
                     vec3 dir(implicit.eval(pos+vec3(-1,0,0)*step,p1,p2)
                                 - implicit.eval(pos+vec3(1,0,0)*step,p1,p2), 
                             implicit.eval(pos+vec3(0,-1,0)*step,p1,p2)
@@ -195,6 +192,7 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
                             implicit.eval(pos+vec3(0,0,-1)*step,p1,p2)
                                 - implicit.eval(pos+vec3(0,0,1)*step,p1,p2));
                     add_gradient(slot_to_fill, dir);
+                    */
                 }
             }
         }
@@ -372,8 +370,8 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
             // Completely occluded do not add vertices
             if (!visible) continue;
 
-            //glm::vec3 normal = get_norm_grid(voxel);
-            glm::vec3 normal = glm::normalize(gradient[voxel.x][voxel.y][voxel.z]);
+            glm::vec3 normal = get_norm_grid(voxel);
+            //glm::vec3 normal = glm::normalize(gradient[voxel.x][voxel.y][voxel.z]);
 
             // Loop through and generate vertices
             vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
