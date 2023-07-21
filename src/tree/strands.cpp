@@ -135,6 +135,7 @@ void Strands::add_strand(size_t shoot_index) {
     // Loop until on root, and target node is the end
     bool on_root = false;
     bool done = false;
+    size_t inflection = 0;
     method=CanonDir;
     while (!done) {
         // Start of this segment is head of last
@@ -209,6 +210,7 @@ void Strands::add_strand(size_t shoot_index) {
                 on_root = true;
                 closest_index=0;
                 next = find_closest(strand.back(), *path, 0, 10);
+                inflection = strand.size()-1;
             }
         }
         closest_index = next.index;
@@ -217,7 +219,10 @@ void Strands::add_strand(size_t shoot_index) {
     // Occupy strand path
     if (strand.size()<=2) return;
     strands.push_back(strand);
-    grid.fill_path(strand, evalfunc, offset);
+    //grid.fill_path(strand, evalfunc, offset);
+    MetaBalls testimplicit(3.0,0.03);
+    grid.fill_path(strand, testimplicit, inflection, 0.02, offset);
+    //grid.fill_path(strand, testimplicit, inflection, 0.015);
 }
 
 // Strand creation helper functions
@@ -400,7 +405,7 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     }
     // Step along gradient
     num_steps = 0;
-    max_steps = 50;
+    max_steps = 200;
     while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
         glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
         extension += step;

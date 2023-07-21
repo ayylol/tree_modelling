@@ -206,6 +206,20 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit, float offs
         fill_line(path[i]+offset*(path[i+1]-path[i]), path[i + 1], implicit);
     }
 }
+void Grid::fill_path(std::vector<glm::vec3> path, MetaBalls& implicit, size_t inflection_point, float start_diff, float offset){
+    float a=implicit.get_a();
+    float b=implicit.get_b()-start_diff;
+    float shoot_b_step = start_diff/inflection_point;
+    float root_b_step = -start_diff/(path.size()-inflection_point-1);
+    MetaBalls current_implicit = MetaBalls(a,b);
+    fill_line(path[0], path[1], current_implicit);
+    for (int i = 1; i<path.size()-1; i++){
+        b += inflection_point>=i? shoot_b_step : root_b_step;
+        //std::cout<<b<<std::endl;
+        current_implicit = MetaBalls(a,b);
+        fill_line(path[i]+offset*(path[i+1]-path[i]), path[i + 1], current_implicit);
+    }
+}
 
 // For making initial implicit field
 void Grid::fill_skeleton(const Skeleton::Node& node, Implicit& implicit){ 
