@@ -42,6 +42,7 @@ public:
 
     // Implicit Filling
     void fill_path(std::vector<glm::vec3> path, Implicit& implicit, float offset=0.f);
+    void fill_path(std::vector<glm::vec3> path, MetaBalls& implicit, size_t inflection_point, float start_diff, float offset=0.f);
     void fill_line(glm::vec3 p1, glm::vec3 p2, Implicit& implicit);
     void fill_point(glm::vec3 p, Implicit& implicit);
     void fill_skeleton(const Skeleton::Node& node, Implicit& implicit);

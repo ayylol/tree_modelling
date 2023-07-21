@@ -52,6 +52,8 @@ public:
       : MetaBalls(options.at("max_val"),
                   options.at("range")){};
 
+  float get_a(){return a;}
+  float get_b(){return b;}
 private:
   float a;
   float b;
