@@ -140,10 +140,12 @@ void Strands::add_strand(size_t shoot_index) {
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-        float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
+        //float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
         //float distance_to_travel = lookahead_factor*(segment_length);
         //float dist_to_frame = glm::distance(frame_position(last_closest), start);
         //float distance_to_travel = lookahead_factor*(segment_length) + lookahead_frame(dist_to_frame);
+        //float distance_to_travel = segment_length + lookahead_factor*glm::distance(frame_position(last_closest), start);
+        float distance_to_travel = std::max(segment_length, lookahead_factor*glm::distance(frame_position(last_closest), start));
 
         // Find target
         TargetResult target;
@@ -211,16 +213,18 @@ void Strands::add_strand(size_t shoot_index) {
                 closest_index=0;
                 next = find_closest(strand.back(), *path, 0, 10);
                 inflection = strand.size()-1;
+                //lookahead_factor=1.0;
             }
         }
         closest_index = next.index;
         last_closest = next.frame;
+        // Interpolate lookahead factor
     }
     // Occupy strand path
     if (strand.size()<=2) return;
     strands.push_back(strand);
     //grid.fill_path(strand, evalfunc, offset);
-    grid.fill_path(strand, 3.0, 0.02, 0.01, 0.005, inflection);
+    grid.fill_path(strand, 3.0, 0.03, 0.01, 0.005, inflection);
 }
 
 // Strand creation helper functions
