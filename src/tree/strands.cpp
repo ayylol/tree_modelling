@@ -115,7 +115,7 @@ void Strands::add_strands(unsigned int amount) {
     for (size_t i = 0; i < amount; i++) {
         add_strand(paths[i%paths.size()]);
         //std::cout<<lookahead_factor<<std::endl;
-        //lookahead_factor+=lhf_step;
+        lookahead_factor+=lhf_step;
     }
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
@@ -141,11 +141,11 @@ void Strands::add_strand(size_t shoot_index) {
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-        //float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
+        float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
         //float distance_to_travel = lookahead_factor*(segment_length);
         //float dist_to_frame = glm::distance(frame_position(last_closest), start);
         //float distance_to_travel = lookahead_factor*(segment_length) + lookahead_frame(dist_to_frame);
-        float distance_to_travel = segment_length + lookahead_factor*glm::distance(frame_position(last_closest), start);
+        //float distance_to_travel = segment_length + lookahead_factor*glm::distance(frame_position(last_closest), start);
         //float distance_to_travel = std::max(segment_length, lookahead_factor*glm::distance(frame_position(last_closest), start));
 
         // Find target
@@ -233,7 +233,7 @@ void Strands::add_strand(size_t shoot_index) {
     if (strand.size()<=2) return;
     strands.push_back(strand);
     //grid.fill_path(strand, evalfunc, offset);
-    grid.fill_path(strand, 3.0, 0.015, 0.01, 0.001, inflection);
+    grid.fill_path(strand, 3.0, 0.02, 0.01, 0.001, inflection, offset);
 }
 
 // Strand creation helper functions
@@ -642,17 +642,18 @@ size_t Strands::match_root(glm::vec3 position){
             else if (cos > largest_cos) {
                 possible_matches.clear();
                 largest_cos = cos;
-                //match_index = j;
+                match_index = j;
                 possible_matches.push_back(j);
             }
         }
+        /*
         if (possible_matches.empty()){
             //std::cout<<"Shouldn't reach here"<<std::endl;
             match_index = 0;
         }else{
             match_index = possible_matches[(int)std::rand() % possible_matches.size()-1];
-            //std::cout<<match_index<<std::endl;
         }
+        */
     }
     size_t match = root_pool[match_index];
     if (select_pool == NotSelected || select_pool == AtLeastOnce) {
