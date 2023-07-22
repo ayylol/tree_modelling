@@ -37,6 +37,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
         // TODO: make the index used for the angle vector a parameter
         glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/12]) - tree.get_root_pos();
         //glm::vec3 angle_vec = frame_position(root_frames[i][16]) - tree.get_root_pos();
+        //glm::vec3 angle_vec = frame_position(root_frames[i][1]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
@@ -144,8 +145,8 @@ void Strands::add_strand(size_t shoot_index) {
         //float distance_to_travel = lookahead_factor*(segment_length);
         //float dist_to_frame = glm::distance(frame_position(last_closest), start);
         //float distance_to_travel = lookahead_factor*(segment_length) + lookahead_frame(dist_to_frame);
-        //float distance_to_travel = segment_length + lookahead_factor*glm::distance(frame_position(last_closest), start);
-        float distance_to_travel = std::max(segment_length, lookahead_factor*glm::distance(frame_position(last_closest), start));
+        float distance_to_travel = segment_length + lookahead_factor*glm::distance(frame_position(last_closest), start);
+        //float distance_to_travel = std::max(segment_length, lookahead_factor*glm::distance(frame_position(last_closest), start));
 
         // Find target
         TargetResult target;
@@ -213,18 +214,26 @@ void Strands::add_strand(size_t shoot_index) {
                 closest_index=0;
                 next = find_closest(strand.back(), *path, 0, 10);
                 inflection = strand.size()-1;
-                //lookahead_factor=1.0;
+                //break;
             }
         }
         closest_index = next.index;
         last_closest = next.frame;
         // Interpolate lookahead factor
+        /*
+        float progress = ((float)closest_index/path->size());
+        if (on_root){
+            lookahead_factor = (1.0f-progress)*3.0f+progress*1.0f;
+        }else{
+            lookahead_factor = (1.0f-progress)*1.0f+progress*4.0f;
+        }
+        */
     }
     // Occupy strand path
     if (strand.size()<=2) return;
     strands.push_back(strand);
     //grid.fill_path(strand, evalfunc, offset);
-    grid.fill_path(strand, 3.0, 0.03, 0.01, 0.005, inflection);
+    grid.fill_path(strand, 3.0, 0.015, 0.01, 0.001, inflection);
 }
 
 // Strand creation helper functions
@@ -620,16 +629,29 @@ size_t Strands::match_root(glm::vec3 position){
     if (select_method == AtRandom) {
         match_index = rng() % root_pool.size();
     } else if (select_method == WithAngle) {
+        std::vector<size_t> possible_matches={};
         glm::vec3 angle_vec = position - tree.get_root_pos();
         angle_vec.y = 0.f;
         angle_vec = glm::normalize(angle_vec);
         float largest_cos = -1.f;
         for (size_t j = 0; j < root_pool.size(); j++) {
             float cos = glm::dot(angle_vec, root_vecs[root_pool[j]]);
-            if (cos > largest_cos) {
-                largest_cos = cos;
-                match_index = j;
+            if (cos == largest_cos){
+                possible_matches.push_back(j);
             }
+            else if (cos > largest_cos) {
+                possible_matches.clear();
+                largest_cos = cos;
+                //match_index = j;
+                possible_matches.push_back(j);
+            }
+        }
+        if (possible_matches.empty()){
+            //std::cout<<"Shouldn't reach here"<<std::endl;
+            match_index = 0;
+        }else{
+            match_index = possible_matches[(int)std::rand() % possible_matches.size()-1];
+            //std::cout<<match_index<<std::endl;
         }
     }
     size_t match = root_pool[match_index];
@@ -637,7 +659,6 @@ size_t Strands::match_root(glm::vec3 position){
         root_pool.erase(root_pool.begin() + match_index);
         if (root_pool.empty() && select_pool == AtLeastOnce){
             select_pool=All;
-            //method=CanonIso;
         }
     }
     return match;
