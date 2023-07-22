@@ -115,7 +115,7 @@ void Strands::add_strands(unsigned int amount) {
     for (size_t i = 0; i < amount; i++) {
         add_strand(paths[i%paths.size()]);
         //std::cout<<lookahead_factor<<std::endl;
-        lookahead_factor+=lhf_step;
+        //lookahead_factor+=lhf_step;
     }
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
@@ -135,6 +135,7 @@ void Strands::add_strand(size_t shoot_index) {
         root_path = &(root_frames[match_root(strand[0])]); 
     // Loop until on root, and target node is the end
     bool on_root = false;
+    bool target_on_root = false;
     bool done = false;
     size_t inflection = 0;
     method=CanonDir;
@@ -157,6 +158,10 @@ void Strands::add_strand(size_t shoot_index) {
         }
         if (target.index == path->size()-1) {
             if (!on_root){ // switch path
+                if (!target_on_root){
+                    method=CanonIso;
+                    inflection = strand.size()-1;
+                }
                 if (select_pos == AtRoot && root_path == nullptr) 
                     root_path = &(root_frames[match_root(strand[0])]); 
                 if(method==HeadingDir){
@@ -208,32 +213,30 @@ void Strands::add_strand(size_t shoot_index) {
             if (on_root){
                 done = true;
             }else{
-                method=CanonIso;
+                //method=CanonIso;
                 path = root_path;
                 on_root = true;
                 closest_index=0;
                 next = find_closest(strand.back(), *path, 0, 10);
-                inflection = strand.size()-1;
+                //inflection = strand.size()-1;
                 //break;
             }
         }
         closest_index = next.index;
         last_closest = next.frame;
         // Interpolate lookahead factor
-        /*
-        float progress = ((float)closest_index/path->size());
+        float progress = ((float)target.index/path->size());
         if (on_root){
-            lookahead_factor = (1.0f-progress)*3.0f+progress*1.0f;
+            lookahead_factor = (1.0f-progress)*1.0f+progress*1.0f;
         }else{
             lookahead_factor = (1.0f-progress)*1.0f+progress*4.0f;
         }
-        */
     }
     // Occupy strand path
     if (strand.size()<=2) return;
     strands.push_back(strand);
     //grid.fill_path(strand, evalfunc, offset);
-    grid.fill_path(strand, 3.0, 0.02, 0.01, 0.001, inflection, offset);
+    grid.fill_path(strand, 3.0, 0.03, 0.01, 0.0001, inflection, offset);
 }
 
 // Strand creation helper functions
