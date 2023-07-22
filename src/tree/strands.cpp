@@ -114,7 +114,7 @@ void Strands::add_strands(unsigned int amount) {
     for (size_t i = 0; i < amount; i++) {
         add_strand(paths[i%paths.size()]);
         //std::cout<<lookahead_factor<<std::endl;
-        lookahead_factor+=lhf_step;
+        //lookahead_factor+=lhf_step;
     }
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
@@ -220,9 +220,7 @@ void Strands::add_strand(size_t shoot_index) {
     if (strand.size()<=2) return;
     strands.push_back(strand);
     //grid.fill_path(strand, evalfunc, offset);
-    MetaBalls testimplicit(3.0,0.03);
-    grid.fill_path(strand, testimplicit, inflection, 0.02, offset);
-    //grid.fill_path(strand, testimplicit, inflection, 0.015);
+    grid.fill_path(strand, 3.0, 0.02, 0.01, 0.005, inflection);
 }
 
 // Strand creation helper functions
