@@ -46,7 +46,7 @@ public:
     void fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, float offset=0.f);
     void fill_line(glm::vec3 p1, glm::vec3 p2, Implicit& implicit);
     void fill_point(glm::vec3 p, Implicit& implicit);
-    void fill_skeleton(const Skeleton::Node& node, Implicit& implicit);
+    void fill_skeleton(const Skeleton::Node& node, float range);
 
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;

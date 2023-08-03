@@ -79,9 +79,13 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
     local_eval/=total_eval_weight;
     frame_eval/=total_eval_weight;
     local_spread = strand_options.at("local_spread");
+    // Implicit Vals
+    leaf_min_range = strand_options.at("leaf_min_range");
+    base_max_range = strand_options.at("base_max_range");
+    root_min_range = strand_options.at("root_min_range");
 
-    //grid.fill_skeleton(*tree.shoot_root, initialevalfunc);
-    //grid.fill_skeleton(*tree.root_root, initialevalfunc);
+    grid.fill_skeleton(*tree.shoot_root, 0.06);
+    grid.fill_skeleton(*tree.root_root, 0.06);
     add_strands(num_strands);
 }
 
@@ -112,9 +116,12 @@ void Strands::add_strands(unsigned int amount) {
     std::iota(paths.begin(),paths.end(),0);
     std::shuffle(paths.begin(), paths.end(), rng);
     float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
+    lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
+        lookahead_factor=lookahead_factor_current;
         add_strand(paths[i%paths.size()]);
         //std::cout<<lookahead_factor<<std::endl;
+        lookahead_factor_current+=lhf_step;
         //lookahead_factor+=lhf_step;
     }
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
@@ -159,13 +166,14 @@ void Strands::add_strand(size_t shoot_index) {
         if (target.index == path->size()-1) {
             if (!on_root){ // switch path
                 if (!target_on_root){
+                    target_on_root = true;
                     method=CanonIso;
-                    inflection = strand.size()-1;
+                    //inflection = strand.size()-1;
+                    if (select_pos == AtRoot && root_path==nullptr){
+                        root_path = &(root_frames[match_root(strand[0])]); 
+                    }
                 }
-                if (select_pos == AtRoot && root_path == nullptr) 
-                    root_path = &(root_frames[match_root(strand[0])]); 
                 if(method==HeadingDir){
-                    // FIXME????? I don't think this makes sense
                     target = {closest_index,(*root_path)[0],0.0};
                 }else{
                     target = find_target(*root_path, 0, distance_to_travel-target.travelled);
@@ -188,7 +196,9 @@ void Strands::add_strand(size_t shoot_index) {
                 ext = find_extension_heading(strand.back(), target.frame);
                 break;
             case CanonIso:
-                ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
+                //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, on_root);
+                ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true);
+                //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 break;
             case PTFIso:
                 ext = find_extension_ptfiso(strand.back(), last_closest, target.frame);
@@ -208,7 +218,6 @@ void Strands::add_strand(size_t shoot_index) {
         }
 
         TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10);
-        //if (!on_root && next.index >= path->size()-1) {
         if (next.index >= path->size()-1) {
             if (on_root){
                 done = true;
@@ -218,25 +227,30 @@ void Strands::add_strand(size_t shoot_index) {
                 on_root = true;
                 closest_index=0;
                 next = find_closest(strand.back(), *path, 0, 10);
-                //inflection = strand.size()-1;
+                inflection = strand.size()-1;
+                lookahead_factor=1.0f;
                 //break;
+                //done=true;
             }
         }
         closest_index = next.index;
         last_closest = next.frame;
         // Interpolate lookahead factor
+        /*
         float progress = ((float)target.index/path->size());
         if (on_root){
-            lookahead_factor = (1.0f-progress)*1.0f+progress*1.0f;
+            lookahead_factor = (1.0f-progress)*lookahead_factor_current+progress*lookahead_factor_min;
         }else{
-            lookahead_factor = (1.0f-progress)*1.0f+progress*4.0f;
+            lookahead_factor = (1.0f-progress)*lookahead_factor_min+progress*lookahead_factor_current;
         }
+        */
     }
     // Occupy strand path
     if (strand.size()<=2) return;
     strands.push_back(strand);
     //grid.fill_path(strand, evalfunc, offset);
-    grid.fill_path(strand, 3.0, 0.03, 0.01, 0.0001, inflection, offset);
+    //grid.fill_path(strand, 3.0, 0.03, 0.01, 0.0001, inflection, offset);
+    grid.fill_path(strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection, offset);
 }
 
 // Strand creation helper functions
@@ -406,10 +420,26 @@ std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::ma
     return extension;
 }
 
-std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
+std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias){
+    glm::vec3 closest_pos = frame_position(frame_from);
     glm::vec3 target_extension = frame_position(frame_to);
     glm::vec3 extension = from+segment_length*glm::normalize(frame_position(frame_to)-frame_position(frame_from));
     // Step until gradient is found
+    // Bias towards being on top of root 
+    // NOTE: Experimental
+    if (bias){
+        glm::vec3 offset_no_y = target_extension - extension; 
+        offset_no_y.y = 0.f;
+        //std::cout << (from-closest_pos).y <<std::endl;
+        //std::uniform_real_distribution<float> rand_offset(0.2f, 0.8f);
+        //extension = extension+rand_offset(rng)*offset_no_y;
+        //extension = extension + offset_no_y;
+        //extension = extension + std::min(std::abs((from-closest_pos).y)/0.02f,1.0f)*offset_no_y;
+        //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(1-glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
+        //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
+        extension = extension+0.8f*offset_no_y;
+    }
+    //
     int num_steps = 0;
     int max_steps = 50;
     glm::vec3 step =0.02f*(target_extension-extension);
@@ -417,6 +447,19 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
         extension+=step;
         num_steps++;
     }
+    //NOTE: EXPERIMENTAL
+    /*
+    if (bias){
+        glm::vec3 offset_no_y = target_extension - extension; 
+        offset_no_y.y = 0.f;
+        //std::cout << (from-closest_pos).y <<std::endl;
+        std::uniform_real_distribution<float> rand_offset(0.2f, 0.6f);
+        //extension = extension+rand_offset(rng)*offset_no_y;
+        //extension = extension + offset_no_y;
+        //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,1.0f)*offset_no_y;
+        extension = extension + std::min(std::abs((from-closest_pos).y)/0.02f,rand_offset(rng))*offset_no_y;
+    }
+    */
     // Step along gradient
     num_steps = 0;
     max_steps = 200;
