@@ -51,7 +51,7 @@ private:
     std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_fs(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_heading(glm::vec3 from, glm::mat4 frame);
-    std::optional<glm::vec3> find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
+    std::optional<glm::vec3> find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false);
     std::optional<glm::vec3> find_extension_ptfiso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_canonptfeval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_ptfcanoneval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
@@ -74,7 +74,12 @@ private:
     float reject_iso;
     float offset;
     float lookahead_factor;
+    float lookahead_factor_current;
+    float lookahead_factor_min = 1.0f;
     float lookahead_factor_max = 3.0f;
+    float leaf_min_range;
+    float base_max_range;
+    float root_min_range;
     // Eval Weights
     float iso_eval;
     float target_iso;

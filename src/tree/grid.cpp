@@ -220,12 +220,13 @@ void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, fl
 }
 
 // For making initial implicit field
-void Grid::fill_skeleton(const Skeleton::Node& node, Implicit& implicit){ 
+void Grid::fill_skeleton(const Skeleton::Node& node, float range){ 
     if (node.parent != nullptr){  
-        fill_line(frame_position(node.frame),frame_position(node.parent->frame), implicit);
+        MetaBalls imp(3.0,range);
+        fill_line(frame_position(node.frame),frame_position(node.parent->frame), imp);
     }
     for (auto child : node.children){
-        Grid::fill_skeleton(*child, implicit);
+        Grid::fill_skeleton(*child, range-0.0005f);
     }
 }
 
