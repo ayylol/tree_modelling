@@ -11,6 +11,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/hash.hpp"
+
 
 #include "util/color.h"
 
@@ -41,10 +44,9 @@ public:
     void occupy_path(std::vector<glm::vec3> path, float val);
 
     // Implicit Filling
-    void fill_path(std::vector<glm::vec3> path, Implicit& implicit, float offset=0.f);
-    //void fill_path(std::vector<glm::vec3> path, MetaBalls& implicit, size_t inflection_point, float start_diff, float offset=0.f);
-    void fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, float offset=0.f);
-    void fill_line(glm::vec3 p1, glm::vec3 p2, Implicit& implicit);
+    void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
+    void fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
+    std::unordered_map<glm::ivec3, float> fill_line(glm::vec3 p1, glm::vec3 p2, Implicit& implicit, std::unordered_map<glm::ivec3, float> prev_visited = {});
     void fill_point(glm::vec3 p, Implicit& implicit);
     void fill_skeleton(const Skeleton::Node& node, float range);
 

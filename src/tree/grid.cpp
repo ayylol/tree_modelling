@@ -145,7 +145,8 @@ void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
     }
 }
 
-void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
+std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit, std::unordered_map<glm::ivec3, float> prev_visited) {
+    std::unordered_map<glm::ivec3,float> visited = {};
     int n = std::ceil(implicit.cutoff / scale);
     vec3 diff = p2 - p1;
     vec3 variance = glm::abs(diff);
@@ -174,7 +175,6 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
         l2_start = -n;
     for (int i = 0; i < voxels.size(); i++) {
         if (last_main_axis != voxels[i][main_axis]) { // Add all
-            //std::cout << l1_start << " "<<l1_end<<"\n"<<l2_start<<" "<<l2_end<<"\n"<<std::endl;
             for (int i1 = l1_start; i1 <= l1_end; i1++) {
                 for (int i2 = l2_start; i2 <= l2_end; i2++) {
                     ivec3 slot_to_fill = voxels[i-1];
@@ -183,8 +183,19 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
                     vec3 pos = grid_to_pos(slot_to_fill);
                     float val = implicit.eval(pos, p1, p2);
                     if (val != 0) {
-                        add_slot(slot_to_fill, val);
-                        // Add dictionary checking here to not double add slots
+                        if (prev_visited.contains(slot_to_fill)){
+                            // Don't double add
+                            float prev_val = prev_visited.at(slot_to_fill);
+                            if (prev_val < val){
+                                add_slot(slot_to_fill, val-prev_val);
+                                visited.insert({slot_to_fill,val});
+                            }else{
+                                visited.insert({slot_to_fill,prev_val});
+                            }
+                        }else {
+                            add_slot(slot_to_fill, val);
+                            visited.insert({slot_to_fill,val});
+                        }
                     }
                 }
             }
@@ -212,24 +223,25 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
         last_axis1 = voxels[i][axis1];
         last_axis2 = voxels[i][axis2];
     }
+    return visited;
 }
 
-void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit, float offset){
-    fill_line(path[0], path[1], implicit);
+void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit){
+    std::unordered_map<glm::ivec3,float> visited = fill_line(path[0], path[1], implicit);
     for (int i = 1; i<path.size()-1; i++){
-        fill_line(path[i]+offset*(path[i+1]-path[i]), path[i + 1], implicit);
+        visited = fill_line(path[i], path[i + 1], implicit,visited);
     }
 }
-void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, float offset){
+void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point){
     float b=shoot_b;
     float shoot_b_step = (max_b-shoot_b)/inflection_point;
     float root_b_step = (root_b-max_b)/(path.size()-inflection_point-1);
     MetaBalls current_implicit = MetaBalls(max_val,b);
-    fill_line(path[0], path[1], current_implicit);
+    std::unordered_map<glm::ivec3, float> visited = fill_line(path[0], path[1], current_implicit);
     for (int i = 1; i<path.size()-1; i++){
         b += inflection_point>=i? shoot_b_step : root_b_step;
         current_implicit = MetaBalls(max_val,b);
-        fill_line(path[i]+offset*(path[i+1]-path[i]), path[i + 1], current_implicit);
+        visited = fill_line(path[i], path[i + 1], current_implicit,visited);
     }
 }
 
