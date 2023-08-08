@@ -147,8 +147,8 @@ void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
 
 std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit, std::unordered_map<glm::ivec3, float> prev_visited) {
     std::unordered_map<glm::ivec3,float> visited = {};
-    int n = std::ceil(implicit.cutoff / scale);
     vec3 diff = p2 - p1;
+    vec3 dir = glm::normalize(diff);
     vec3 variance = glm::abs(diff);
     int main_axis = 0;
     if (variance.y > variance.x && variance.y > variance.z) {
@@ -163,16 +163,28 @@ std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2
     vec3 segment_start = p1 - diff * implicit.cutoff * SEGMENT_OVERSHOOT;
     vec3 segment_end = p2 + diff * implicit.cutoff * SEGMENT_OVERSHOOT;
 
+
+    glm::vec3 axis1_dir = glm::vec3(0,0,0);
+    axis1_dir[axis1] = 1.0;
+    glm::vec3 axis2_dir = glm::vec3(0,0,0);
+    axis2_dir[axis2] = 1.0;
+    //int d1 = std::ceil(std::sqrt(std::pow(implicit.cutoff,2)/(1-std::pow(glm::dot(axis1_dir,dir),2))) / scale), 
+    //    d2 = std::ceil(std::sqrt(std::pow(implicit.cutoff,2)/(1-std::pow(glm::dot(axis2_dir,dir),2))) / scale);
+    int n = std::ceil(implicit.cutoff / scale);
+    int d1 = n,
+        d2 = n;
+    //std::cout<<"n: "<<n<<" d1: "<<d1<<" d2: "<<d2<<std::endl;
+
     vector<ivec3> voxels = get_voxels_line(segment_start, segment_end);
     glm::ivec3 init_slot = pos_to_grid(p1);
     int last_main_axis = init_slot[main_axis];
     int last_axis1 = init_slot[axis1];
     int last_axis2 = init_slot[axis2];
     // Voxel Filling limits
-    int l1_end = n,
-        l1_start = -n,
-        l2_end = n,
-        l2_start = -n;
+    int l1_end = d1,
+        l1_start = -d1,
+        l2_end = d2,
+        l2_start = -d2;
     for (int i = 0; i < voxels.size(); i++) {
         if (last_main_axis != voxels[i][main_axis]) { // Add all
             for (int i1 = l1_start; i1 <= l1_end; i1++) {
@@ -199,10 +211,10 @@ std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2
                     }
                 }
             }
-            l1_end = n;
-            l2_end = n;
-            l1_start = -n;
-            l2_start = -n;
+            l1_end = d1;
+            l2_end = d2;
+            l1_start = -d1;
+            l2_start = -d2;
         } else { // Add extra
             // One of these should run
             if (last_axis1 != voxels[i][axis1]){
