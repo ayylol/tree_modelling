@@ -127,21 +127,10 @@ int main(int argc, char *argv[]) {
         std::cerr << "did not recognize implicit type" << std::endl;
         return 1;
     }
-    /*
-    Implicit *df2;
-    if(opt_data.at("implicit2").at("type")=="metaballs"){
-        df2 = new MetaBalls(opt_data.at("implicit2"));
-    }else if(opt_data.at("implicit2").at("type")=="blinn"){
-        df2 = new Blinn(opt_data.at("implicit2"));
-    }else{
-        std::cerr << "did not recognize implicit type" << std::endl;
-        return 1;
-    }
-    */
-
-    //std::vector<glm::vec3> path = {glm::vec3(1.0,0.0,0.0),glm::vec3(0.0,0.0,0.0),glm::vec3(0.707,0.707,0.0),glm::vec3(0.866,0.5,0.0)};
+    //std::vector<glm::vec3> path = {glm::vec3(1.0,0.5,0.0),glm::vec3(0.0,0.5,0.0),glm::vec3(0.707,1.207,0.707)};//,glm::vec3(0.866,0.5,0.0)};
     //gr.fill_path(path, *df, 0.0f);
-    //gr.fill_line(path[0],path[1], *df);
+    //gr.fill_line(path[1],path[2], *df);
+    //gr.occupy_line(path[1],path[2],1);
     //gr.fill_line(path[1],path[3], *df);
 
     STOPWATCH("Adding Strands",Strands detail(tree, gr, *df, *df, opt_data););
@@ -153,6 +142,7 @@ int main(int argc, char *argv[]) {
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
     //STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val,{glm::vec3(-0.5,0.05,-0.5),glm::vec3(0.75,0.23,0.75)}););
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val););
+    //STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(0.1f););
     // Mesh tree_geom = gr.get_occupied_voxels(surface_val);
     STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
     STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
@@ -163,8 +153,8 @@ int main(int argc, char *argv[]) {
     // GROUND PLANE
     glm::vec3 ground_color = glm::vec3(0, 0.3, 0.02);
     std::vector<Vertex> ground_verts{
-        Vertex{glm::vec3(50, 0, 50), ground_color},
-        Vertex{glm::vec3(50, 0, -50), ground_color},
+        Vertex{glm::vec3(50,  0, 50), ground_color},
+        Vertex{glm::vec3(50,  0, -50), ground_color},
         Vertex{glm::vec3(-50, 0, 50), ground_color},
         Vertex{glm::vec3(-50, 0, -50), ground_color}};
     std::vector<GLuint> ground_indices{0, 1, 3, 0, 3, 2};

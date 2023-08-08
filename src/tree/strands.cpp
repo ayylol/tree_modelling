@@ -149,6 +149,18 @@ void Strands::add_strand(size_t shoot_index) {
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
+        /*
+        float distance_to_travel = 0.f; 
+        if (on_root){
+            glm::vec3 closest_no_y= frame_position(last_closest);
+            closest_no_y.y=0.f;
+            glm::vec3 start_no_y = start;
+            start_no_y.y=0.f;
+            distance_to_travel = lookahead_factor*(segment_length + glm::distance(closest_no_y, start_no_y));
+        }else{
+            distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
+        }
+        */
         float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
         //float distance_to_travel = lookahead_factor*(segment_length);
         //float dist_to_frame = glm::distance(frame_position(last_closest), start);
@@ -168,7 +180,6 @@ void Strands::add_strand(size_t shoot_index) {
                 if (!target_on_root){
                     target_on_root = true;
                     method=CanonIso;
-                    //inflection = strand.size()-1;
                     if (select_pos == AtRoot && root_path==nullptr){
                         root_path = &(root_frames[match_root(strand[0])]); 
                     }
@@ -228,7 +239,7 @@ void Strands::add_strand(size_t shoot_index) {
                 closest_index=0;
                 next = find_closest(strand.back(), *path, 0, 10);
                 inflection = strand.size()-1;
-                lookahead_factor=1.0f;
+                //lookahead_factor=1.5f;
                 //break;
                 //done=true;
             }
@@ -437,7 +448,8 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.02f,1.0f)*offset_no_y;
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(1-glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
-        extension = extension+0.8f*offset_no_y;
+        //extension = extension+0.8f*offset_no_y;
+        extension = extension+(std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0))))*offset_no_y;
     }
     //
     int num_steps = 0;
@@ -463,7 +475,7 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     // Step along gradient
     num_steps = 0;
     max_steps = 200;
-    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
+    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.1&&num_steps<=max_steps){
         glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
         extension += step;
         num_steps++;
