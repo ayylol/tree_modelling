@@ -155,48 +155,62 @@ void Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit) {
     } else if (variance.z > variance.x && variance.z > variance.y) {
         main_axis = 2;
     }
-    int axis_1 = (main_axis + 1) % 3;
-    int axis_2 = (main_axis + 2) % 3;
+    int axis1 = (main_axis + 1) % 3;
+    int axis2 = (main_axis + 2) % 3;
     // Try to find what the exact overshoot should be
 #define SEGMENT_OVERSHOOT 40.f
     vec3 segment_start = p1 - diff * implicit.cutoff * SEGMENT_OVERSHOOT;
     vec3 segment_end = p2 + diff * implicit.cutoff * SEGMENT_OVERSHOOT;
 
     vector<ivec3> voxels = get_voxels_line(segment_start, segment_end);
-    int last_main_axis = pos_to_grid(p1)[main_axis] - 1;
+    glm::ivec3 init_slot = pos_to_grid(p1);
+    int last_main_axis = init_slot[main_axis];
+    int last_axis1 = init_slot[axis1];
+    int last_axis2 = init_slot[axis2];
+    // Voxel Filling limits
+    int l1_end = n,
+        l1_start = -n,
+        l2_end = n,
+        l2_start = -n;
     for (int i = 0; i < voxels.size(); i++) {
-        int l1, l2;                                 // Voxel filling limits
         if (last_main_axis != voxels[i][main_axis]) { // Add all
-            l1 = n;
-            l2 = n;
+            //std::cout << l1_start << " "<<l1_end<<"\n"<<l2_start<<" "<<l2_end<<"\n"<<std::endl;
+            for (int i1 = l1_start; i1 <= l1_end; i1++) {
+                for (int i2 = l2_start; i2 <= l2_end; i2++) {
+                    ivec3 slot_to_fill = voxels[i-1];
+                    slot_to_fill[axis1] += i1;
+                    slot_to_fill[axis2] += i2;
+                    vec3 pos = grid_to_pos(slot_to_fill);
+                    float val = implicit.eval(pos, p1, p2);
+                    if (val != 0) {
+                        add_slot(slot_to_fill, val);
+                        // Add dictionary checking here to not double add slots
+                    }
+                }
+            }
+            l1_end = n;
+            l2_end = n;
+            l1_start = -n;
+            l2_start = -n;
         } else { // Add extra
-            last_main_axis = voxels[i][main_axis];
-            continue;
-        }
-        for (int i1 = -l1; i1 <= l1; i1++) {
-            for (int i2 = -l2; i2 <= l2; i2++) {
-                ivec3 slot_to_fill = voxels[i];
-                slot_to_fill[axis_1] += i1;
-                slot_to_fill[axis_2] += i2;
-                vec3 pos = grid_to_pos(slot_to_fill);
-                float val = implicit.eval(pos, p1, p2);
-                if (val != 0) {
-                    add_slot(slot_to_fill, val);
-                    //calculate gradient
-                    /*
-                    const float step = 0.00001f;
-                    vec3 dir(implicit.eval(pos+vec3(-1,0,0)*step,p1,p2)
-                                - implicit.eval(pos+vec3(1,0,0)*step,p1,p2), 
-                            implicit.eval(pos+vec3(0,-1,0)*step,p1,p2)
-                                - implicit.eval(pos+vec3(0,1,0)*step,p1,p2), 
-                            implicit.eval(pos+vec3(0,0,-1)*step,p1,p2)
-                                - implicit.eval(pos+vec3(0,0,1)*step,p1,p2));
-                    add_gradient(slot_to_fill, dir);
-                    */
+            // One of these should run
+            if (last_axis1 != voxels[i][axis1]){
+                if (last_axis1<voxels[i][axis1]){
+                    l1_end++; 
+                } else if (last_axis1>voxels[i][axis1]){
+                    l1_start--; 
+                }
+            }else if (last_axis2 != voxels[i][axis2]){
+                if (last_axis2<voxels[i][axis2]){
+                    l2_end++; 
+                } else if (last_axis2>voxels[i][axis2]){
+                    l2_start--;
                 }
             }
         }
         last_main_axis = voxels[i][main_axis];
+        last_axis1 = voxels[i][axis1];
+        last_axis2 = voxels[i][axis2];
     }
 }
 
