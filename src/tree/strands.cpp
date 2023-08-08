@@ -261,7 +261,7 @@ void Strands::add_strand(size_t shoot_index) {
     strands.push_back(strand);
     //grid.fill_path(strand, evalfunc, offset);
     //grid.fill_path(strand, 3.0, 0.03, 0.01, 0.0001, inflection, offset);
-    grid.fill_path(strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection, offset);
+    grid.fill_path(strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
 }
 
 // Strand creation helper functions
