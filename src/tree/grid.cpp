@@ -258,14 +258,23 @@ void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, fl
 }
 
 // For making initial implicit field
-void Grid::fill_skeleton(const Skeleton::Node& node, float range){ 
+// TODO: should start on tips then go down
+float Grid::fill_skeleton(const Skeleton::Node& node, float min_range){ 
+    float range = 0.f;
+    if (node.children.empty()){
+        range = min_range;
+    }
+    else{
+        for (auto child : node.children){
+            range += Grid::fill_skeleton(*child, min_range);
+        }
+    }
+    std::cout<<range<<" "<<min_range<<std::endl;
     if (node.parent != nullptr){  
         MetaBalls imp(3.0,range);
         fill_line(frame_position(node.frame),frame_position(node.parent->frame), imp);
     }
-    for (auto child : node.children){
-        Grid::fill_skeleton(*child, range-0.0005f);
-    }
+    return range;
 }
 
 vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {

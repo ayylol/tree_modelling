@@ -77,7 +77,7 @@ private:
     float lookahead_factor;
     float lookahead_factor_current;
     float lookahead_factor_min = 1.0f;
-    float lookahead_factor_max = 2.0f;
+    float lookahead_factor_max = 3.0f;
     float leaf_min_range;
     float base_max_range;
     float root_min_range;

@@ -35,8 +35,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
     root_vecs.reserve(root_frames.size());
     for (size_t i = 0; i<root_frames.size(); i++){
         // TODO: make the index used for the angle vector a parameter
-        glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/12]) - tree.get_root_pos();
-        //glm::vec3 angle_vec = frame_position(root_frames[i][16]) - tree.get_root_pos();
+        //glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/12]) - tree.get_root_pos();
+        glm::vec3 angle_vec = frame_position(root_frames[i][4]) - tree.get_root_pos();
         //glm::vec3 angle_vec = frame_position(root_frames[i][1]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
@@ -84,8 +84,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
     base_max_range = strand_options.at("base_max_range");
     root_min_range = strand_options.at("root_min_range");
 
-    grid.fill_skeleton(*tree.shoot_root, 0.06);
-    grid.fill_skeleton(*tree.root_root, 0.06);
+    //grid.fill_skeleton(*tree.shoot_root, 0.0003);
+    //grid.fill_skeleton(*tree.root_root, 0.004);
     add_strands(num_strands);
 }
 
@@ -161,12 +161,27 @@ void Strands::add_strand(size_t shoot_index) {
             distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
         }
         */
+        /*
+        float distance;
+        if (!on_root){
+            distance = glm::distance(frame_position(last_closest), start);
+        }else{
+            glm::vec3 closest_no_y = frame_position(last_closest);
+            closest_no_y.y = 0.f;
+            glm::vec3 start_no_y = start;
+            start.y = 0.f;
+            distance = glm::distance(closest_no_y.y, start.y);
+        }
+        float distance_to_travel = lookahead_factor*(segment_length + distance);
+        */
         float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
         //float distance_to_travel = lookahead_factor*(segment_length);
         //float dist_to_frame = glm::distance(frame_position(last_closest), start);
         //float distance_to_travel = lookahead_factor*(segment_length) + lookahead_frame(dist_to_frame);
         //float distance_to_travel = segment_length + lookahead_factor*glm::distance(frame_position(last_closest), start);
         //float distance_to_travel = std::max(segment_length, lookahead_factor*glm::distance(frame_position(last_closest), start));
+        //distance_to_travel = std::min(distance_to_travel, 0.25f);
+        //std::cout<<distance_to_travel<<std::endl;
 
         // Find target
         TargetResult target;
@@ -242,6 +257,7 @@ void Strands::add_strand(size_t shoot_index) {
                 on_root = true;
                 inflection = strand.size()-1;
                 lookahead_factor=1.0f;
+                //done = true;
             }
         }else{
             //std::cout<<"root or shoot"<<std::endl;
@@ -472,8 +488,9 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.02f,1.0f)*offset_no_y;
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(1-glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
-        //extension = extension+0.8f*offset_no_y;
-        extension = extension+(std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0))))*offset_no_y;
+        extension = extension+0.8f*offset_no_y;
+        //std::cout<<std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0)))<<std::endl;
+        //extension = extension+(std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0))))*offset_no_y;
     }
     //
     int num_steps = 0;
@@ -502,6 +519,7 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.1&&num_steps<=max_steps){
         glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
         extension += step;
+        //extension = from+segment_length*glm::normalize(extension-from);
         num_steps++;
     }
     extension = from+segment_length*glm::normalize(extension-from);
@@ -747,6 +765,9 @@ size_t Strands::match_root(glm::vec3 position){
                 match_index = j;
                 possible_matches.push_back(j);
             }
+        }
+        if (!possible_matches.empty()){
+            match_index = possible_matches[(int)std::rand() % possible_matches.size()];
         }
         /*
         if (possible_matches.empty()){
