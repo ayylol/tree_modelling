@@ -55,7 +55,8 @@ private:
     std::optional<glm::vec3> find_extension_ptfiso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_canonptfeval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_ptfcanoneval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
-    TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
+    //TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
+    TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, int start_index, int end_index);
 
     // Strand Creation Vars
     enum Method{
@@ -76,7 +77,7 @@ private:
     float lookahead_factor;
     float lookahead_factor_current;
     float lookahead_factor_min = 1.0f;
-    float lookahead_factor_max = 3.0f;
+    float lookahead_factor_max = 2.0f;
     float leaf_min_range;
     float base_max_range;
     float root_min_range;

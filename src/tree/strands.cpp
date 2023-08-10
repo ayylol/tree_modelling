@@ -228,7 +228,30 @@ void Strands::add_strand(size_t shoot_index) {
             break;
         }
 
-        TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10);
+        //TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10); // Old method
+        TargetResult next;
+        if (!on_root && target_on_root){
+            //std::cout<<"transition"<<std::endl;
+            TargetResult shoot_closest = find_closest(strand.back(), *shoot_path, closest_index+1, shoot_path->size()-1); 
+            TargetResult root_closest = find_closest(strand.back(), *root_path, 0, target.index); 
+            if (shoot_closest.travelled < root_closest.travelled){
+                next = shoot_closest;
+            }else{
+                next = root_closest;
+                path = root_path;
+                on_root = true;
+                inflection = strand.size()-1;
+                lookahead_factor=1.0f;
+            }
+        }else{
+            //std::cout<<"root or shoot"<<std::endl;
+            next = find_closest(strand.back(), *path, closest_index+1, target.index); 
+        }
+
+        if (next.index >= path->size()-1 && on_root) {
+            done = true;
+        }
+        /*
         if (next.index >= path->size()-1) {
             if (on_root){
                 done = true;
@@ -237,13 +260,14 @@ void Strands::add_strand(size_t shoot_index) {
                 path = root_path;
                 on_root = true;
                 closest_index=0;
-                next = find_closest(strand.back(), *path, 0, 10);
+                next = find_closest(strand.back(), *path, closest_index, target.index); 
                 inflection = strand.size()-1;
                 //lookahead_factor=1.5f;
                 //break;
                 //done=true;
             }
         }
+        */
         closest_index = next.index;
         last_closest = next.frame;
         // Interpolate lookahead factor
@@ -649,6 +673,7 @@ std::optional<glm::vec3> Strands::find_extension_ptfcanoneval(glm::vec3 from, gl
     return extension;
 }
 
+/*
 Strands::TargetResult 
 Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, 
                         size_t start_index, int overshoot){
@@ -676,6 +701,25 @@ Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path,
         point_checking++;
     }
     return {closest_index, path[closest_index], 0.f};
+}
+*/
+Strands::TargetResult 
+Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, 
+                        int start_index, int end_index){
+    //std::cout << start_index << " " << end_index<<std::endl;
+    assert (start_index>=0 && start_index<path.size());
+    assert (end_index>=start_index && start_index<path.size());
+    size_t closest_index = start_index;
+    float lowest_dist2 = glm::distance2(pos, frame_position(path[closest_index]));
+
+    for (int i = start_index; i<=end_index; i++){
+        float dist2 = glm::distance2(pos, frame_position(path[i]));
+        if (dist2 < lowest_dist2) {
+            lowest_dist2=dist2;
+            closest_index=i;
+        }
+    }
+    return {closest_index, path[closest_index], lowest_dist2};
 }
 
 size_t Strands::match_root(glm::vec3 position){
