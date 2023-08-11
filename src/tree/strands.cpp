@@ -89,13 +89,17 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
     add_strands(num_strands);
 }
 
-Mesh<Vertex> Strands::get_mesh() const {
+Mesh<Vertex> Strands::get_mesh(float start, float end) const {
+    start = std::max(0.0f,start);
+    end = std::min(1.0f,end);
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     glm::vec3 blue(0,0,1);  // Placed Earlier
     glm::vec3 red(1,0,0);   // Placed Later
-    int i = 0;
-    for (auto path : strands) {
+    //float start = 0.;
+    //float end = 1.0;
+    for (int i = start * (strands.size()-1); i<= end * (strands.size()-1); i++){
+        auto path = strands[i];
         glm::vec3 color = (1-((float)i/strands.size()))*blue+((float)i/strands.size())*red;
         size_t start_index = vertices.size();
         for (auto position : path) {
@@ -106,7 +110,6 @@ Mesh<Vertex> Strands::get_mesh() const {
             indices.push_back(i);
             indices.push_back(i + 1);
         }
-        i++;
     }
     return Mesh(vertices, indices);
 }

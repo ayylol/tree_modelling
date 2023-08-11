@@ -70,6 +70,10 @@ bool view_mesh = true,
      view_bound = false,
      interactive = true;
 
+bool reset_strands = false;
+float strands_start = 0.0f,
+      strands_end = 1.0f;
+
 int main(int argc, char *argv[]) {
     // Validating input
     if (argc != 2) {
@@ -170,6 +174,10 @@ int main(int argc, char *argv[]) {
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
+        if (reset_strands){
+            strands_geom = detail.get_mesh(strands_start,strands_end);
+            reset_strands = false;
+        }
         #define SHOW_CAM_POS 0
         if (SHOW_CAM_POS) std::cout<<CAMERA.to_string()<<"\n"<<std::endl;
         if(interactive) processInput(window);
@@ -410,6 +418,25 @@ void processInput(GLFWwindow *window) {
         pressed7 = true;
     }
     if (glfwGetKey(window, GLFW_KEY_7) == GLFW_RELEASE && pressed7) pressed7 = false;
+    // Strand Geom Keybinds
+    // Affect Lower bounds
+    if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){
+        strands_start = std::max(0.0f, strands_start-0.005f);
+        reset_strands = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_APOSTROPHE) == GLFW_PRESS){
+        strands_start = std::min(strands_end, strands_start+0.005f);
+        reset_strands = true;
+    }
+    // Affect upper bounds
+    if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS){
+        strands_end = std::max(strands_start, strands_end-0.005f);
+        reset_strands = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS){
+        strands_end = std::min(1.0f, strands_end+0.005f);
+        reset_strands = true;
+    }
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
