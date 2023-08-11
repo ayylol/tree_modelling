@@ -266,15 +266,15 @@ float Grid::fill_skeleton(const Skeleton::Node& node, float min_range){
     }
     else{
         for (auto child : node.children){
-            range += Grid::fill_skeleton(*child, min_range);
+            range = std::max(range,Grid::fill_skeleton(*child, min_range));
         }
     }
-    std::cout<<range<<" "<<min_range<<std::endl;
+    //std::cout<<range<<" "<<min_range<<std::endl;
     if (node.parent != nullptr){  
         MetaBalls imp(3.0,range);
         fill_line(frame_position(node.frame),frame_position(node.parent->frame), imp);
     }
-    return range;
+    return range+0.0001;
 }
 
 vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {

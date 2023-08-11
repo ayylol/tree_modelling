@@ -84,8 +84,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
     base_max_range = strand_options.at("base_max_range");
     root_min_range = strand_options.at("root_min_range");
 
-    //grid.fill_skeleton(*tree.shoot_root, 0.0003);
-    //grid.fill_skeleton(*tree.root_root, 0.004);
+    //grid.fill_skeleton(*tree.shoot_root, 0.0000001f);
+    //grid.fill_skeleton(*tree.root_root, 0.02f);
     add_strands(num_strands);
 }
 
@@ -98,17 +98,19 @@ Mesh<Vertex> Strands::get_mesh(float start, float end) const {
     glm::vec3 red(1,0,0);   // Placed Later
     //float start = 0.;
     //float end = 1.0;
-    for (int i = start * (strands.size()-1); i<= end * (strands.size()-1); i++){
-        auto path = strands[i];
-        glm::vec3 color = (1-((float)i/strands.size()))*blue+((float)i/strands.size())*red;
-        size_t start_index = vertices.size();
-        for (auto position : path) {
-            vertices.push_back(Vertex{position, color});
-        }
-        size_t end_index = vertices.size();
-        for (int i = start_index; i < end_index - 1; i++) {
-            indices.push_back(i);
-            indices.push_back(i + 1);
+    if (strands.size()!=0){
+        for (int i = start * (strands.size()-1); i<= end * (strands.size()-1); i++){
+            auto path = strands[i];
+            glm::vec3 color = (1-((float)i/strands.size()))*blue+((float)i/strands.size())*red;
+            size_t start_index = vertices.size();
+            for (auto position : path) {
+                vertices.push_back(Vertex{position, color});
+            }
+            size_t end_index = vertices.size();
+            for (int i = start_index; i < end_index - 1; i++) {
+                indices.push_back(i);
+                indices.push_back(i + 1);
+            }
         }
     }
     return Mesh(vertices, indices);
