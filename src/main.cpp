@@ -48,6 +48,7 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h);
 void processInput(GLFWwindow *window);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void save_image();
+void save_mesh(Mesh<Vertex> mesh);
 
 std::vector<Camera> cameras;
 size_t curr_cam = 0;
@@ -171,6 +172,8 @@ int main(int argc, char *argv[]) {
     }
     bool done_screenshots = false;
 
+    //save_mesh(tree_geom);
+
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
@@ -290,6 +293,31 @@ void save_image(){
     system(convert_cmd.c_str());
     std::cout<<"Saved image: "<<file_name<<std::endl;
     images_taken++;
+}
+void save_mesh(Mesh<Vertex> mesh){
+    std::string file_name = image_prefix + ".obj";
+    std::ofstream out(file_name);
+    glm::mat4 pos_transform = glm::scale(glm::vec3(2,2,2));
+    glm::mat3 norm_scale = glm::scale(glm::vec3(100,100,100));
+    out<<"o "<<image_prefix<<"\n";
+    out<<std::fixed;
+    out<<std::setprecision(10);
+    for (Vertex vertex : mesh.vertices){
+        glm::vec3 pos = pos_transform*glm::vec4(vertex.position,1.f);
+        glm::vec3 normal = vertex.normal;
+        if (glm::any(glm::isnan(normal))){
+            std::cout <<"IS NAN"<<std::endl;
+        }
+        out<<"v "<<pos.x<<" "<<pos.y<<" "<<pos.z<<"\n";
+        out<<"vn "<<normal.x<<" "<<normal.y<<" "<<normal.z<<"\n";
+    }
+    for (int i=0; i<mesh.indices.size()-3; i+=3){
+        GLuint v0 = mesh.indices[i]+1;
+        GLuint v1 = mesh.indices[i+1]+1;
+        GLuint v2 = mesh.indices[i+2]+1;
+        out<<"f "<<v0<<"//"<<v0<<" "<<v1<<"//"<<v1<<" "<<v2<<"//"<<v2<<"\n";
+    }
+    out.close();
 }
 
 #define PANSENS 0.38f
