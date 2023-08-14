@@ -71,6 +71,9 @@ bool view_mesh = true,
      view_bound = false,
      interactive = true;
 
+bool has_exported = false;
+bool export_mesh = false;
+
 bool reset_strands = false;
 float strands_start = 0.0f,
       strands_end = 1.0f;
@@ -153,7 +156,13 @@ int main(int argc, char *argv[]) {
     STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
     STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
-    STOPWATCH("Exporting Data", gr.export_data("data.txt"););
+    if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
+        STOPWATCH("Exporting Data", 
+                    //gr.export_data("data.txt");
+                    save_mesh(tree_geom);
+                    has_exported = true;
+                );
+    }
 
     // GROUND PLANE
     glm::vec3 ground_color = glm::vec3(0, 0.3, 0.02);
@@ -172,7 +181,6 @@ int main(int argc, char *argv[]) {
     }
     bool done_screenshots = false;
 
-    //save_mesh(tree_geom);
 
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
@@ -204,6 +212,13 @@ int main(int argc, char *argv[]) {
             save_image();
             cycle_camera(1);
             if (curr_cam == 0) done_screenshots = true;
+        }
+        if (export_mesh){
+            STOPWATCH("Exporting Data", 
+            save_mesh(tree_geom);
+            has_exported = true;
+            export_mesh = false;
+            );
         }
     }
 
@@ -464,6 +479,9 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS){
         strands_end = std::min(1.0f, strands_end+0.005f);
         reset_strands = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_PRESS && !has_exported){
+        export_mesh = true;
     }
 }
 
