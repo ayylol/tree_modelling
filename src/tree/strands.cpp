@@ -44,6 +44,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
     }
     // Set strand options
     auto strand_options = options.at("strands");
+    /*
     if (strand_options.at("method")=="canon_dir"){
         method = CanonDir;
     }else if (strand_options.at("method")=="local_pos_matching"){
@@ -55,6 +56,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
     } else if (strand_options.at("method")=="ptf_iso"){
         method = PTFIso;
     }
+    */
     int num_strands = tree.leafs_size();
     if (strand_options.contains("num_abs")) {
         num_strands = strand_options.at("num_abs");
