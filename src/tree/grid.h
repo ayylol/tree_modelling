@@ -109,11 +109,6 @@ namespace mc{
     float val;
     glm::vec3 norm;
   };
-  /*
-  struct GridCell {
-    Sample verts[8];
-  };
-  */
   using GridCell = std::array<Sample,8>;
   extern const glm::ivec3 cell_order[8];
   extern const int edge_table[256];
