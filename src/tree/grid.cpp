@@ -56,6 +56,16 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
 }
 
 float Grid::get_in_grid(ivec3 index) const {
+    /*
+    // HASHED CHUNKS
+    glm::ivec3 chunk_slot = get_chunk_slot(index);
+    glm::ivec3 local_slot = get_local_slot(index);
+    if (!grid.contains(chunk_slot)){
+        return 0.f;
+    }
+    return grid.at(get_chunk_slot(index))[local_slot.x][local_slot.y][local_slot.z];
+    */
+    // REGULAR GRID
     if (!is_in_grid(index)) {
         return 0.f;
     }
@@ -88,15 +98,38 @@ void Grid::occupy_pos(vec3 pos, float val) {
 }
 
 void Grid::occupy_slot(ivec3 slot, float val) {
+    /*
+    // NOTE: HASHED CHUNK (DOESNT WORK THO)
+    glm::ivec3 chunk_slot= get_chunk_slot(slot);
+    glm::ivec3 local_slot= get_local_slot(slot);
+    if ((!grid.contains(chunk_slot)||grid.at(chunk_slot)[local_slot.x][local_slot.y][local_slot.z]==0) && val!=0){
+        occupied.push_back(slot);
+    }
+    //grid.insert_or_assign(slot,val);
+    */
     if (!is_in_grid(slot)) {
         return;
     }
+    // NORMAL GRID
     if (get_in_grid(slot) == 0) {
         grid[slot.x][slot.y][slot.z] = val;
         occupied.push_back(slot);
     }
 }
 void Grid::add_slot(ivec3 slot, float val) {
+    /*
+    // HASHED CHUNKS
+    glm::ivec3 chunk_slot= get_chunk_slot(slot);
+    glm::ivec3 local_slot= get_local_slot(slot);
+    if (!grid.contains(chunk_slot)){
+        grid.insert({chunk_slot,{}});
+    }
+    if (grid.at(chunk_slot)[local_slot.x][local_slot.y][local_slot.z]==0 && val!=0){
+        occupied.push_back(slot);
+    }
+    grid.at(chunk_slot)[local_slot.x][local_slot.y][local_slot.z]+=val; 
+    */
+    // NORMAL GRID
     if (!is_in_grid(slot)) {
         return;
     }
@@ -107,10 +140,14 @@ void Grid::add_slot(ivec3 slot, float val) {
 }
 
 void Grid::add_gradient(ivec3 slot, glm::vec3 val) {
+    // NOTE: currently does nothing cause gradient 
+    // is calculated using grid
+    /*
     if (!is_in_grid(slot)) {
         return;
     }
     //gradient[slot.x][slot.y][slot.z] += val;
+    */
 }
 
 void Grid::occupy_line(vec3 start, vec3 end, float val) {

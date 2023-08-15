@@ -72,7 +72,16 @@ public:
 
     void export_data(const char * filename);
 private:
+    // NOTE: FOR REGULAR GRID
     std::vector<std::vector<std::vector<float>>> grid;
+/*
+// NOTE: FOR HASHED CHUNKS
+#define CHUNKSIZE 50
+    glm::ivec3 get_chunk_slot(glm::ivec3 slot)const{return slot / CHUNKSIZE;}
+    glm::ivec3 get_local_slot(glm::ivec3 slot)const{return slot % CHUNKSIZE;}
+    std::unordered_map<glm::ivec3, std::array<std::array<std::array<float,CHUNKSIZE>,CHUNKSIZE>,CHUNKSIZE>> grid;
+    */
+
     //std::vector<std::vector<std::vector<glm::vec3>>> gradient;
     std::vector<glm::ivec3> occupied;
 
