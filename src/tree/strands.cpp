@@ -495,7 +495,7 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
         extension = extension+0.8f*offset_no_y;
         //std::cout<<std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0)))<<std::endl;
-        //extension = extension+(std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0))))*offset_no_y;
+        //extension = extension+(1.0f-std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0))))*offset_no_y;
     }
     //
     int num_steps = 0;
