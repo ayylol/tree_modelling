@@ -109,7 +109,10 @@ int main(int argc, char *argv[]) {
     STOPWATCH("Parsing Skeleton", Skeleton tree(opt_data););
 
     // Grid
-    STOPWATCH("Initializing Grid",Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale")););
+    STOPWATCH("Initializing Grid",
+            Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+            Grid texture_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+            );
 
     // Make camera according to grid
     cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
@@ -141,7 +144,7 @@ int main(int argc, char *argv[]) {
     //gr.occupy_line(path[1],path[2],1);
     //gr.fill_line(path[1],path[3], *df);
 
-    STOPWATCH("Adding Strands",Strands detail(tree, gr, *df, *df, opt_data););
+    STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
     delete df;
     //delete df2;
 
@@ -149,7 +152,8 @@ int main(int argc, char *argv[]) {
     float surface_val = opt_data.at("mesh_iso");
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
     //STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val,{glm::vec3(-0.5,0.05,-0.5),glm::vec3(0.75,0.23,0.75)}););
-    STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val););
+    STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
+    Mesh texture_strands = detail.get_mesh(0.0,1.0,Strands::Texture);
     //STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(0.1f););
     // Mesh tree_geom = gr.get_occupied_voxels(surface_val);
     STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
@@ -198,7 +202,10 @@ int main(int argc, char *argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the meshes here
-        if (view_mesh) tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
+        if (view_mesh) {
+            tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
+            texture_strands.draw(flat_shader, CAMERA, GL_LINES);
+        }
         if (view_volume) volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
