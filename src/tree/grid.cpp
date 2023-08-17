@@ -486,7 +486,7 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
     return Mesh(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_occupied_geom(float threshold,std::pair<glm::vec3,glm::vec3>vis_bounds) const {
+Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds) const {
     using namespace mc;
     if (vis_bounds.first==glm::vec3() && vis_bounds.second==glm::vec3()){
         vis_bounds.first = back_bottom_left;
@@ -522,41 +522,49 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,std::pair<glm::vec3,glm::ve
                 {
                     .pos = grid_to_pos(voxel_verts[0]),
                     .val = get_in_grid(voxel_verts[0]),
+                    .col_val = texture_space.get_in_grid(voxel_verts[0]),
                     .norm = get_norm_grid(voxel_verts[0]),
                 },
                 {
                     .pos = grid_to_pos(voxel_verts[1]),
                     .val = get_in_grid(voxel_verts[1]),
+                    .col_val = texture_space.get_in_grid(voxel_verts[1]),
                     .norm = get_norm_grid(voxel_verts[1]),
                 },
                 {
                     .pos = grid_to_pos(voxel_verts[2]),
                     .val = get_in_grid(voxel_verts[2]),
+                    .col_val = texture_space.get_in_grid(voxel_verts[2]),
                     .norm = get_norm_grid(voxel_verts[2]),
                 },
                 {
                     .pos = grid_to_pos(voxel_verts[3]),
                     .val = get_in_grid(voxel_verts[3]),
+                    .col_val = texture_space.get_in_grid(voxel_verts[3]),
                     .norm = get_norm_grid(voxel_verts[3]),
                 },
                 {
                     .pos = grid_to_pos(voxel_verts[4]),
                     .val = get_in_grid(voxel_verts[4]),
+                    .col_val = texture_space.get_in_grid(voxel_verts[4]),
                     .norm = get_norm_grid(voxel_verts[4]),
                 },
                 {
                     .pos = grid_to_pos(voxel_verts[5]),
                     .val = get_in_grid(voxel_verts[5]),
+                    .col_val = texture_space.get_in_grid(voxel_verts[5]),
                     .norm = get_norm_grid(voxel_verts[5]),
                 },
                 {
                     .pos = grid_to_pos(voxel_verts[6]),
                     .val = get_in_grid(voxel_verts[6]),
+                    .col_val = texture_space.get_in_grid(voxel_verts[6]),
                     .norm = get_norm_grid(voxel_verts[6]),
                 },
                 {
                     .pos = grid_to_pos(voxel_verts[7]),
                     .val = get_in_grid(voxel_verts[7]),
+                    .col_val = texture_space.get_in_grid(voxel_verts[7]),
                     .norm = get_norm_grid(voxel_verts[7]),
                 },
                 }};
@@ -701,26 +709,36 @@ void mc::polygonize(const GridCell& cell, float threshold, vector<Vertex>& verts
         indices.push_back(vertlist[tri_table[cubeindex][i+2]].i);
     }
 }
-
 Vertex mc::vertex_interp(float threshold, const mc::Sample& a, const mc::Sample& b){
-    Vertex v = {vec3(),vec3(0.2,0.16,0.02),vec3()};
+    vec3 brown0(0.08,0.05,0.01);
+    vec3 brown1(0.2,0.16,0.02);
+    float max_col_val = 5.0f;
+    float min_col_val = 0.0f;
+    Vertex v = {vec3(),vec3(),vec3()};
+    float col_factor;
     if (std::abs(threshold - a.val) < 0.00001) {
         v.position = a.pos;
         v.normal = a.norm;
+        col_factor = a.col_val;
     } 
     else if (std::abs(threshold - b.val) < 0.00001) {
         v.position = b.pos;
         v.normal = b.norm;
+        col_factor = b.col_val;
     } 
     else if (std::abs(threshold - b.val) < 0.00001) {
         v.position = a.pos;
         v.normal = a.norm;
+        col_factor = a.col_val;
     }
     else {
         float mu = (threshold - a.val) / (b.val - a.val);
         v.position = a.pos + mu*(b.pos-a.pos);
         v.normal = a.norm + mu*(b.norm-a.norm);
+        col_factor = a.col_val + mu*(b.col_val-a.col_val);
     }
+    col_factor = std::clamp((col_factor-min_col_val)/(max_col_val-min_col_val),0.f,1.0f);
+    v.color = (1.0f-col_factor)*brown0+col_factor*brown1;
     return v;
 }
 

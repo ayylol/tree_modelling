@@ -22,18 +22,24 @@
 
 class Strands {
 public:
-    Strands(const Skeleton &tree, Grid &grid, Implicit& evalfunc, Implicit& initialevalfunc, nlohmann::json options);
-    Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f) const;
+    enum StrandType {
+        Structure,
+        Texture
+    };
+    Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options);
+    Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
 private:
     void add_strands(unsigned int amount);
-    void add_strand(size_t shoot_index);
+    void add_strand(size_t shoot_index, StrandType type = Structure);
     size_t match_root(glm::vec3 pos);
-    Implicit &evalfunc;
+    //Implicit &evalfunc;
     const Skeleton& tree;
     std::vector<std::vector<glm::mat4>> shoot_frames;
     std::vector<std::vector<glm::mat4>> root_frames;
     std::vector<std::vector<glm::vec3>> strands;
+    std::vector<std::vector<glm::vec3>> texture_strands;
     Grid &grid;
+    Grid &texture_grid;
 
     // Strand Creation Helper Functions
 
@@ -51,10 +57,11 @@ private:
     std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_fs(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_heading(glm::vec3 from, glm::mat4 frame);
-    std::optional<glm::vec3> find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false);
+    std::optional<glm::vec3> find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false, float bias_amount = 1.0f);
     std::optional<glm::vec3> find_extension_ptfiso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_canonptfeval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_ptfcanoneval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
+    std::optional<glm::vec3> find_extension_texture(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     //TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, int start_index, int end_index);
 
@@ -67,6 +74,7 @@ private:
         PTFIso,
         CanonPTFEval,
         PTFCanonEval,
+        TextureExt
     } method = CanonDir;
     float segment_length;
     int num_trials;
@@ -77,7 +85,7 @@ private:
     float lookahead_factor;
     float lookahead_factor_current;
     float lookahead_factor_min = 1.0f;
-    float lookahead_factor_max = 3.0f;
+    float lookahead_factor_max = 2.0f;
     float leaf_min_range;
     float base_max_range;
     float root_min_range;

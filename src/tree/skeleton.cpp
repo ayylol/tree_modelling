@@ -163,6 +163,11 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
         throw std::invalid_argument( "Incorrect file format: Opening parentheses for position not found" );
     glm::vec3 position;
     PARSE_POINT(token, position);
+    /*
+    if (dir == BACKWARDS){
+        position.x-=0.1f;
+    }
+    */
     root->frame = glm::translate(position);
 
     std::stack<std::shared_ptr<Skeleton::Node>> last_split;
@@ -196,6 +201,11 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
         if(token.find("(")!=std::string::npos){
             // Define position of the node  
             PARSE_POINT(token,position);
+            /*
+            if (dir == BACKWARDS){
+                position.x-=0.1f;
+            }
+            */
             std::shared_ptr<Node>next=
                 std::make_shared<Node>(Node{
                         .frame = glm::translate(position),

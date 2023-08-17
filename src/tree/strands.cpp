@@ -14,8 +14,11 @@ glm::vec3 random_vector(glm::vec3 axis, float angle);
 glm::vec2 random_vec2();
 float lookahead_frame(float dist);
 
-Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit  &initialevalfunc, nlohmann::json options) : 
-    grid(grid),evalfunc(evalfunc), tree(tree)
+Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann::json options) : 
+    grid(grid),
+    texture_grid(texture_grid),
+    //evalfunc(evalfunc), 
+    tree(tree)
 {
     // Set up root & shoot paths
     for (size_t i = 0; i < tree.leafs_size(); i++) {
@@ -91,7 +94,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Implicit &evalfunc, Implicit 
     add_strands(num_strands);
 }
 
-Mesh<Vertex> Strands::get_mesh(float start, float end) const {
+Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
     start = std::max(0.0f,start);
     end = std::min(1.0f,end);
     std::vector<Vertex> vertices;
@@ -100,10 +103,11 @@ Mesh<Vertex> Strands::get_mesh(float start, float end) const {
     glm::vec3 red(1,0,0);   // Placed Later
     //float start = 0.;
     //float end = 1.0;
-    if (strands.size()!=0){
-        for (int i = start * (strands.size()-1); i<= end * (strands.size()-1); i++){
-            auto path = strands[i];
-            glm::vec3 color = (1-((float)i/strands.size()))*blue+((float)i/strands.size())*red;
+    auto& strand_list = type==Structure ? strands : texture_strands;
+    if (strand_list.size()!=0){
+        for (int i = start * (strand_list.size()-1); i<= end * (strand_list.size()-1); i++){
+            auto path = strand_list[i];
+            glm::vec3 color = (1-((float)i/strand_list.size()))*blue+((float)i/strand_list.size())*red;
             size_t start_index = vertices.size();
             for (auto position : path) {
                 vertices.push_back(Vertex{position, color});
@@ -131,11 +135,17 @@ void Strands::add_strands(unsigned int amount) {
         lookahead_factor_current+=lhf_step;
         //lookahead_factor+=lhf_step;
     }
+    /*
+    lookahead_factor_current=1.0f;
+    for (size_t i = 0; i < amount; i++) {
+        add_strand(paths[i%paths.size()], Texture);
+    }
+    */
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
-void Strands::add_strand(size_t shoot_index) {
+void Strands::add_strand(size_t shoot_index, StrandType type) {
     if (shoot_index >= shoot_frames.size()) return;
     // Set up strand
     const std::vector<glm::mat4> *shoot_path=&(shoot_frames[shoot_index]);
@@ -152,7 +162,16 @@ void Strands::add_strand(size_t shoot_index) {
     bool target_on_root = false;
     bool done = false;
     size_t inflection = 0;
-    method=CanonDir;
+    switch(type){
+        case Structure:
+            method=CanonDir;
+            break;
+        case Texture:
+            method=PTFIso;
+            //method=TextureExt;
+            break;
+    }
+    int transition_node = 0;
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
@@ -201,9 +220,10 @@ void Strands::add_strand(size_t shoot_index) {
             if (!on_root){ // switch path
                 if (!target_on_root){
                     target_on_root = true;
-                    method=CanonIso;
+                    if (type == Structure) method=CanonIso;
                     if (select_pos == AtRoot && root_path==nullptr){
                         root_path = &(root_frames[match_root(strand[0])]); 
+                        transition_node = closest_index;
                     }
                 }
                 if(method==HeadingDir){
@@ -230,7 +250,11 @@ void Strands::add_strand(size_t shoot_index) {
                 break;
             case CanonIso:
                 //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, on_root);
-                ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true);
+                //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true, ((float)closest_index-transition_node)/(path->size()-transition_node));
+                if (!on_root) ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true, std::max(((float)closest_index-transition_node)/(path->size()-transition_node), 0.2f));
+                else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true);
+                //if (type==Structure)ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true);
+                //else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 break;
             case PTFIso:
@@ -241,6 +265,9 @@ void Strands::add_strand(size_t shoot_index) {
                 break;
             case PTFCanonEval:
                 ext = find_extension_ptfcanoneval(strand.back(), last_closest, target.frame);
+                break;
+            case TextureExt:
+                ext = find_extension_texture(strand.back(), last_closest, target.frame);
                 break;
         }
         if (ext){
@@ -305,10 +332,16 @@ void Strands::add_strand(size_t shoot_index) {
     }
     // Occupy strand path
     if (strand.size()<=2) return;
-    strands.push_back(strand);
-    //grid.fill_path(strand, evalfunc, offset);
-    //grid.fill_path(strand, 3.0, 0.03, 0.01, 0.0001, inflection, offset);
-    grid.fill_path(strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
+    switch(type){
+        case Structure:
+            strands.push_back(strand);
+            grid.fill_path(strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
+            texture_grid.fill_path(strand, 25.0, 0.03, 0.01, 0.01, inflection);
+            break;
+        case Texture:
+            texture_strands.push_back(strand);
+            break;
+    }
 }
 
 // Strand creation helper functions
@@ -478,7 +511,7 @@ std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::ma
     return extension;
 }
 
-std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias){
+std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias, float bias_amount){
     glm::vec3 closest_pos = frame_position(frame_from);
     glm::vec3 target_extension = frame_position(frame_to);
     glm::vec3 extension = from+segment_length*glm::normalize(frame_position(frame_to)-frame_position(frame_from));
@@ -495,7 +528,7 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.02f,1.0f)*offset_no_y;
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(1-glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
         //extension = extension + std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)), glm::vec3(0,1,0))))*offset_no_y;
-        extension = extension+0.8f*offset_no_y;
+        extension = extension+bias_amount*offset_no_y;
         //std::cout<<std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0)))<<std::endl;
         //extension = extension+(1.0f-std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0))))*offset_no_y;
     }
@@ -532,6 +565,7 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     extension = from+segment_length*glm::normalize(extension-from);
     return extension;
 }
+
 std::optional<glm::vec3> Strands::find_extension_ptfiso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
     glm::mat4 inv_from = frame_inverse(frame_from);
     glm::mat4 inv_to = frame_inverse(frame_to);
@@ -555,8 +589,8 @@ std::optional<glm::vec3> Strands::find_extension_ptfiso(glm::vec3 from, glm::mat
     }
     direction = 0.0001f*glm::normalize(direction);
     num_steps = 0;
-    max_steps = 50;
-    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
+    max_steps = 200;
+    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-target_iso)>=0.01f&&num_steps<=max_steps){
         if (grid.get_in_pos(extension)>=reject_iso){
             extension_local += direction;
         }else{
@@ -696,6 +730,10 @@ std::optional<glm::vec3> Strands::find_extension_ptfcanoneval(glm::vec3 from, gl
     }
     glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
     return extension;
+}
+
+std::optional<glm::vec3> Strands::find_extension_texture(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
+    return {};
 }
 
 /*
