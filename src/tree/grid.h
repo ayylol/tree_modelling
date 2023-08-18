@@ -44,8 +44,9 @@ public:
     void occupy_path(std::vector<glm::vec3> path, float val);
 
     // Implicit Filling
-    void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
-    void fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
+    //void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
+    void fill_path(std::vector<glm::vec3> path, Implicit& implicit, bool use_max=true);
+    void fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, bool use_max=true);
     std::unordered_map<glm::ivec3, float> fill_line(glm::vec3 p1, glm::vec3 p2, Implicit& implicit, std::unordered_map<glm::ivec3, float> prev_visited = {});
     void fill_point(glm::vec3 p, Implicit& implicit);
     float fill_skeleton(const Skeleton::Node& node, float min_range);

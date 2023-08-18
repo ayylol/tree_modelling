@@ -40,6 +40,19 @@ float MetaBalls::potential(float distance) {
   return (a * 3 / 2) * pow((1 - distance / b), 2);
 }
 
+float DoublePeak::potential(float distance) {
+  if (distance <= b0 / 3) {
+    return a0 * (1 - 3 * pow(distance / b0, 2));
+  } else if (distance <= b0){
+      return (a0 * 3 / 2) * pow((1 - distance / b0), 2);
+  } else if (distance <= u1){
+    return a1*((distance-u0)/(u2-u0))*((distance-u0)/(u1-u0));
+  } else if (distance <= u2){
+    return a1*(((distance-u0)/(u2-u0))*((u2-distance)/(u2-u1)))+(((u3-distance)/(u3-u1))*((distance-u1)/(u2-u1)));
+  }
+  return a1*(((u3-distance)/(u3-u1))*((u3-distance)/(u3-u2)));
+}
+
 Blinn::Blinn(float radius, float blobiness, float cutoff_val)
     : radius(radius), blobiness(blobiness),
       DistanceField(radius * sqrt(log(cutoff_val) / blobiness + 1)) {}
