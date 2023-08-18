@@ -167,7 +167,8 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
             method=CanonDir;
             break;
         case Texture:
-            method=PTFIso;
+            method=CanonDir;
+            //method=PTFIso;
             //method=TextureExt;
             break;
     }
@@ -332,14 +333,18 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
     }
     // Occupy strand path
     if (strand.size()<=2) return;
+
+    //DoublePeak imp(2.0,0.02,1.0,0.04);
     switch(type){
         case Structure:
             strands.push_back(strand);
             grid.fill_path(strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
             texture_grid.fill_path(strand, 25.0, 0.03, 0.01, 0.01, inflection);
+            //texture_grid.fill_path(strand,imp,true);
             break;
         case Texture:
             texture_strands.push_back(strand);
+            //texture_grid.fill_path(strand, 50.0, 0.01, 0.01, 0.01, inflection);
             break;
     }
 }

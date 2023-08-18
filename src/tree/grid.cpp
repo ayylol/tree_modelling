@@ -275,13 +275,17 @@ std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2
     return visited;
 }
 
-void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit){
+void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit, bool use_max){
     std::unordered_map<glm::ivec3,float> visited = fill_line(path[0], path[1], implicit);
     for (int i = 1; i<path.size()-1; i++){
-        visited = fill_line(path[i], path[i + 1], implicit,visited);
+        if (use_max){
+            visited = fill_line(path[i], path[i + 1], implicit,visited);
+        }else{
+            fill_line(path[i], path[i + 1], implicit);
+        }
     }
 }
-void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point){
+void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, bool use_max){
     float b=shoot_b;
     float shoot_b_step = (max_b-shoot_b)/inflection_point;
     float root_b_step = (root_b-max_b)/(path.size()-inflection_point-1);
@@ -290,7 +294,11 @@ void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, fl
     for (int i = 1; i<path.size()-1; i++){
         b += inflection_point>=i? shoot_b_step : root_b_step;
         current_implicit = MetaBalls(max_val,b);
-        visited = fill_line(path[i], path[i + 1], current_implicit,visited);
+        if (use_max){
+            visited = fill_line(path[i], path[i + 1], current_implicit,visited);
+        }else{
+            fill_line(path[i], path[i + 1], current_implicit);
+        }
     }
 }
 

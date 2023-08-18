@@ -59,6 +59,27 @@ private:
   float b;
   float potential(float distance);
 };
+class DoublePeak : public DistanceField {
+public:
+  DoublePeak(float a0, float b0, float a1, float b1) : DistanceField(b1), 
+    a0(a0), b0(b0), a1(a1), b1(b1)
+    {};
+
+  float get_a0(){return a0;}
+  float get_b0(){return b0;}
+  float get_a1(){return a1;}
+  float get_b1(){return b1;}
+private:
+  float a0;
+  float b0;
+  float a1;
+  float b1;
+  float u0 = b0;
+  float u1 = (b1+2.f*b0)/3.f;
+  float u2 = (2.f*b1+b0)/3.f;
+  float u3 = b1;
+  float potential(float distance);
+};
 
 class Blinn : public DistanceField {
 public:
