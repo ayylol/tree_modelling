@@ -40,6 +40,10 @@ float MetaBalls::potential(float distance) {
   return (a * 3 / 2) * pow((1 - distance / b), 2);
 }
 
+float LinearField::potential(float distance) {
+    return (-a/b)*distance + a;
+}
+
 float DoublePeak::potential(float distance) {
   if (distance <= b0 / 3) {
     return a0 * (1 - 3 * pow(distance / b0, 2));

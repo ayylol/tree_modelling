@@ -137,8 +137,11 @@ void Strands::add_strands(unsigned int amount) {
     }
     /*
     lookahead_factor_current=1.0f;
-    for (size_t i = 0; i < amount; i++) {
+    reject_iso = target_iso;
+    for (size_t i = 0; i < 100; i++) {
+        lookahead_factor=lookahead_factor_current;
         add_strand(paths[i%paths.size()], Texture);
+        lookahead_factor_current+=lhf_step;
     }
     */
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
@@ -167,8 +170,10 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
             method=CanonDir;
             break;
         case Texture:
-            method=CanonDir;
+            //method = CanonDir;
+            //method=CanonDir;
             //method=PTFIso;
+            method=LocalPosMatching;
             //method=TextureExt;
             break;
     }
@@ -274,8 +279,9 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
         if (ext){
             strand.push_back(ext.value());
         }else{
-            strands_terminated++;
-            break;
+            ext = find_extension_canoniso(strand.back(), last_closest, target.frame,false);
+            //strands_terminated++;
+            //break;
         }
 
         //TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10); // Old method
@@ -335,16 +341,19 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
     if (strand.size()<=2) return;
 
     //DoublePeak imp(2.0,0.02,1.0,0.04);
+    LinearField imp(4.0,0.03);
     switch(type){
         case Structure:
             strands.push_back(strand);
             grid.fill_path(strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
-            texture_grid.fill_path(strand, 25.0, 0.03, 0.01, 0.01, inflection);
-            //texture_grid.fill_path(strand,imp,true);
+            texture_grid.fill_path(strand, 30.0, 0.028, 0.007, 0.005, inflection);
+            //texture_grid.fill_path(strand, 20.0, 0.025, 0.01, 0.01, inflection, true, true);
+            //texture_grid.fill_path(strand,imp,false);
             break;
         case Texture:
             texture_strands.push_back(strand);
             //texture_grid.fill_path(strand, 50.0, 0.01, 0.01, 0.01, inflection);
+            texture_grid.fill_path(strand, 5.0, 0.008, 0.001, 0.0001, inflection);
             break;
     }
 }
