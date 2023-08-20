@@ -285,19 +285,30 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit, bool use_m
         }
     }
 }
-void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, bool use_max){
+void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, bool use_max, bool is_texture){
     float b=shoot_b;
     float shoot_b_step = (max_b-shoot_b)/inflection_point;
     float root_b_step = (root_b-max_b)/(path.size()-inflection_point-1);
-    MetaBalls current_implicit = MetaBalls(max_val,b);
-    std::unordered_map<glm::ivec3, float> visited = fill_line(path[0], path[1], current_implicit);
+    MetaBalls current_metaballs = MetaBalls(max_val,b);
+    LinearField current_linearfield= LinearField(max_val,b);
+    DistanceField* current_implicit;
+    if (is_texture){
+        current_implicit = &current_linearfield;
+    }else{
+        current_implicit = &current_metaballs;
+    }
+    std::unordered_map<glm::ivec3, float> visited = fill_line(path[0], path[1], *current_implicit);
     for (int i = 1; i<path.size()-1; i++){
         b += inflection_point>=i? shoot_b_step : root_b_step;
-        current_implicit = MetaBalls(max_val,b);
-        if (use_max){
-            visited = fill_line(path[i], path[i + 1], current_implicit,visited);
+        if (is_texture){
+            current_linearfield = LinearField(max_val,b);
         }else{
-            fill_line(path[i], path[i + 1], current_implicit);
+            current_metaballs = MetaBalls(max_val,b);
+        }
+        if (use_max){
+            visited = fill_line(path[i], path[i + 1], *current_implicit,visited);
+        }else{
+            fill_line(path[i], path[i + 1], *current_implicit);
         }
     }
 }

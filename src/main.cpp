@@ -204,10 +204,11 @@ int main(int argc, char *argv[]) {
         // Draw the meshes here
         if (view_mesh) {
             tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
-            texture_strands.draw(flat_shader, CAMERA, GL_LINES);
+            //texture_strands.draw(flat_shader, CAMERA, GL_LINES);
         }
         if (view_volume) volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
+        //if (view_strands) texture_strands.draw(flat_shader, CAMERA, GL_LINES);
         if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) ground.draw(shader, CAMERA, GL_TRIANGLES);

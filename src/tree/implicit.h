@@ -59,6 +59,19 @@ private:
   float b;
   float potential(float distance);
 };
+
+class LinearField : public DistanceField {
+public:
+  LinearField(float a, float b) : DistanceField(b), a(a), b(b){};
+
+  float get_a(){return a;}
+  float get_b(){return b;}
+private:
+  float a;
+  float b;
+  float potential(float distance);
+};
+
 class DoublePeak : public DistanceField {
 public:
   DoublePeak(float a0, float b0, float a1, float b1) : DistanceField(b1), 
