@@ -318,27 +318,43 @@ void save_image(){
     images_taken++;
 }
 void save_mesh(Mesh<Vertex> mesh){
-    std::string file_name = image_prefix + ".obj";
+    std::string file_name = image_prefix + ".ply";
     std::ofstream out(file_name);
     glm::mat4 pos_transform = glm::scale(glm::vec3(2,2,2));
     glm::mat3 norm_scale = glm::scale(glm::vec3(100,100,100));
-    out<<"o "<<image_prefix<<"\n";
+    out<<"ply\n";
+    out<<"format ascii 1.0\n";
+    out<<"element vertex "<<mesh.vertices.size()<<"\n";
+    out<<"property float x\n";
+    out<<"property float y\n";
+    out<<"property float z\n";
+    out<<"property float nx\n";
+    out<<"property float ny\n";
+    out<<"property float nz\n";
+    out<<"property uchar red\n";
+    out<<"property uchar green\n";
+    out<<"property uchar blue\n";
+    out<<"element face "<<mesh.indices.size()/3<<"\n";
+    out<<"property list uchar int vertex_index\n";
+    out<<"end_header\n";
     out<<std::fixed;
     out<<std::setprecision(10);
     for (Vertex vertex : mesh.vertices){
         glm::vec3 pos = pos_transform*glm::vec4(vertex.position,1.f);
         glm::vec3 normal = vertex.normal;
+        glm::vec3 col = vertex.color;
         if (glm::any(glm::isnan(normal))){
             std::cout <<"IS NAN"<<std::endl;
         }
-        out<<"v "<<pos.x<<" "<<pos.y<<" "<<pos.z<<"\n";
-        out<<"vn "<<normal.x<<" "<<normal.y<<" "<<normal.z<<"\n";
+        out <<pos.x<<" "<<pos.y<<" "<<pos.z<<" "
+            <<normal.x<<" "<<normal.y<<" "<<normal.z<<" "
+            <<(int)(col.r*255)<<" "<<(int)(col.g*255)<<" "<<(int)(col.b*255)<<"\n";
     }
-    for (int i=0; i<mesh.indices.size()-3; i+=3){
-        GLuint v0 = mesh.indices[i]+1;
-        GLuint v1 = mesh.indices[i+1]+1;
-        GLuint v2 = mesh.indices[i+2]+1;
-        out<<"f "<<v0<<"//"<<v0<<" "<<v1<<"//"<<v1<<" "<<v2<<"//"<<v2<<"\n";
+    for (int i=0; i<=mesh.indices.size()-3; i+=3){
+        GLuint v0 = mesh.indices[i];
+        GLuint v1 = mesh.indices[i+1];
+        GLuint v2 = mesh.indices[i+2];
+        out<<"3 "<<v0<<" "<<v1<<" "<<v2<<"\n";
     }
     out.close();
 }
