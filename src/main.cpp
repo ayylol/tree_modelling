@@ -63,7 +63,7 @@ std::string image_prefix = "./tree";
 
 // Toggles
 bool view_mesh = true, 
-     view_volume = false, 
+     view_volume = true, 
      view_strands = false,
      view_normals = false,
      view_skeleton = false,
@@ -103,7 +103,8 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl
 
     // Parse options
-    json opt_data = json::parse(std::ifstream(argv[1]));
+    auto option_file =std::ifstream(argv[1]);
+    json opt_data = json::parse(option_file);
 
     // Creating tree
     STOPWATCH("Parsing Skeleton", Skeleton tree(opt_data););
@@ -111,9 +112,9 @@ int main(int argc, char *argv[]) {
     // Grid
     STOPWATCH("Initializing Grid",
             Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
-            Grid texture_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+           //Grid texture_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+            Grid texture_grid = Grid(tree, 0.01f, 1.0);
             );
-
     // Make camera according to grid
     cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
     if (opt_data.contains("cameras")){
@@ -138,8 +139,47 @@ int main(int argc, char *argv[]) {
         std::cerr << "did not recognize implicit type" << std::endl;
         return 1;
     }
-    //std::vector<glm::vec3> path = {glm::vec3(1.0,0.5,0.0),glm::vec3(0.0,0.5,0.0),glm::vec3(0.707,1.207,0.707)};//,glm::vec3(0.866,0.5,0.0)};
+    //std::vector<glm::vec3> path = {glm::vec3(1.0,0.5,0.0),glm::vec3(0.0,0.5,0.0),glm::vec3(0.707,1.207,0.707),glm::vec3(0.866,0.4,0.0),glm::vec3(0.3,0.2,0.3)};
+    /*
+    std::vector<glm::vec3> path = {
+        glm::vec3(0.5,0.0,0.0),
+        glm::vec3(0.5,0.1,0.0),
+        glm::vec3(0.5,0.2,0.0),
+        glm::vec3(0.5,0.3,0.0),
+        glm::vec3(0.5,0.4,0.0),
+        glm::vec3(0.5,0.5,0.0),
+        glm::vec3(0.5,0.6,0.0),
+        glm::vec3(0.5,0.7,0.0),
+        glm::vec3(0.5,0.8,0.0),
+        glm::vec3(0.5,0.9,0.0),
+        glm::vec3(0.5,1.0,0.0),
+        glm::vec3(0.5,1.1,0.0),
+        glm::vec3(0.5,1.2,0.0),
+        glm::vec3(0.5,1.3,0.0),
+        glm::vec3(0.5,1.4,0.0),
+        glm::vec3(0.5,1.5,0.0),
+    };
+    */
+    std::vector<glm::vec3> path = {
+        glm::vec3(0.1,0.0,0.1),
+        glm::vec3(0.2,0.1,0.2),
+        glm::vec3(0.3,0.2,0.3),
+        glm::vec3(0.4,0.3,0.4),
+        glm::vec3(0.5,0.4,0.5),
+        glm::vec3(0.6,0.5,0.6),
+        glm::vec3(0.7,0.6,0.7),
+        glm::vec3(0.8,0.7,0.8),
+        glm::vec3(0.9,0.8,0.9),
+        glm::vec3(1.0,0.9,1.0),
+        glm::vec3(1.1,1.0,1.1),
+    };
     //gr.fill_path(path, *df, 0.0f);
+    //gr.fill_path
+    //    (0, path, 3.0, 0.04, 0.01, 0.01, 5);
+    //std::cout <<gr.eval_pos(glm::vec3(0.7,0.6,0.7))<<std::endl;
+    //texture_grid.fill_path
+    //    (0, path, 3.0, 0.04, 0.01, 0.01, 7);
+
     //gr.fill_line(path[1],path[2], *df);
     //gr.occupy_line(path[1],path[2],1);
     //gr.fill_line(path[1],path[3], *df);
@@ -151,15 +191,16 @@ int main(int argc, char *argv[]) {
     // Creating Meshes
     float surface_val = opt_data.at("mesh_iso");
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
-    //STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val,{glm::vec3(-0.5,0.05,-0.5),glm::vec3(0.75,0.23,0.75)}););
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
-    Mesh texture_strands = detail.get_mesh(0.0,1.0,Strands::Texture);
+    //Mesh texture_strands = detail.get_mesh(0.0,1.0,Strands::Texture);
     //STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(0.1f););
-    // Mesh tree_geom = gr.get_occupied_voxels(surface_val);
-    STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
+    //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
+    STOPWATCH("Getting Occupied Volume", Mesh fine_volume = texture_grid.get_occupied_voxels(0.0f););
+    STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_voxels(0.0f););
     STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
     STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
+    /*
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
         STOPWATCH("Exporting Data", 
                     //gr.export_data("data.txt");
@@ -167,6 +208,7 @@ int main(int argc, char *argv[]) {
                     has_exported = true;
                 );
     }
+    */
 
     // GROUND PLANE
     glm::vec3 ground_color = glm::vec3(0, 0.3, 0.02);
@@ -203,13 +245,18 @@ int main(int argc, char *argv[]) {
 
         // Draw the meshes here
         if (view_mesh) {
-            tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
+            fine_volume.draw(shader, CAMERA, GL_TRIANGLES);
+            //tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
             //texture_strands.draw(flat_shader, CAMERA, GL_LINES);
+
         }
-        if (view_volume) volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
+        //if (view_volume) volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
+        if (view_volume) {
+            //fine_volume.draw(flat_shader, CAMERA, GL_POINTS);
+            volume_geom.draw(shader, CAMERA, GL_TRIANGLES);
+        }
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
-        //if (view_strands) texture_strands.draw(flat_shader, CAMERA, GL_LINES);
-        if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
+        //if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) ground.draw(shader, CAMERA, GL_TRIANGLES);
         if (view_bound) bound_geom.draw(flat_shader, CAMERA, GL_LINES);
@@ -223,7 +270,7 @@ int main(int argc, char *argv[]) {
         }
         if (export_mesh){
             STOPWATCH("Exporting Data", 
-            save_mesh(tree_geom);
+            //save_mesh(tree_geom);
             has_exported = true;
             export_mesh = false;
             );
@@ -277,7 +324,7 @@ GLFWwindow *openGLInit() {
     glPointSize(2.f);
     //glPolygonMode( GL_BACK, GL_LINE );
     //glPolygonMode( GL_FRONT, GL_POINT );
-    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     glEnable(GL_DEPTH_TEST);
 
     return window;

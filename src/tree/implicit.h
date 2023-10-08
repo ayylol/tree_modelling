@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 
 #include <vector>
+
 class Implicit {
 public:
   float cutoff = 0.f;
@@ -106,4 +107,11 @@ private:
   float radius;
   float blobiness;
   float potential(float distance);
+};
+
+struct Segment{
+    glm::vec3 start;    
+    glm::vec3 end;    
+    uint32_t strand_id;
+    MetaBalls f;
 };
