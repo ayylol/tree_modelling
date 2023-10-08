@@ -131,19 +131,8 @@ void Strands::add_strands(unsigned int amount) {
     for (size_t i = 0; i < amount; i++) {
         lookahead_factor=lookahead_factor_current;
         add_strand(paths[i%paths.size()]);
-        //std::cout<<lookahead_factor<<std::endl;
-        lookahead_factor_current+=lhf_step;
-        //lookahead_factor+=lhf_step;
-    }
-    /*
-    lookahead_factor_current=1.0f;
-    reject_iso = target_iso;
-    for (size_t i = 0; i < 100; i++) {
-        lookahead_factor=lookahead_factor_current;
-        add_strand(paths[i%paths.size()], Texture);
         lookahead_factor_current+=lhf_step;
     }
-    */
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
 
@@ -170,50 +159,14 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
             method=CanonDir;
             break;
         case Texture:
-            //method = CanonDir;
-            //method=CanonDir;
-            //method=PTFIso;
             method=LocalPosMatching;
-            //method=TextureExt;
             break;
     }
     int transition_node = 0;
     while (!done) {
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-        /*
-        float distance_to_travel = 0.f; 
-        if (on_root){
-            glm::vec3 closest_no_y= frame_position(last_closest);
-            closest_no_y.y=0.f;
-            glm::vec3 start_no_y = start;
-            start_no_y.y=0.f;
-            distance_to_travel = lookahead_factor*(segment_length + glm::distance(closest_no_y, start_no_y));
-        }else{
-            distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
-        }
-        */
-        /*
-        float distance;
-        if (!on_root){
-            distance = glm::distance(frame_position(last_closest), start);
-        }else{
-            glm::vec3 closest_no_y = frame_position(last_closest);
-            closest_no_y.y = 0.f;
-            glm::vec3 start_no_y = start;
-            start.y = 0.f;
-            distance = glm::distance(closest_no_y.y, start.y);
-        }
-        float distance_to_travel = lookahead_factor*(segment_length + distance);
-        */
         float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
-        //float distance_to_travel = lookahead_factor*(segment_length);
-        //float dist_to_frame = glm::distance(frame_position(last_closest), start);
-        //float distance_to_travel = lookahead_factor*(segment_length) + lookahead_frame(dist_to_frame);
-        //float distance_to_travel = segment_length + lookahead_factor*glm::distance(frame_position(last_closest), start);
-        //float distance_to_travel = std::max(segment_length, lookahead_factor*glm::distance(frame_position(last_closest), start));
-        //distance_to_travel = std::min(distance_to_travel, 0.25f);
-        //std::cout<<distance_to_travel<<std::endl;
 
         // Find target
         TargetResult target;
@@ -226,7 +179,7 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
             if (!on_root){ // switch path
                 if (!target_on_root){
                     target_on_root = true;
-                    if (type == Structure) method=CanonIso;
+                    //if (type == Structure) method=CanonIso;
                     if (select_pos == AtRoot && root_path==nullptr){
                         root_path = &(root_frames[match_root(strand[0])]); 
                         transition_node = closest_index;
@@ -255,13 +208,13 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
                 ext = find_extension_heading(strand.back(), target.frame);
                 break;
             case CanonIso:
-                //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, on_root);
-                //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true, ((float)closest_index-transition_node)/(path->size()-transition_node));
-                if (!on_root) ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true, std::max(((float)closest_index-transition_node)/(path->size()-transition_node), 0.2f));
-                else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true);
-                //if (type==Structure)ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true);
+                /*
+                if (!on_root) ext = find_extension_canoniso(
+                        strand.back(), last_closest, target.frame, true, std::max(((float)closest_index-transition_node)/(path->size()-transition_node), 0.2f));
+                else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
+                */
+                find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 //else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
-                //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 break;
             case PTFIso:
                 ext = find_extension_ptfiso(strand.back(), last_closest, target.frame);
@@ -301,59 +254,28 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
                 //done = true;
             }
         }else{
-            //std::cout<<"root or shoot"<<std::endl;
             next = find_closest(strand.back(), *path, closest_index+1, target.index); 
         }
 
         if (next.index >= path->size()-1 && on_root) {
             done = true;
         }
-        /*
-        if (next.index >= path->size()-1) {
-            if (on_root){
-                done = true;
-            }else{
-                //method=CanonIso;
-                path = root_path;
-                on_root = true;
-                closest_index=0;
-                next = find_closest(strand.back(), *path, closest_index, target.index); 
-                inflection = strand.size()-1;
-                //lookahead_factor=1.5f;
-                //break;
-                //done=true;
-            }
-        }
-        */
         closest_index = next.index;
         last_closest = next.frame;
-        // Interpolate lookahead factor
-        /*
-        float progress = ((float)target.index/path->size());
-        if (on_root){
-            lookahead_factor = (1.0f-progress)*lookahead_factor_current+progress*lookahead_factor_min;
-        }else{
-            lookahead_factor = (1.0f-progress)*lookahead_factor_min+progress*lookahead_factor_current;
-        }
-        */
     }
     // Occupy strand path
     if (strand.size()<=2) return;
-
-    //DoublePeak imp(2.0,0.02,1.0,0.04);
-    LinearField imp(4.0,0.03);
     switch(type){
         case Structure:
+            //FIXME: CHANGE MARKER
+            grid.fill_path(strands.size(), strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
             strands.push_back(strand);
-            grid.fill_path(strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
-            texture_grid.fill_path(strand, 30.0, 0.028, 0.007, 0.005, inflection);
-            //texture_grid.fill_path(strand, 20.0, 0.025, 0.01, 0.01, inflection, true, true);
-            //texture_grid.fill_path(strand,imp,false);
+            //texture_grid.fill_path(0, strand, 30.0, 0.028, 0.007, 0.005, inflection);
             break;
         case Texture:
+            //FIXME: CHANGE MARKER
             texture_strands.push_back(strand);
-            //texture_grid.fill_path(strand, 50.0, 0.01, 0.01, 0.01, inflection);
-            texture_grid.fill_path(strand, 5.0, 0.008, 0.001, 0.0001, inflection);
+            //texture_grid.fill_path(0,strand, 5.0, 0.008, 0.001, 0.0001, inflection);
             break;
     }
 }
@@ -407,7 +329,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
     for (int i = 0; i < num_trials; i++) {
         glm::vec3 trial_head = from + segment_length * 
             random_vector(canonical_direction, glm::radians(max_angle));
-        float val = grid.get_in_pos(trial_head);
+        float val = grid.eval_pos(trial_head);
         if (val<=reject_iso) {
             float distance = glm::distance(trial_head, target_point);
             float angle = glm::angle(trial_head - from, canonical_direction);
@@ -470,7 +392,7 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
         local_sample.x+=sample.x;
         local_sample.z+=sample.y;
         glm::vec3 global_sample = frame_to*glm::vec4(local_sample,1.f);
-        float val = grid.get_in_pos(global_sample);
+        float val = grid.eval_pos(global_sample);
         if (val<reject_iso){
             trials.push_back({local_sample,global_sample, val});
             // Update Evaluation Bounds
@@ -516,8 +438,8 @@ std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from, glm::ma
     num_steps = 0;
     max_steps = 20;
     // Step along gradient
-    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
-        glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
+    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.eval_pos(extension)-reject_iso)>=0.4&&num_steps<=max_steps){
+        glm::vec3 step = 0.0001f*(grid.eval_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
         extension += step;
         num_steps++;
     }
@@ -570,8 +492,8 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     // Step along gradient
     num_steps = 0;
     max_steps = 200;
-    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-reject_iso)>=0.1&&num_steps<=max_steps){
-        glm::vec3 step = 0.0001f*(grid.get_in_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
+    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.eval_pos(extension)-reject_iso)>=0.1&&num_steps<=max_steps){
+        glm::vec3 step = 0.0001f*(grid.eval_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
         extension += step;
         //extension = from+segment_length*glm::normalize(extension-from);
         num_steps++;
@@ -604,8 +526,8 @@ std::optional<glm::vec3> Strands::find_extension_ptfiso(glm::vec3 from, glm::mat
     direction = 0.0001f*glm::normalize(direction);
     num_steps = 0;
     max_steps = 200;
-    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.get_in_pos(extension)-target_iso)>=0.01f&&num_steps<=max_steps){
-        if (grid.get_in_pos(extension)>=reject_iso){
+    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.eval_pos(extension)-target_iso)>=0.01f&&num_steps<=max_steps){
+        if (grid.eval_pos(extension)>=reject_iso){
             extension_local += direction;
         }else{
             extension_local -= direction;
@@ -643,7 +565,7 @@ std::optional<glm::vec3> Strands::find_extension_canonptfeval(glm::vec3 from, gl
     for (int i = 0; i < num_trials; i++) {
         glm::vec3 trial_head = from + segment_length * 
             random_vector(canonical_direction, glm::radians(max_angle));
-        float val = grid.get_in_pos(trial_head);
+        float val = grid.eval_pos(trial_head);
         if (val<=reject_iso) {
             glm::vec3 trial_local = inv_to*glm::vec4(trial_head,1.f);
             glm::vec3 trial_local_projected = glm::vec3(trial_local.x,0.f,trial_local.z);
@@ -706,7 +628,7 @@ std::optional<glm::vec3> Strands::find_extension_ptfcanoneval(glm::vec3 from, gl
         local_sample.x+=sample.x;
         local_sample.z+=sample.y;
         glm::vec3 global_sample = frame_to*glm::vec4(local_sample,1.f);
-        float val = grid.get_in_pos(global_sample);
+        float val = grid.eval_pos(global_sample);
         if (val<=reject_iso) {
             float distance = glm::distance(global_sample, target_point);
             float angle = glm::angle(global_sample - from, canonical_direction);

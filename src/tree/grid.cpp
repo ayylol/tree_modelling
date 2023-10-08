@@ -5,6 +5,7 @@
 #include "tree/implicit.h"
 #include "util/geometry.h"
 #include <climits>
+#include <cmath>
 #include <glm/gtx/io.hpp>
 #include <iostream>
 
@@ -17,8 +18,9 @@ using std::vector;
 
 Grid::Grid(ivec3 dimensions, float scale, vec3 back_bottom_left)
     : dimensions(dimensions),
-      grid(dimensions.x, vector<vector<float>>(dimensions.y, vector<float>(dimensions.z, 0))),
-      //gradient(dimensions.x, vector<vector<glm::vec3>>(dimensions.y, vector<glm::vec3>(dimensions.z, glm::vec3(0,0,0)))),
+      grid(dimensions.x,vector<vector<vector<size_t>>>(
+                  dimensions.y, vector<vector<size_t>>(
+                      dimensions.z,vector<size_t>()))),
       scale(scale), back_bottom_left(back_bottom_left),
       center(back_bottom_left + (scale / 2.f) * (vec3)dimensions) {}
 
@@ -31,13 +33,9 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     center = 0.5f*(back_bottom_left+front_top_right);
     scale = tree.get_average_length() * scale_factor;
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
-    grid = std::vector<std::vector<std::vector<float>>>(dimensions.x, 
-            vector<vector<float>>(dimensions.y, 
-            vector<float>(dimensions.z, 0))); 
-    /*gradient = std::vector<std::vector<std::vector<vec3>>>(dimensions.x, 
-            vector<vector<vec3>>(dimensions.y, 
-            vector<vec3>(dimensions.z, vec3(0, 0, 0))));
-            */
+    grid =vector<vector<vector<vector<size_t>>>>(dimensions.x, 
+            vector<vector<vector<size_t>>>(dimensions.y, (
+                    vector<vector<size_t>>(dimensions.z))));
     std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 
@@ -56,27 +54,54 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
 }
 
 float Grid::get_in_grid(ivec3 index) const {
-    /*
-    // HASHED CHUNKS
-    glm::ivec3 chunk_slot = get_chunk_slot(index);
-    glm::ivec3 local_slot = get_local_slot(index);
-    if (!grid.contains(chunk_slot)){
-        return 0.f;
-    }
-    return grid.at(get_chunk_slot(index))[local_slot.x][local_slot.y][local_slot.z];
-    */
     // REGULAR GRID
     if (!is_in_grid(index)) {
         return 0.f;
     }
-    return grid[index.x][index.y][index.z];
+    //FIXME: CHANGE MARKER
+    //return grid[index.x][index.y][index.z];
+    return 0.f;
+}
+
+bool Grid::has_refs(ivec3 index) const {
+    // REGULAR GRID
+    if (!is_in_grid(index)) {
+        return false;
+    }
+    return !(grid[index.x][index.y][index.z].empty());
 }
 
 float Grid::get_in_pos(vec3 pos) const { return get_in_grid(pos_to_grid(pos)); }
 
+float Grid::eval_pos(vec3 pos) const { 
+    ivec3 slot = pos_to_grid(pos);
+    if (!has_refs(slot)){
+        return 0.f;
+    }
+    std::unordered_map<uint32_t, float> strand_vals;
+    auto slot_refs = grid[slot.x][slot.y][slot.z];
+    for (size_t i : slot_refs){
+        struct Segment segment = segments[i]; 
+        float v = segment.f.eval(pos, segment.start,segment.end);
+        if (strand_vals.contains(segment.strand_id)){
+            strand_vals[segment.strand_id] = 
+                std::max(strand_vals[segment.strand_id], v);
+        }else{
+            strand_vals[segment.strand_id] = v;
+        }
+    }
+    float val = 0.f;
+    for (auto v : strand_vals){
+        val += v.second;
+    }
+    return val;
+}
+
+// FIXME: CHANGE THIS
 glm::vec3 Grid::get_norm_grid(glm::ivec3 index) const {
     // Grid dependent normals
-    return glm::normalize(glm::vec3((get_in_grid(index + ivec3(-1, 0, 0)) - get_in_grid(index + ivec3(1, 0, 0))), (get_in_grid(index + ivec3(0, -1, 0)) - get_in_grid(index + ivec3(0, 1, 0))), (get_in_grid(index + ivec3(0, 0, -1)) - get_in_grid(index + ivec3(0, 0, 1)))));
+    return vec3(0,0,0);
+    //return glm::normalize(glm::vec3((get_in_grid(index + ivec3(-1, 0, 0)) - get_in_grid(index + ivec3(1, 0, 0))), (get_in_grid(index + ivec3(0, -1, 0)) - get_in_grid(index + ivec3(0, 1, 0))), (get_in_grid(index + ivec3(0, 0, -1)) - get_in_grid(index + ivec3(0, 0, 1)))));
     //return glm::normalize(gradient[index.x][index.y][index.z]);
 }
 glm::vec3 Grid::get_norm_pos(glm::vec3 pos) const { return get_norm_grid(pos_to_grid(pos)); }
@@ -98,37 +123,17 @@ void Grid::occupy_pos(vec3 pos, float val) {
 }
 
 void Grid::occupy_slot(ivec3 slot, float val) {
-    /*
-    // NOTE: HASHED CHUNK (DOESNT WORK THO)
-    glm::ivec3 chunk_slot= get_chunk_slot(slot);
-    glm::ivec3 local_slot= get_local_slot(slot);
-    if ((!grid.contains(chunk_slot)||grid.at(chunk_slot)[local_slot.x][local_slot.y][local_slot.z]==0) && val!=0){
-        occupied.push_back(slot);
-    }
-    //grid.insert_or_assign(slot,val);
-    */
     if (!is_in_grid(slot)) {
         return;
     }
     // NORMAL GRID
     if (get_in_grid(slot) == 0) {
-        grid[slot.x][slot.y][slot.z] = val;
+        //FIXME: CHANGE MARKER
+        //grid[slot.x][slot.y][slot.z] = val;
         occupied.push_back(slot);
     }
 }
 void Grid::add_slot(ivec3 slot, float val) {
-    /*
-    // HASHED CHUNKS
-    glm::ivec3 chunk_slot= get_chunk_slot(slot);
-    glm::ivec3 local_slot= get_local_slot(slot);
-    if (!grid.contains(chunk_slot)){
-        grid.insert({chunk_slot,{}});
-    }
-    if (grid.at(chunk_slot)[local_slot.x][local_slot.y][local_slot.z]==0 && val!=0){
-        occupied.push_back(slot);
-    }
-    grid.at(chunk_slot)[local_slot.x][local_slot.y][local_slot.z]+=val; 
-    */
     // NORMAL GRID
     if (!is_in_grid(slot)) {
         return;
@@ -136,18 +141,22 @@ void Grid::add_slot(ivec3 slot, float val) {
     if (get_in_grid(slot) == 0) {
         occupied.push_back(slot);
     }
-    grid[slot.x][slot.y][slot.z] += val;
+    //FIXME: CHANGE MARKER
+    //grid[slot.x][slot.y][slot.z] += val;
 }
 
-void Grid::add_gradient(ivec3 slot, glm::vec3 val) {
-    // NOTE: currently does nothing cause gradient 
-    // is calculated using grid
-    /*
+void Grid::add_ref(glm::ivec3 slot, size_t segment) {
+    // NORMAL GRID
     if (!is_in_grid(slot)) {
         return;
     }
-    //gradient[slot.x][slot.y][slot.z] += val;
-    */
+    if (!has_refs(slot)) {
+        occupied.push_back(slot);
+    }
+    grid[slot.x][slot.y][slot.z].push_back(segment);
+}
+
+void Grid::add_gradient(ivec3 slot, glm::vec3 val) {
 }
 
 void Grid::occupy_line(vec3 start, vec3 end, float val) {
@@ -182,8 +191,9 @@ void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
     }
 }
 
-std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2, Implicit &implicit, std::unordered_map<glm::ivec3, float> prev_visited) {
-    std::unordered_map<glm::ivec3,float> visited = {};
+void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &implicit) {
+    struct Segment s = {.start = p1, .end = p2, .strand_id = strand_id, .f = implicit};
+    segments.push_back(s);
     vec3 diff = p2 - p1;
     vec3 dir = glm::normalize(diff);
     vec3 variance = glm::abs(diff);
@@ -205,12 +215,9 @@ std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2
     axis1_dir[axis1] = 1.0;
     glm::vec3 axis2_dir = glm::vec3(0,0,0);
     axis2_dir[axis2] = 1.0;
-    //int d1 = std::ceil(std::sqrt(std::pow(implicit.cutoff,2)/(1-std::pow(glm::dot(axis1_dir,dir),2))) / scale), 
-    //    d2 = std::ceil(std::sqrt(std::pow(implicit.cutoff,2)/(1-std::pow(glm::dot(axis2_dir,dir),2))) / scale);
-    int n = std::ceil(implicit.cutoff / scale);
+    int n = std::ceil((implicit.cutoff) / scale);
     int d1 = n,
         d2 = n;
-    //std::cout<<"n: "<<n<<" d1: "<<d1<<" d2: "<<d2<<std::endl;
 
     vector<ivec3> voxels = get_voxels_line(segment_start, segment_end);
     glm::ivec3 init_slot = pos_to_grid(p1);
@@ -226,25 +233,14 @@ std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2
         if (last_main_axis != voxels[i][main_axis]) { // Add all
             for (int i1 = l1_start; i1 <= l1_end; i1++) {
                 for (int i2 = l2_start; i2 <= l2_end; i2++) {
-                    ivec3 slot_to_fill = voxels[i-1];
+                    ivec3 slot_to_fill = voxels[i];
                     slot_to_fill[axis1] += i1;
                     slot_to_fill[axis2] += i2;
                     vec3 pos = grid_to_pos(slot_to_fill);
                     float val = implicit.eval(pos, p1, p2);
-                    if (val != 0) {
-                        if (prev_visited.contains(slot_to_fill)){
-                            // Don't double add
-                            float prev_val = prev_visited.at(slot_to_fill);
-                            if (prev_val < val){
-                                add_slot(slot_to_fill, val-prev_val);
-                                visited.insert({slot_to_fill,val});
-                            }else{
-                                visited.insert({slot_to_fill,prev_val});
-                            }
-                        }else {
-                            add_slot(slot_to_fill, val);
-                            visited.insert({slot_to_fill,val});
-                        }
+                    //FIXME: CHANGE MARKER
+                    if (val != 0 || scale > 0.02) {
+                        add_ref(slot_to_fill, segments.size()-1);
                     }
                 }
             }
@@ -272,44 +268,27 @@ std::unordered_map<glm::ivec3, float> Grid::fill_line(glm::vec3 p1, glm::vec3 p2
         last_axis1 = voxels[i][axis1];
         last_axis2 = voxels[i][axis2];
     }
-    return visited;
 }
 
-void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit, bool use_max){
-    std::unordered_map<glm::ivec3,float> visited = fill_line(path[0], path[1], implicit);
+//FIXME: CHANGED THIS
+void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit){
+    /*
+    fill_line(0, path[0], path[1], implicit);
     for (int i = 1; i<path.size()-1; i++){
-        if (use_max){
-            visited = fill_line(path[i], path[i + 1], implicit,visited);
-        }else{
-            fill_line(path[i], path[i + 1], implicit);
-        }
+        fill_line(0, path[i], path[i + 1], implicit);
     }
+    */
 }
-void Grid::fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, bool use_max, bool is_texture){
-    float b=shoot_b;
-    float shoot_b_step = (max_b-shoot_b)/inflection_point;
-    float root_b_step = (root_b-max_b)/(path.size()-inflection_point-1);
-    MetaBalls current_metaballs = MetaBalls(max_val,b);
-    LinearField current_linearfield= LinearField(max_val,b);
-    DistanceField* current_implicit;
-    if (is_texture){
-        current_implicit = &current_linearfield;
-    }else{
-        current_implicit = &current_metaballs;
-    }
-    std::unordered_map<glm::ivec3, float> visited = fill_line(path[0], path[1], *current_implicit);
-    for (int i = 1; i<path.size()-1; i++){
-        b += inflection_point>=i? shoot_b_step : root_b_step;
-        if (is_texture){
-            current_linearfield = LinearField(max_val,b);
+void Grid::fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point){
+    for (int i = 0; i<path.size()-1; i++){
+        float b;
+        if (i<=inflection_point){
+            b = std::lerp(shoot_b, max_b, (float)i/inflection_point);
         }else{
-            current_metaballs = MetaBalls(max_val,b);
+            b = std::lerp(max_b, root_b, (float)(i-inflection_point)/(path.size()-2-inflection_point));
         }
-        if (use_max){
-            visited = fill_line(path[i], path[i + 1], *current_implicit,visited);
-        }else{
-            fill_line(path[i], path[i + 1], *current_implicit);
-        }
+        MetaBalls implicit = MetaBalls(max_val, b);
+        fill_line(strand_id, path[i], path[i + 1], implicit);
     }
 }
 
@@ -328,7 +307,7 @@ float Grid::fill_skeleton(const Skeleton::Node& node, float min_range){
     //std::cout<<range<<" "<<min_range<<std::endl;
     if (node.parent != nullptr){  
         MetaBalls imp(3.0,range);
-        fill_line(frame_position(node.frame),frame_position(node.parent->frame), imp);
+        fill_line(0, frame_position(node.frame),frame_position(node.parent->frame), imp);
     }
     return range+0.0001;
 }

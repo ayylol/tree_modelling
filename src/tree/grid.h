@@ -39,18 +39,20 @@ public:
     void occupy_pos(glm::vec3 pos, float val);
     void occupy_slot(glm::ivec3 pos, float val);
     void add_slot(glm::ivec3 slot, float val);
+    void add_ref(glm::ivec3 slot, size_t segment);
     void add_gradient(glm::ivec3 slot, glm::vec3 val);
     void occupy_line(glm::vec3 start, glm::vec3 end, float val);
     void occupy_path(std::vector<glm::vec3> path, float val);
 
     // Implicit Filling
-    //void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
-    void fill_path(std::vector<glm::vec3> path, Implicit& implicit, bool use_max=true);
-    void fill_path(std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point, bool use_max=true, bool is_texture=false);
-    std::unordered_map<glm::ivec3, float> fill_line(glm::vec3 p1, glm::vec3 p2, Implicit& implicit, std::unordered_map<glm::ivec3, float> prev_visited = {});
+    void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
+    void fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
+    void fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls& implicit);
     void fill_point(glm::vec3 p, Implicit& implicit);
     float fill_skeleton(const Skeleton::Node& node, float min_range);
 
+    bool has_refs(glm::ivec3 index) const;
+    float eval_pos(glm::vec3 pos) const;
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;
     glm::vec3 get_norm_grid(glm::ivec3 index) const;
@@ -67,25 +69,15 @@ public:
     Mesh<VertFlat> get_grid_geom() const;
     Mesh<VertFlat> get_bound_geom() const;
     Mesh<Vertex> get_occupied_voxels(float threshold) const;
-    //Mesh<Vertex> get_occupied_geom(float threshold, std::pair<glm::vec3,glm::vec3> vis_bounds={glm::vec3(),glm::vec3()}) const;
     Mesh<Vertex> get_occupied_geom(float threshold, Grid& texture_space, std::pair<glm::vec3,glm::vec3> vis_bounds={glm::vec3(),glm::vec3()}) const;
     Mesh<VertFlat> get_occupied_geom_points(float threshold) const;
     Mesh<VertFlat> get_normals_geom(float threshold) const;
 
     void export_data(const char * filename);
 private:
-    // NOTE: FOR REGULAR GRID
-    std::vector<std::vector<std::vector<float>>> grid;
-/*
-// NOTE: FOR HASHED CHUNKS
-#define CHUNKSIZE 50
-    glm::ivec3 get_chunk_slot(glm::ivec3 slot)const{return slot / CHUNKSIZE;}
-    glm::ivec3 get_local_slot(glm::ivec3 slot)const{return slot % CHUNKSIZE;}
-    std::unordered_map<glm::ivec3, std::array<std::array<std::array<float,CHUNKSIZE>,CHUNKSIZE>,CHUNKSIZE>> grid;
-    */
-
-    //std::vector<std::vector<std::vector<glm::vec3>>> gradient;
+    std::vector<std::vector<std::vector<std::vector<size_t>>>> grid;
     std::vector<glm::ivec3> occupied;
+    std::vector<struct Segment> segments;
 
     glm::ivec3 dimensions;
     float scale;
