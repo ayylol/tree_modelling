@@ -63,7 +63,7 @@ std::string image_prefix = "./tree";
 
 // Toggles
 bool view_mesh = true, 
-     view_volume = true, 
+     view_volume = false, 
      view_strands = false,
      view_normals = false,
      view_skeleton = false,
@@ -89,9 +89,8 @@ int main(int argc, char *argv[]) {
     // Ready window
     GLFWwindow *window = openGLInit();
 
-    // Readying Shaders
-    Shader flat_shader("resources/shaders/flat.vert",
-            "resources/shaders/flat.frag");
+    // Readying Shaders 
+    Shader flat_shader("resources/shaders/flat.vert", "resources/shaders/flat.frag");
     Shader shader("resources/shaders/default.vert",
             "resources/shaders/default.frag");
 
@@ -192,15 +191,11 @@ int main(int argc, char *argv[]) {
     float surface_val = opt_data.at("mesh_iso");
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
-    //Mesh texture_strands = detail.get_mesh(0.0,1.0,Strands::Texture);
-    //STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(0.1f););
-    //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
     STOPWATCH("Getting Occupied Volume", Mesh fine_volume = texture_grid.get_occupied_voxels(0.0f););
     STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_voxels(0.0f););
     STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
     STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
-    /*
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
         STOPWATCH("Exporting Data", 
                     //gr.export_data("data.txt");
@@ -208,7 +203,6 @@ int main(int argc, char *argv[]) {
                     has_exported = true;
                 );
     }
-    */
 
     // GROUND PLANE
     glm::vec3 ground_color = glm::vec3(0, 0.3, 0.02);
@@ -245,14 +239,11 @@ int main(int argc, char *argv[]) {
 
         // Draw the meshes here
         if (view_mesh) {
-            fine_volume.draw(shader, CAMERA, GL_TRIANGLES);
-            //tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
+            tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
             //texture_strands.draw(flat_shader, CAMERA, GL_LINES);
 
         }
-        //if (view_volume) volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         if (view_volume) {
-            //fine_volume.draw(flat_shader, CAMERA, GL_POINTS);
             volume_geom.draw(shader, CAMERA, GL_TRIANGLES);
         }
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
@@ -270,7 +261,7 @@ int main(int argc, char *argv[]) {
         }
         if (export_mesh){
             STOPWATCH("Exporting Data", 
-            //save_mesh(tree_geom);
+            save_mesh(tree_geom);
             has_exported = true;
             export_mesh = false;
             );
@@ -324,7 +315,7 @@ GLFWwindow *openGLInit() {
     glPointSize(2.f);
     //glPolygonMode( GL_BACK, GL_LINE );
     //glPolygonMode( GL_FRONT, GL_POINT );
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     glEnable(GL_DEPTH_TEST);
 
     return window;

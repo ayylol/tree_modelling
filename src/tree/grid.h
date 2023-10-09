@@ -53,6 +53,7 @@ public:
 
     bool has_refs(glm::ivec3 index) const;
     float eval_pos(glm::vec3 pos) const;
+    glm::vec3 eval_norm(glm::vec3 pos) const;
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;
     glm::vec3 get_norm_grid(glm::ivec3 index) const;
@@ -69,7 +70,7 @@ public:
     Mesh<VertFlat> get_grid_geom() const;
     Mesh<VertFlat> get_bound_geom() const;
     Mesh<Vertex> get_occupied_voxels(float threshold) const;
-    Mesh<Vertex> get_occupied_geom(float threshold, Grid& texture_space, std::pair<glm::vec3,glm::vec3> vis_bounds={glm::vec3(),glm::vec3()}) const;
+    Mesh<Vertex> get_occupied_geom(float threshold, Grid& texture_space) const;
     Mesh<VertFlat> get_occupied_geom_points(float threshold) const;
     Mesh<VertFlat> get_normals_geom(float threshold) const;
 
@@ -94,21 +95,19 @@ private:
         glm::ivec3(0,0,1),  // Front
         glm::ivec3(0,0,-1)  // Back
     };
-
-};
-
-namespace mc{
   struct Sample{
     glm::vec3 pos;
     float val;
     float col_val;
-    glm::vec3 norm;
   };
   using GridCell = std::array<Sample,8>;
+  void polygonize(const GridCell &cell, float threshold, std::vector<Vertex> &verts, std::vector<GLuint> &indices) const;
+  Vertex vertex_interp(float threshold, const Sample& a, const Sample& b) const; 
+
+};
+
+namespace mc{
   extern const glm::ivec3 cell_order[8];
   extern const int edge_table[256];
   extern const int tri_table[256][16];
-  void polygonize(const GridCell &cell, float threshold,
-                  std::vector<Vertex> &verts, std::vector<GLuint> &indices);
-  Vertex vertex_interp(float threshold, const Sample& a, const Sample& b);
-  };
+};
