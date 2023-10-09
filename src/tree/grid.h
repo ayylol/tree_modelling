@@ -54,6 +54,7 @@ public:
     bool has_refs(glm::ivec3 index) const;
     float eval_pos(glm::vec3 pos) const;
     glm::vec3 eval_norm(glm::vec3 pos) const;
+    glm::vec3 eval_gradient(glm::vec3 pos) const;
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;
     glm::vec3 get_norm_grid(glm::ivec3 index) const;
