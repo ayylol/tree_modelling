@@ -98,6 +98,9 @@ float Grid::eval_pos(vec3 pos) const {
     return val;
 }
 glm::vec3 Grid::eval_norm(vec3 pos) const { 
+    return glm::normalize(eval_gradient(pos));
+}
+glm::vec3 Grid::eval_gradient(vec3 pos) const { 
     const float step_size = 0.0001f;
     float x = (eval_pos(pos - vec3(step_size, 0, 0)) - eval_pos(pos + vec3(step_size, 0, 0)));
     float y = (eval_pos(pos - vec3(0, step_size, 0)) - eval_pos(pos + vec3(0, step_size, 0)));
@@ -108,7 +111,7 @@ glm::vec3 Grid::eval_norm(vec3 pos) const {
     assert(z==z);
     assert(x==0.0f&&x==y&&x==z);
     */
-    return glm::normalize(glm::vec3(x,y,z));
+    return glm::vec3(x,y,z);
 }
 
 // FIXME: CHANGE THIS
