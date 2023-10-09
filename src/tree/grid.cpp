@@ -94,7 +94,21 @@ float Grid::eval_pos(vec3 pos) const {
     for (auto v : strand_vals){
         val += v.second;
     }
+    assert(val==val);
     return val;
+}
+glm::vec3 Grid::eval_norm(vec3 pos) const { 
+    const float step_size = 0.0001f;
+    float x = (eval_pos(pos - vec3(step_size, 0, 0)) - eval_pos(pos + vec3(step_size, 0, 0)));
+    float y = (eval_pos(pos - vec3(0, step_size, 0)) - eval_pos(pos + vec3(0, step_size, 0)));
+    float z = (eval_pos(pos - vec3(0, 0, step_size)) - eval_pos(pos + vec3(0, 0, step_size)));
+    /*
+    assert(x==x);
+    assert(y==y);
+    assert(z==z);
+    assert(x==0.0f&&x==y&&x==z);
+    */
+    return glm::normalize(glm::vec3(x,y,z));
 }
 
 // FIXME: CHANGE THIS
@@ -104,7 +118,9 @@ glm::vec3 Grid::get_norm_grid(glm::ivec3 index) const {
     //return glm::normalize(glm::vec3((get_in_grid(index + ivec3(-1, 0, 0)) - get_in_grid(index + ivec3(1, 0, 0))), (get_in_grid(index + ivec3(0, -1, 0)) - get_in_grid(index + ivec3(0, 1, 0))), (get_in_grid(index + ivec3(0, 0, -1)) - get_in_grid(index + ivec3(0, 0, 1)))));
     //return glm::normalize(gradient[index.x][index.y][index.z]);
 }
-glm::vec3 Grid::get_norm_pos(glm::vec3 pos) const { return get_norm_grid(pos_to_grid(pos)); }
+glm::vec3 Grid::get_norm_pos(glm::vec3 pos) const { 
+    return get_norm_grid(pos_to_grid(pos)); 
+}
 
 bool Grid::line_occluded(glm::vec3 start, glm::vec3 end) {
     std::vector<glm::ivec3> voxels = get_voxels_line(start, end);
@@ -238,10 +254,7 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
                     slot_to_fill[axis2] += i2;
                     vec3 pos = grid_to_pos(slot_to_fill);
                     float val = implicit.eval(pos, p1, p2);
-                    //FIXME: CHANGE MARKER
-                    if (val != 0 || scale > 0.02) {
-                        add_ref(slot_to_fill, segments.size()-1);
-                    }
+                    add_ref(slot_to_fill, segments.size()-1);
                 }
             }
             l1_end = d1;
@@ -484,92 +497,42 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
     return Mesh(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds) const {
+Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space) const {
+    uint32_t samples = 3;
     using namespace mc;
-    if (vis_bounds.first==glm::vec3() && vis_bounds.second==glm::vec3()){
-        vis_bounds.first = back_bottom_left;
-        vis_bounds.second = back_bottom_left + scale*glm::vec3(dimensions);
-    }
     vector<Vertex> verts;
     vector<GLuint> indices;
     for (auto occupied : occupied){
-        for (int z = -1; z <= 0; z++) {
-            for (int y = -1; y <= 0; y++) {
-                for (int x = -1; x <= 0; x++) {
-                ivec3 offset(x, y, z);
-                ivec3 voxel = occupied + offset;
-                vec3 voxel_pos = back_bottom_left+scale*glm::vec3(voxel);
-                if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
-                    voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
-                    voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
-                if (voxel != occupied && (!is_in_grid(voxel) || get_in_grid(voxel) > threshold)) {
-                    continue;
-                }
-                // TODO: refactor this
-                ivec3 voxel_verts[8]={
-                    voxel+cell_order[0],
-                    voxel+cell_order[1],
-                    voxel+cell_order[2],
-                    voxel+cell_order[3],
-                    voxel+cell_order[4],
-                    voxel+cell_order[5],
-                    voxel+cell_order[6],
-                    voxel+cell_order[7],
-                };
-                GridCell cell = {{
-                {
-                    .pos = grid_to_pos(voxel_verts[0]),
-                    .val = get_in_grid(voxel_verts[0]),
-                    .col_val = texture_space.get_in_grid(voxel_verts[0]),
-                    .norm = get_norm_grid(voxel_verts[0]),
-                },
-                {
-                    .pos = grid_to_pos(voxel_verts[1]),
-                    .val = get_in_grid(voxel_verts[1]),
-                    .col_val = texture_space.get_in_grid(voxel_verts[1]),
-                    .norm = get_norm_grid(voxel_verts[1]),
-                },
-                {
-                    .pos = grid_to_pos(voxel_verts[2]),
-                    .val = get_in_grid(voxel_verts[2]),
-                    .col_val = texture_space.get_in_grid(voxel_verts[2]),
-                    .norm = get_norm_grid(voxel_verts[2]),
-                },
-                {
-                    .pos = grid_to_pos(voxel_verts[3]),
-                    .val = get_in_grid(voxel_verts[3]),
-                    .col_val = texture_space.get_in_grid(voxel_verts[3]),
-                    .norm = get_norm_grid(voxel_verts[3]),
-                },
-                {
-                    .pos = grid_to_pos(voxel_verts[4]),
-                    .val = get_in_grid(voxel_verts[4]),
-                    .col_val = texture_space.get_in_grid(voxel_verts[4]),
-                    .norm = get_norm_grid(voxel_verts[4]),
-                },
-                {
-                    .pos = grid_to_pos(voxel_verts[5]),
-                    .val = get_in_grid(voxel_verts[5]),
-                    .col_val = texture_space.get_in_grid(voxel_verts[5]),
-                    .norm = get_norm_grid(voxel_verts[5]),
-                },
-                {
-                    .pos = grid_to_pos(voxel_verts[6]),
-                    .val = get_in_grid(voxel_verts[6]),
-                    .col_val = texture_space.get_in_grid(voxel_verts[6]),
-                    .norm = get_norm_grid(voxel_verts[6]),
-                },
-                {
-                    .pos = grid_to_pos(voxel_verts[7]),
-                    .val = get_in_grid(voxel_verts[7]),
-                    .col_val = texture_space.get_in_grid(voxel_verts[7]),
-                    .norm = get_norm_grid(voxel_verts[7]),
-                },
-                }};
-                polygonize(cell, threshold, verts, indices);
-                }
-            }
-        }
+        vec3 voxel_pos = back_bottom_left+scale*glm::vec3(occupied);
+        for (int z = 0; z < samples; z++) { for (int y = 0; y < samples; y++) { for (int x = 0; x < samples; x++) {
+            vec3 pos = voxel_pos + (scale/samples)*vec3(x,y,z);
+            vec3 cell_pos[8]={
+                pos+vec3(cell_order[0])*(scale/samples),
+                pos+vec3(cell_order[1])*(scale/samples),
+                pos+vec3(cell_order[2])*(scale/samples),
+                pos+vec3(cell_order[3])*(scale/samples),
+                pos+vec3(cell_order[4])*(scale/samples),
+                pos+vec3(cell_order[5])*(scale/samples),
+                pos+vec3(cell_order[6])*(scale/samples),
+                pos+vec3(cell_order[7])*(scale/samples),
+            };
+            GridCell cell = {{
+            { .pos=cell_pos[0], .val=eval_pos(cell_pos[0]), .col_val=0.f },
+            { .pos=cell_pos[1], .val=eval_pos(cell_pos[1]), .col_val=0.f },
+            { .pos=cell_pos[2], .val=eval_pos(cell_pos[2]), .col_val=0.f },
+            { .pos=cell_pos[3], .val=eval_pos(cell_pos[3]), .col_val=0.f },
+            { .pos=cell_pos[4], .val=eval_pos(cell_pos[4]), .col_val=0.f },
+            { .pos=cell_pos[5], .val=eval_pos(cell_pos[5]), .col_val=0.f },
+            { .pos=cell_pos[6], .val=eval_pos(cell_pos[6]), .col_val=0.f },
+            { .pos=cell_pos[7], .val=eval_pos(cell_pos[7]), .col_val=0.f },
+            }};
+            if ((cell[0].val<threshold && cell[1].val<threshold && cell[2].val<threshold && cell[3].val<threshold &&
+                 cell[4].val<threshold && cell[5].val<threshold && cell[6].val<threshold && cell[7].val<threshold) ||
+                (cell[0].val>=threshold && cell[1].val>=threshold && cell[2].val>=threshold && cell[3].val>=threshold &&
+                 cell[4].val>=threshold && cell[5].val>=threshold && cell[6].val>=threshold && cell[7].val>=threshold)
+                ) continue;
+            polygonize(cell, threshold, verts, indices);
+        }}}
     }
     std::cout<<"VERTS: " <<verts.size()<<std::endl;
     return Mesh<Vertex>(verts,indices);
@@ -666,7 +629,8 @@ void Grid::export_data(const char *filename) {
 
 // Marching Cubes
 // BOURKE, P., 1994. Polygonising a Scalar Field (accessed on May 16, 2023). URL: http://paulbourke.net/geometry/polygonise/
-void mc::polygonize(const GridCell& cell, float threshold, vector<Vertex>& verts, vector<GLuint>& indices){
+void Grid::polygonize(const GridCell& cell, float threshold, vector<Vertex>& verts, vector<GLuint>& indices) const{
+    using namespace mc;
     int i;
     int cubeindex;
     struct vert_index{
@@ -707,7 +671,7 @@ void mc::polygonize(const GridCell& cell, float threshold, vector<Vertex>& verts
         indices.push_back(vertlist[tri_table[cubeindex][i+2]].i);
     }
 }
-Vertex mc::vertex_interp(float threshold, const mc::Sample& a, const mc::Sample& b){
+Vertex Grid::vertex_interp(float threshold, const Grid::Sample& a, const Grid::Sample& b) const{
     vec3 brown0(0.08,0.05,0.01);
     vec3 brown1(0.2,0.16,0.02);
     float max_col_val = 5.0f;
@@ -716,27 +680,26 @@ Vertex mc::vertex_interp(float threshold, const mc::Sample& a, const mc::Sample&
     float col_factor;
     if (std::abs(threshold - a.val) < 0.00001) {
         v.position = a.pos;
-        v.normal = a.norm;
         col_factor = a.col_val;
     } 
     else if (std::abs(threshold - b.val) < 0.00001) {
         v.position = b.pos;
-        v.normal = b.norm;
         col_factor = b.col_val;
     } 
     else if (std::abs(threshold - b.val) < 0.00001) {
         v.position = a.pos;
-        v.normal = a.norm;
         col_factor = a.col_val;
     }
     else {
         float mu = (threshold - a.val) / (b.val - a.val);
         v.position = a.pos + mu*(b.pos-a.pos);
-        v.normal = a.norm + mu*(b.norm-a.norm);
+        v.normal = eval_norm(v.position);
+        //std::cout<<v.normal<<std::endl;
         col_factor = a.col_val + mu*(b.col_val-a.col_val);
     }
     col_factor = std::clamp((col_factor-min_col_val)/(max_col_val-min_col_val),0.f,1.0f);
-    v.color = (1.0f-col_factor)*brown0+col_factor*brown1;
+    //v.color = (1.0f-col_factor)*brown0+col_factor*brown1;
+    v.color = brown1;
     return v;
 }
 

@@ -129,6 +129,7 @@ void Strands::add_strands(unsigned int amount) {
     float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
     lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
+        //std::cout<<i<<std::endl;
         lookahead_factor=lookahead_factor_current;
         add_strand(paths[i%paths.size()]);
         lookahead_factor_current+=lhf_step;
@@ -179,7 +180,8 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
             if (!on_root){ // switch path
                 if (!target_on_root){
                     target_on_root = true;
-                    //if (type == Structure) method=CanonIso;
+                    // FIXME: CHANGED
+                    if (type == Structure) method=CanonIso;
                     if (select_pos == AtRoot && root_path==nullptr){
                         root_path = &(root_frames[match_root(strand[0])]); 
                         transition_node = closest_index;
@@ -208,12 +210,10 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
                 ext = find_extension_heading(strand.back(), target.frame);
                 break;
             case CanonIso:
-                /*
                 if (!on_root) ext = find_extension_canoniso(
                         strand.back(), last_closest, target.frame, true, std::max(((float)closest_index-transition_node)/(path->size()-transition_node), 0.2f));
                 else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
-                */
-                find_extension_canoniso(strand.back(), last_closest, target.frame, false);
+                //find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 //else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 break;
             case PTFIso:
@@ -246,6 +246,7 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
             if (shoot_closest.travelled < root_closest.travelled){
                 next = shoot_closest;
             }else{
+                //method=CanonIso;
                 next = root_closest;
                 path = root_path;
                 on_root = true;
