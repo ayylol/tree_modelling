@@ -493,8 +493,8 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     // Step along gradient
     num_steps = 0;
     max_steps = 200;
-    while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.eval_pos(extension)-reject_iso)>=0.1&&num_steps<=max_steps){
-        glm::vec3 step = 0.0001f*(grid.eval_pos(extension)-reject_iso)*grid.get_norm_pos(extension);
+    while(!glm::all(glm::isnan(grid.eval_norm(extension)))&&std::abs(grid.eval_pos(extension)-reject_iso)>=0.1&&num_steps<=max_steps){
+        glm::vec3 step = 0.0001f*(grid.eval_pos(extension)-reject_iso)*grid.eval_norm(extension);
         extension += step;
         //extension = from+segment_length*glm::normalize(extension-from);
         num_steps++;
