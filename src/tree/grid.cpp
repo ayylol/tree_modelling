@@ -98,19 +98,19 @@ float Grid::eval_pos(vec3 pos) const {
     return val;
 }
 glm::vec3 Grid::eval_norm(vec3 pos) const { 
-    return glm::normalize(eval_gradient(pos));
+    auto x =glm::normalize(eval_gradient(pos));
+    //assert(glm::any(glm::isnan(x));
+    return x;
 }
 glm::vec3 Grid::eval_gradient(vec3 pos) const { 
-    const float step_size = 0.0001f;
+    const float step_size = 0.0005f;
     float x = (eval_pos(pos - vec3(step_size, 0, 0)) - eval_pos(pos + vec3(step_size, 0, 0)));
     float y = (eval_pos(pos - vec3(0, step_size, 0)) - eval_pos(pos + vec3(0, step_size, 0)));
     float z = (eval_pos(pos - vec3(0, 0, step_size)) - eval_pos(pos + vec3(0, 0, step_size)));
-    /*
     assert(x==x);
     assert(y==y);
     assert(z==z);
-    assert(x==0.0f&&x==y&&x==z);
-    */
+    //assert(!(x==0.0f&&x==y&&x==z));
     return glm::vec3(x,y,z);
 }
 
@@ -501,7 +501,7 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
 }
 
 Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space) const {
-    uint32_t samples = 3;
+    uint32_t samples = 1;
     using namespace mc;
     vector<Vertex> verts;
     vector<GLuint> indices;
