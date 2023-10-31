@@ -97,24 +97,19 @@ float Grid::eval_pos(vec3 pos) const {
     assert(val==val);
     return val;
 }
-glm::vec3 Grid::eval_norm(vec3 pos) const { 
-    auto x =glm::normalize(eval_gradient(pos));
+glm::vec3 Grid::eval_norm(vec3 pos, float step_size) const { 
+    auto x =glm::normalize(eval_gradient(pos, step_size));
     //assert(glm::any(glm::isnan(x));
     return x;
 }
-glm::vec3 Grid::eval_gradient(vec3 pos, float step_size, int recurse) const { 
+glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const { 
     float x = (eval_pos(pos - vec3(step_size, 0, 0)) - eval_pos(pos + vec3(step_size, 0, 0)));
     float y = (eval_pos(pos - vec3(0, step_size, 0)) - eval_pos(pos + vec3(0, step_size, 0)));
     float z = (eval_pos(pos - vec3(0, 0, step_size)) - eval_pos(pos + vec3(0, 0, step_size)));
     assert(x==x);
     assert(y==y);
     assert(z==z);
-    //assert(!(x==0.0f&&x==y&&x==z));
-    /*
-    if (recurse && x==0 && y==0 && z==0){
-        return eval_gradient(pos, step_size*2, recurse-1);
-    }
-    */
+    //assert(!(x==0.0f&&x==y&&x==z)); //FIXME 
     return glm::vec3(x,y,z);
 }
 
@@ -711,7 +706,10 @@ Vertex Grid::vertex_interp(float threshold, const Grid::Sample& a, const Grid::S
     else {
         float mu = (threshold - a.val) / (b.val - a.val);
         v.position = a.pos + mu*(b.pos-a.pos);
-        v.normal = a.norm + mu*(b.norm-a.norm);
+        if (glm::any(glm::isnan(a.norm)) || (glm::any(glm::isnan(b.norm))))
+            v.normal = eval_norm(v.position, 0.0001f);
+        else
+            v.normal = a.norm + mu*(b.norm-a.norm);
         //v.normal = eval_norm(v.position);
         //std::cout<<v.normal<<std::endl;
         col_factor = a.col_val + mu*(b.col_val-a.col_val);
