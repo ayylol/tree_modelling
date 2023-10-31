@@ -102,8 +102,7 @@ glm::vec3 Grid::eval_norm(vec3 pos) const {
     //assert(glm::any(glm::isnan(x));
     return x;
 }
-glm::vec3 Grid::eval_gradient(vec3 pos) const { 
-    const float step_size = 0.0005f;
+glm::vec3 Grid::eval_gradient(vec3 pos, float step_size, int recurse) const { 
     float x = (eval_pos(pos - vec3(step_size, 0, 0)) - eval_pos(pos + vec3(step_size, 0, 0)));
     float y = (eval_pos(pos - vec3(0, step_size, 0)) - eval_pos(pos + vec3(0, step_size, 0)));
     float z = (eval_pos(pos - vec3(0, 0, step_size)) - eval_pos(pos + vec3(0, 0, step_size)));
@@ -111,6 +110,11 @@ glm::vec3 Grid::eval_gradient(vec3 pos) const {
     assert(y==y);
     assert(z==z);
     //assert(!(x==0.0f&&x==y&&x==z));
+    /*
+    if (recurse && x==0 && y==0 && z==0){
+        return eval_gradient(pos, step_size*2, recurse-1);
+    }
+    */
     return glm::vec3(x,y,z);
 }
 
@@ -500,42 +504,53 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
     return Mesh(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space) const {
-    uint32_t samples = 1;
+Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds) const {
     using namespace mc;
+    if (vis_bounds.first==glm::vec3() && vis_bounds.second==glm::vec3()){
+        vis_bounds.first = back_bottom_left;
+        vis_bounds.second = back_bottom_left + scale*glm::vec3(dimensions);
+    }
     vector<Vertex> verts;
     vector<GLuint> indices;
     for (auto occupied : occupied){
-        vec3 voxel_pos = back_bottom_left+scale*glm::vec3(occupied);
-        for (int z = 0; z < samples; z++) { for (int y = 0; y < samples; y++) { for (int x = 0; x < samples; x++) {
-            vec3 pos = voxel_pos + (scale/samples)*vec3(x,y,z);
-            vec3 cell_pos[8]={
-                pos+vec3(cell_order[0])*(scale/samples),
-                pos+vec3(cell_order[1])*(scale/samples),
-                pos+vec3(cell_order[2])*(scale/samples),
-                pos+vec3(cell_order[3])*(scale/samples),
-                pos+vec3(cell_order[4])*(scale/samples),
-                pos+vec3(cell_order[5])*(scale/samples),
-                pos+vec3(cell_order[6])*(scale/samples),
-                pos+vec3(cell_order[7])*(scale/samples),
-            };
-            GridCell cell = {{
-            { .pos=cell_pos[0], .val=eval_pos(cell_pos[0]), .col_val=0.f },
-            { .pos=cell_pos[1], .val=eval_pos(cell_pos[1]), .col_val=0.f },
-            { .pos=cell_pos[2], .val=eval_pos(cell_pos[2]), .col_val=0.f },
-            { .pos=cell_pos[3], .val=eval_pos(cell_pos[3]), .col_val=0.f },
-            { .pos=cell_pos[4], .val=eval_pos(cell_pos[4]), .col_val=0.f },
-            { .pos=cell_pos[5], .val=eval_pos(cell_pos[5]), .col_val=0.f },
-            { .pos=cell_pos[6], .val=eval_pos(cell_pos[6]), .col_val=0.f },
-            { .pos=cell_pos[7], .val=eval_pos(cell_pos[7]), .col_val=0.f },
-            }};
-            if ((cell[0].val<threshold && cell[1].val<threshold && cell[2].val<threshold && cell[3].val<threshold &&
-                 cell[4].val<threshold && cell[5].val<threshold && cell[6].val<threshold && cell[7].val<threshold) ||
-                (cell[0].val>=threshold && cell[1].val>=threshold && cell[2].val>=threshold && cell[3].val>=threshold &&
-                 cell[4].val>=threshold && cell[5].val>=threshold && cell[6].val>=threshold && cell[7].val>=threshold)
-                ) continue;
-            polygonize(cell, threshold, verts, indices);
-        }}}
+        for (int z = -1; z <= 0; z++) {
+            for (int y = -1; y <= 0; y++) {
+                for (int x = -1; x <= 0; x++) {
+                ivec3 offset(x, y, z);
+                ivec3 voxel = occupied + offset;
+                vec3 voxel_pos = back_bottom_left+scale*glm::vec3(voxel);
+                if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
+                    voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
+                    voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
+                if (voxel != occupied && (!is_in_grid(voxel) || get_in_grid(voxel) > threshold)) {
+                    continue;
+                }
+                // TODO: refactor this
+                vec3 cell_pos[8]={
+                    grid_to_pos(voxel+cell_order[0]),
+                    grid_to_pos(voxel+cell_order[1]),
+                    grid_to_pos(voxel+cell_order[2]),
+                    grid_to_pos(voxel+cell_order[3]),
+                    grid_to_pos(voxel+cell_order[4]),
+                    grid_to_pos(voxel+cell_order[5]),
+                    grid_to_pos(voxel+cell_order[6]),
+                    grid_to_pos(voxel+cell_order[7]),
+                };
+                GridCell cell = {{
+                    { .pos=cell_pos[0], .val=eval_pos(cell_pos[0]), .norm=eval_norm(cell_pos[0]), .col_val=0.f },
+                    { .pos=cell_pos[1], .val=eval_pos(cell_pos[1]), .norm=eval_norm(cell_pos[1]),.col_val=0.f },
+                    { .pos=cell_pos[2], .val=eval_pos(cell_pos[2]), .norm=eval_norm(cell_pos[2]),.col_val=0.f },
+                    { .pos=cell_pos[3], .val=eval_pos(cell_pos[3]), .norm=eval_norm(cell_pos[3]),.col_val=0.f },
+                    { .pos=cell_pos[4], .val=eval_pos(cell_pos[4]), .norm=eval_norm(cell_pos[4]),.col_val=0.f },
+                    { .pos=cell_pos[5], .val=eval_pos(cell_pos[5]), .norm=eval_norm(cell_pos[5]),.col_val=0.f },
+                    { .pos=cell_pos[6], .val=eval_pos(cell_pos[6]), .norm=eval_norm(cell_pos[6]),.col_val=0.f },
+                    { .pos=cell_pos[7], .val=eval_pos(cell_pos[7]), .norm=eval_norm(cell_pos[7]),.col_val=0.f },
+                }};
+
+                polygonize(cell, threshold, verts, indices);
+                }
+            }
+        }
     }
     std::cout<<"VERTS: " <<verts.size()<<std::endl;
     return Mesh<Vertex>(verts,indices);
@@ -696,7 +711,8 @@ Vertex Grid::vertex_interp(float threshold, const Grid::Sample& a, const Grid::S
     else {
         float mu = (threshold - a.val) / (b.val - a.val);
         v.position = a.pos + mu*(b.pos-a.pos);
-        v.normal = eval_norm(v.position);
+        v.normal = a.norm + mu*(b.norm-a.norm);
+        //v.normal = eval_norm(v.position);
         //std::cout<<v.normal<<std::endl;
         col_factor = a.col_val + mu*(b.col_val-a.col_val);
     }
