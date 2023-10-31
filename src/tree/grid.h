@@ -54,7 +54,7 @@ public:
     bool has_refs(glm::ivec3 index) const;
     float eval_pos(glm::vec3 pos) const;
     glm::vec3 eval_norm(glm::vec3 pos) const;
-    glm::vec3 eval_gradient(glm::vec3 pos) const;
+    glm::vec3 eval_gradient(glm::vec3 pos, float step_size=0.0005f, int recurse=1) const;
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;
     glm::vec3 get_norm_grid(glm::ivec3 index) const;
@@ -71,7 +71,8 @@ public:
     Mesh<VertFlat> get_grid_geom() const;
     Mesh<VertFlat> get_bound_geom() const;
     Mesh<Vertex> get_occupied_voxels(float threshold) const;
-    Mesh<Vertex> get_occupied_geom(float threshold, Grid& texture_space) const;
+    //Mesh<Vertex> get_occupied_geom(float threshold, Grid& texture_space) const;
+    Mesh<Vertex> get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds= {glm::vec3(),glm::vec3()}) const;
     Mesh<VertFlat> get_occupied_geom_points(float threshold) const;
     Mesh<VertFlat> get_normals_geom(float threshold) const;
 
@@ -99,6 +100,7 @@ private:
   struct Sample{
     glm::vec3 pos;
     float val;
+    glm::vec3 norm;
     float col_val;
   };
   using GridCell = std::array<Sample,8>;

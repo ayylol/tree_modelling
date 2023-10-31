@@ -4,6 +4,7 @@
 #include "glm/geometric.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "glm/gtx/vector_angle.hpp"
+#include "glm/gtc/epsilon.hpp"
 #include "tree/implicit.h"
 #include <glm/gtx/io.hpp>
 
@@ -177,6 +178,7 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
         }else{
             target = find_target(*path, closest_index, distance_to_travel);
         }
+
         if (target.index == path->size()-1) {
             if (!on_root){ // switch path
                 if (!target_on_root){
@@ -214,6 +216,7 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
                 if (!on_root) ext = find_extension_canoniso(
                         strand.back(), last_closest, target.frame, true, std::max(((float)closest_index-transition_node)/(path->size()-transition_node), 0.2f));
                 else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
+                //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true, std::max(((float)closest_index-transition_node)/(path->size()-transition_node), 0.2f));
                 //find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 //else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
                 break;
@@ -474,7 +477,8 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     int num_steps = 0;
     int max_steps = 50;
     glm::vec3 step =0.02f*(target_extension-extension);
-    while (glm::all(glm::isnan(grid.get_norm_pos(extension))) && num_steps<=max_steps){
+    //while (glm::all(glm::isnan(grid.eval_gradient(extension))) && num_steps<=max_steps){
+    while(glm::all(glm::lessThan(glm::abs(grid.eval_gradient(extension)), glm::vec3(0.0001f)))&&num_steps<=max_steps){
         extension+=step;
         num_steps++;
     }
