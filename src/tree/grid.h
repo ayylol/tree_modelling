@@ -25,11 +25,6 @@
 class Grid
 {
 public:
-    Grid(
-        glm::ivec3 dimensions, 
-        float scale = 1.f, 
-        glm::vec3 back_bottom_left = {0.f,0.f,0.f}
-        );
     Grid(const Skeleton& tree, float percent_overshoot, float scale_factor=1.f);
 
     float get_scale() { return scale; }
@@ -53,12 +48,17 @@ public:
 
     bool has_refs(glm::ivec3 index) const;
     float eval_pos(glm::vec3 pos) const;
+    float lazy_in_check(glm::ivec3 slot, float threshold);
+    float lazy_eval(glm::ivec3 slot);
     glm::vec3 eval_norm(glm::vec3 pos, float step_size=0.0005f) const;
     glm::vec3 eval_gradient(glm::vec3 pos, float step_size=0.0005f) const;
+
+    // TODO: Remove these ////////////////////////
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;
     glm::vec3 get_norm_grid(glm::ivec3 index) const;
     glm::vec3 get_norm_pos(glm::vec3 pos) const;
+    /////////////////////////////////////////////
 
     bool line_occluded(glm::vec3 start, glm::vec3 end);
 
@@ -72,13 +72,19 @@ public:
     Mesh<VertFlat> get_bound_geom() const;
     Mesh<Vertex> get_occupied_voxels(float threshold) const;
     //Mesh<Vertex> get_occupied_geom(float threshold, Grid& texture_space) const;
-    Mesh<Vertex> get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds= {glm::vec3(),glm::vec3()}) const;
+    Mesh<Vertex> get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds= {glm::vec3(),glm::vec3()});
     Mesh<VertFlat> get_occupied_geom_points(float threshold) const;
     Mesh<VertFlat> get_normals_geom(float threshold) const;
 
     void export_data(const char * filename);
 private:
+    struct Eval {
+        float val   = 0.0;
+        size_t checked = 0;
+        std::unordered_map<uint32_t, float> strands_checked;
+    };
     std::vector<std::vector<std::vector<std::vector<size_t>>>> grid;
+    std::vector<std::vector<std::vector<struct Eval>>> eval_grid;
     std::vector<glm::ivec3> occupied;
     std::vector<struct Segment> segments;
 

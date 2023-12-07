@@ -183,6 +183,7 @@ int main(int argc, char *argv[]) {
     //gr.occupy_line(path[1],path[2],1);
     //gr.fill_line(path[1],path[3], *df);
 
+    // FIXME: Uncomment
     STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
     delete df;
     //delete df2;
@@ -191,7 +192,7 @@ int main(int argc, char *argv[]) {
     float surface_val = opt_data.at("mesh_iso");
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
-    STOPWATCH("Getting Occupied Volume", Mesh fine_volume = texture_grid.get_occupied_voxels(0.0f););
+    //STOPWATCH("Getting Occupied Volume", Mesh fine_volume = texture_grid.get_occupied_voxels(0.0f););
     STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_voxels(0.0f););
     STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
     STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););

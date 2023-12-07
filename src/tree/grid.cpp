@@ -16,26 +16,19 @@ using glm::vec3;
 using std::tuple;
 using std::vector;
 
-Grid::Grid(ivec3 dimensions, float scale, vec3 back_bottom_left)
-    : dimensions(dimensions),
-      grid(dimensions.x,vector<vector<vector<size_t>>>(
-                  dimensions.y, vector<vector<size_t>>(
-                      dimensions.z,vector<size_t>()))),
-      scale(scale), back_bottom_left(back_bottom_left),
-      center(back_bottom_left + (scale / 2.f) * (vec3)dimensions) {}
-
 Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
-    glm::vec3 bounds_size = tree.get_bounds().second - tree.get_bounds().first;
-    back_bottom_left = tree.get_bounds().first 
-                        - (bounds_size * percent_overshoot);
-    glm::vec3 front_top_right = tree.get_bounds().second 
-                                + (bounds_size * percent_overshoot);
+    vec3 bounds_size = tree.get_bounds().second - tree.get_bounds().first;
+    back_bottom_left = tree.get_bounds().first - (bounds_size * percent_overshoot);
+    vec3 front_top_right = tree.get_bounds().second + (bounds_size * percent_overshoot);
     center = 0.5f*(back_bottom_left+front_top_right);
     scale = tree.get_average_length() * scale_factor;
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
-    grid =vector<vector<vector<vector<size_t>>>>(dimensions.x, 
-            vector<vector<vector<size_t>>>(dimensions.y, (
-                    vector<vector<size_t>>(dimensions.z))));
+    grid =  vector<vector<vector<vector<size_t>>>>(dimensions.x, 
+            vector<vector<vector<size_t>>>(dimensions.y,
+            vector<vector<size_t>>(dimensions.z)));
+    eval_grid = vector<vector<vector<struct Eval>>>(dimensions.x, 
+                vector<vector<struct Eval>>(dimensions.y,
+                vector<struct Eval>(dimensions.z)));
     std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 
@@ -53,6 +46,7 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
             grid_cell.z < dimensions.z;
 }
 
+// TODO: remove this function
 float Grid::get_in_grid(ivec3 index) const {
     // REGULAR GRID
     if (!is_in_grid(index)) {
@@ -71,6 +65,7 @@ bool Grid::has_refs(ivec3 index) const {
     return !(grid[index.x][index.y][index.z].empty());
 }
 
+// TODO: remove this function
 float Grid::get_in_pos(vec3 pos) const { return get_in_grid(pos_to_grid(pos)); }
 
 float Grid::eval_pos(vec3 pos) const { 
@@ -81,6 +76,7 @@ float Grid::eval_pos(vec3 pos) const {
     std::unordered_map<uint32_t, float> strand_vals;
     auto slot_refs = grid[slot.x][slot.y][slot.z];
     for (size_t i : slot_refs){
+        // TODO: Extract to function
         struct Segment segment = segments[i]; 
         float v = segment.f.eval(pos, segment.start,segment.end);
         if (strand_vals.contains(segment.strand_id)){
@@ -89,6 +85,7 @@ float Grid::eval_pos(vec3 pos) const {
         }else{
             strand_vals[segment.strand_id] = v;
         }
+        //
     }
     float val = 0.f;
     for (auto v : strand_vals){
@@ -97,6 +94,35 @@ float Grid::eval_pos(vec3 pos) const {
     assert(val==val);
     return val;
 }
+float Grid::lazy_in_check(glm::ivec3 slot, float threshold){
+    vec3 pos = grid_to_pos(slot);
+    struct Eval& eval_slot = eval_grid[slot.x][slot.y][slot.z];
+    std::vector<size_t>& strands = grid[slot.x][slot.y][slot.z];
+    int i;
+    while ((i = eval_slot.checked) < strands.size() && eval_slot.val <= threshold){
+        // Eval based on next strand 
+        struct Segment segment = segments[i]; 
+        float v = segment.f.eval(pos,segment.start,segment.end);
+        // Check strand val in dict 
+        if (eval_slot.strands_checked.contains(i)){
+            // If present and larger, replace value in dict and remove old val from lazy val 
+            float old = eval_slot.strands_checked[i];
+            eval_slot.val -= old;
+            eval_slot.val += std::max(old,v);
+            eval_slot.strands_checked[i]=std::max(old,v);
+        }else{
+            // If not present add to value and dict
+            eval_slot.val+=v;
+            eval_slot.strands_checked[i]=v;
+        }
+        eval_slot.checked++;
+    }
+    return eval_slot.val;
+}
+float Grid::lazy_eval(glm::ivec3 slot){
+    return lazy_in_check(slot, FLT_MAX);
+}
+
 glm::vec3 Grid::eval_norm(vec3 pos, float step_size) const { 
     auto x =glm::normalize(eval_gradient(pos, step_size));
     //assert(glm::any(glm::isnan(x));
@@ -113,7 +139,7 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
     return glm::vec3(x,y,z);
 }
 
-// FIXME: CHANGE THIS
+// FIXME: remove these 
 glm::vec3 Grid::get_norm_grid(glm::ivec3 index) const {
     // Grid dependent normals
     return vec3(0,0,0);
@@ -499,7 +525,7 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
     return Mesh(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds) const {
+Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds) {
     using namespace mc;
     if (vis_bounds.first==glm::vec3() && vis_bounds.second==glm::vec3()){
         vis_bounds.first = back_bottom_left;
@@ -508,44 +534,60 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
     vector<Vertex> verts;
     vector<GLuint> indices;
     for (auto occupied : occupied){
-        for (int z = -1; z <= 0; z++) {
-            for (int y = -1; y <= 0; y++) {
-                for (int x = -1; x <= 0; x++) {
-                ivec3 offset(x, y, z);
-                ivec3 voxel = occupied + offset;
-                vec3 voxel_pos = back_bottom_left+scale*glm::vec3(voxel);
-                if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
-                    voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
-                    voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
-                if (voxel != occupied && (!is_in_grid(voxel) || get_in_grid(voxel) > threshold)) {
-                    continue;
-                }
-                // TODO: refactor this
-                vec3 cell_pos[8]={
-                    grid_to_pos(voxel+cell_order[0]),
-                    grid_to_pos(voxel+cell_order[1]),
-                    grid_to_pos(voxel+cell_order[2]),
-                    grid_to_pos(voxel+cell_order[3]),
-                    grid_to_pos(voxel+cell_order[4]),
-                    grid_to_pos(voxel+cell_order[5]),
-                    grid_to_pos(voxel+cell_order[6]),
-                    grid_to_pos(voxel+cell_order[7]),
-                };
-                GridCell cell = {{
-                    { .pos=cell_pos[0], .val=eval_pos(cell_pos[0]), .norm=eval_norm(cell_pos[0]), .col_val=0.f },
-                    { .pos=cell_pos[1], .val=eval_pos(cell_pos[1]), .norm=eval_norm(cell_pos[1]),.col_val=0.f },
-                    { .pos=cell_pos[2], .val=eval_pos(cell_pos[2]), .norm=eval_norm(cell_pos[2]),.col_val=0.f },
-                    { .pos=cell_pos[3], .val=eval_pos(cell_pos[3]), .norm=eval_norm(cell_pos[3]),.col_val=0.f },
-                    { .pos=cell_pos[4], .val=eval_pos(cell_pos[4]), .norm=eval_norm(cell_pos[4]),.col_val=0.f },
-                    { .pos=cell_pos[5], .val=eval_pos(cell_pos[5]), .norm=eval_norm(cell_pos[5]),.col_val=0.f },
-                    { .pos=cell_pos[6], .val=eval_pos(cell_pos[6]), .norm=eval_norm(cell_pos[6]),.col_val=0.f },
-                    { .pos=cell_pos[7], .val=eval_pos(cell_pos[7]), .norm=eval_norm(cell_pos[7]),.col_val=0.f },
-                }};
+        for (int z = -1; z <= 0; z++) { for (int y = -1; y <= 0; y++) { for (int x = -1; x <= 0; x++) {
+            ivec3 offset(x, y, z);
+            ivec3 voxel = occupied + offset;
+            vec3 voxel_pos = back_bottom_left+scale*glm::vec3(voxel);
+            if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
+                voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
+                voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
+            if (voxel != occupied && !is_in_grid(voxel))continue;
 
-                polygonize(cell, threshold, verts, indices);
-                }
+            ivec3 slots[8]={
+                voxel+cell_order[0],
+                voxel+cell_order[1],
+                voxel+cell_order[2],
+                voxel+cell_order[3],
+                voxel+cell_order[4],
+                voxel+cell_order[5],
+                voxel+cell_order[6],
+                voxel+cell_order[7],
+            };
+            vec3 cell_pos[8]={
+                grid_to_pos(slots[0]),
+                grid_to_pos(slots[1]),
+                grid_to_pos(slots[2]),
+                grid_to_pos(slots[3]),
+                grid_to_pos(slots[4]),
+                grid_to_pos(slots[5]),
+                grid_to_pos(slots[6]),
+                grid_to_pos(slots[7]),
+            };
+
+            if (lazy_in_check(slots[0],threshold) >= threshold &&
+                lazy_in_check(slots[1],threshold) >= threshold &&
+                lazy_in_check(slots[2],threshold) >= threshold &&
+                lazy_in_check(slots[3],threshold) >= threshold &&
+                lazy_in_check(slots[4],threshold) >= threshold &&
+                lazy_in_check(slots[5],threshold) >= threshold &&
+                lazy_in_check(slots[6],threshold) >= threshold &&
+                lazy_in_check(slots[7],threshold) >= threshold) {
+                    continue;
             }
-        }
+
+            GridCell cell = {{
+                { .pos=cell_pos[0], .val=eval_pos(cell_pos[0]), .norm=eval_norm(cell_pos[0]),.col_val=0.f },
+                { .pos=cell_pos[1], .val=eval_pos(cell_pos[1]), .norm=eval_norm(cell_pos[1]),.col_val=0.f },
+                { .pos=cell_pos[2], .val=eval_pos(cell_pos[2]), .norm=eval_norm(cell_pos[2]),.col_val=0.f },
+                { .pos=cell_pos[3], .val=eval_pos(cell_pos[3]), .norm=eval_norm(cell_pos[3]),.col_val=0.f },
+                { .pos=cell_pos[4], .val=eval_pos(cell_pos[4]), .norm=eval_norm(cell_pos[4]),.col_val=0.f },
+                { .pos=cell_pos[5], .val=eval_pos(cell_pos[5]), .norm=eval_norm(cell_pos[5]),.col_val=0.f },
+                { .pos=cell_pos[6], .val=eval_pos(cell_pos[6]), .norm=eval_norm(cell_pos[6]),.col_val=0.f },
+                { .pos=cell_pos[7], .val=eval_pos(cell_pos[7]), .norm=eval_norm(cell_pos[7]),.col_val=0.f },
+            }};
+
+            polygonize(cell, threshold, verts, indices);
+        }}}
     }
     std::cout<<"VERTS: " <<verts.size()<<std::endl;
     return Mesh<Vertex>(verts,indices);
