@@ -126,11 +126,25 @@ float Grid::lazy_eval(glm::ivec3 slot){
     return lazy_in_check(slot, FLT_MAX);
 }
 
-glm::vec3 Grid::eval_norm(vec3 pos, float step_size) const { 
-    auto x =glm::normalize(eval_gradient(pos, step_size));
-    //assert(glm::any(glm::isnan(x));
-    return x;
+glm::vec3 Grid::lazy_gradient(ivec3 slot){ 
+    //float x = (eval_pos(slot - vec3(step_size, 0, 0)) - eval_pos(slot + vec3(step_size, 0, 0)));
+    float x = (lazy_eval(slot - ivec3(1, 0, 0)) - lazy_eval(slot + ivec3(1, 0, 0)));
+    float y = (lazy_eval(slot - ivec3(0, 1, 0)) - lazy_eval(slot + ivec3(0, 1, 0)));
+    float z = (lazy_eval(slot - ivec3(0, 0, 1)) - lazy_eval(slot + ivec3(0, 0, 1)));
+    assert(x==x);
+    assert(y==y);
+    assert(z==z);
+    //assert(!(x==0.0f&&x==y&&x==z)); //FIXME 
+    return glm::vec3(x,y,z);
 }
+glm::vec3 Grid::lazy_norm(ivec3 slot){ 
+    return glm::normalize(lazy_gradient(slot));
+}
+
+glm::vec3 Grid::eval_norm(vec3 pos, float step_size) const { 
+    return glm::normalize(eval_gradient(pos, step_size));
+}
+
 glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const { 
     float x = (eval_pos(pos - vec3(step_size, 0, 0)) - eval_pos(pos + vec3(step_size, 0, 0)));
     float y = (eval_pos(pos - vec3(0, step_size, 0)) - eval_pos(pos + vec3(0, step_size, 0)));
@@ -536,15 +550,15 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
     }
     vector<Vertex> verts;
     vector<GLuint> indices;
-    for (auto occupied : occupied){
+    for (auto occupied_slot : occupied){
         for (int z = -1; z <= 0; z++) { for (int y = -1; y <= 0; y++) { for (int x = -1; x <= 0; x++) {
             ivec3 offset(x, y, z);
-            ivec3 voxel = occupied + offset;
+            ivec3 voxel = occupied_slot + offset;
             vec3 voxel_pos = back_bottom_left+scale*glm::vec3(voxel);
             if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
                 voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
                 voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
-            if (voxel != occupied && !is_in_grid(voxel))continue;
+            if (voxel != occupied_slot && !is_in_grid(voxel))continue;
 
             ivec3 slots[8]={
                 voxel+cell_order[0],
@@ -579,14 +593,14 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
             }
 
             GridCell cell = {{
-                { .pos=cell_pos[0], .val=lazy_eval(slots[0]), .norm=eval_norm(cell_pos[0]),.col_val=0.f },
-                { .pos=cell_pos[1], .val=lazy_eval(slots[1]), .norm=eval_norm(cell_pos[1]),.col_val=0.f },
-                { .pos=cell_pos[2], .val=lazy_eval(slots[2]), .norm=eval_norm(cell_pos[2]),.col_val=0.f },
-                { .pos=cell_pos[3], .val=lazy_eval(slots[3]), .norm=eval_norm(cell_pos[3]),.col_val=0.f },
-                { .pos=cell_pos[4], .val=lazy_eval(slots[4]), .norm=eval_norm(cell_pos[4]),.col_val=0.f },
-                { .pos=cell_pos[5], .val=lazy_eval(slots[5]), .norm=eval_norm(cell_pos[5]),.col_val=0.f },
-                { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=eval_norm(cell_pos[6]),.col_val=0.f },
-                { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=eval_norm(cell_pos[7]),.col_val=0.f },
+                { .pos=cell_pos[0], .val=lazy_eval(slots[0]), .norm=lazy_norm(slots[0]),.col_val=0.f },
+                { .pos=cell_pos[1], .val=lazy_eval(slots[1]), .norm=lazy_norm(slots[1]),.col_val=0.f },
+                { .pos=cell_pos[2], .val=lazy_eval(slots[2]), .norm=lazy_norm(slots[2]),.col_val=0.f },
+                { .pos=cell_pos[3], .val=lazy_eval(slots[3]), .norm=lazy_norm(slots[3]),.col_val=0.f },
+                { .pos=cell_pos[4], .val=lazy_eval(slots[4]), .norm=lazy_norm(slots[4]),.col_val=0.f },
+                { .pos=cell_pos[5], .val=lazy_eval(slots[5]), .norm=lazy_norm(slots[5]),.col_val=0.f },
+                { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=lazy_norm(slots[6]),.col_val=0.f },
+                { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=lazy_norm(slots[7]),.col_val=0.f },
             }};
 
             polygonize(cell, threshold, verts, indices);
