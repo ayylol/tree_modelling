@@ -95,28 +95,31 @@ float Grid::eval_pos(vec3 pos) const {
     return val;
 }
 float Grid::lazy_in_check(glm::ivec3 slot, float threshold){
+    if (!is_in_grid(slot)) return 0.f;
     vec3 pos = grid_to_pos(slot);
     struct Eval& eval_slot = eval_grid[slot.x][slot.y][slot.z];
     std::vector<size_t>& strands = grid[slot.x][slot.y][slot.z];
     int i;
     while ((i = eval_slot.checked) < strands.size() && eval_slot.val <= threshold){
         // Eval based on next strand 
-        struct Segment segment = segments[i]; 
+        int strand_i = strands[i];
+        struct Segment segment = segments[strand_i]; 
         float v = segment.f.eval(pos,segment.start,segment.end);
         // Check strand val in dict 
-        if (eval_slot.strands_checked.contains(i)){
+        if (eval_slot.strands_checked.contains(segment.strand_id)){
             // If present and larger, replace value in dict and remove old val from lazy val 
-            float old = eval_slot.strands_checked[i];
+            float old = eval_slot.strands_checked[segment.strand_id];
             eval_slot.val -= old;
             eval_slot.val += std::max(old,v);
-            eval_slot.strands_checked[i]=std::max(old,v);
+            eval_slot.strands_checked[segment.strand_id]=std::max(old,v);
         }else{
             // If not present add to value and dict
             eval_slot.val+=v;
-            eval_slot.strands_checked[i]=v;
+            eval_slot.strands_checked[segment.strand_id]=v;
         }
         eval_slot.checked++;
     }
+    //std::cout <<strands.size()<<" "<<eval_slot.val<<std::endl;
     return eval_slot.val;
 }
 float Grid::lazy_eval(glm::ivec3 slot){
@@ -576,14 +579,14 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
             }
 
             GridCell cell = {{
-                { .pos=cell_pos[0], .val=eval_pos(cell_pos[0]), .norm=eval_norm(cell_pos[0]),.col_val=0.f },
-                { .pos=cell_pos[1], .val=eval_pos(cell_pos[1]), .norm=eval_norm(cell_pos[1]),.col_val=0.f },
-                { .pos=cell_pos[2], .val=eval_pos(cell_pos[2]), .norm=eval_norm(cell_pos[2]),.col_val=0.f },
-                { .pos=cell_pos[3], .val=eval_pos(cell_pos[3]), .norm=eval_norm(cell_pos[3]),.col_val=0.f },
-                { .pos=cell_pos[4], .val=eval_pos(cell_pos[4]), .norm=eval_norm(cell_pos[4]),.col_val=0.f },
-                { .pos=cell_pos[5], .val=eval_pos(cell_pos[5]), .norm=eval_norm(cell_pos[5]),.col_val=0.f },
-                { .pos=cell_pos[6], .val=eval_pos(cell_pos[6]), .norm=eval_norm(cell_pos[6]),.col_val=0.f },
-                { .pos=cell_pos[7], .val=eval_pos(cell_pos[7]), .norm=eval_norm(cell_pos[7]),.col_val=0.f },
+                { .pos=cell_pos[0], .val=lazy_eval(slots[0]), .norm=eval_norm(cell_pos[0]),.col_val=0.f },
+                { .pos=cell_pos[1], .val=lazy_eval(slots[1]), .norm=eval_norm(cell_pos[1]),.col_val=0.f },
+                { .pos=cell_pos[2], .val=lazy_eval(slots[2]), .norm=eval_norm(cell_pos[2]),.col_val=0.f },
+                { .pos=cell_pos[3], .val=lazy_eval(slots[3]), .norm=eval_norm(cell_pos[3]),.col_val=0.f },
+                { .pos=cell_pos[4], .val=lazy_eval(slots[4]), .norm=eval_norm(cell_pos[4]),.col_val=0.f },
+                { .pos=cell_pos[5], .val=lazy_eval(slots[5]), .norm=eval_norm(cell_pos[5]),.col_val=0.f },
+                { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=eval_norm(cell_pos[6]),.col_val=0.f },
+                { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=eval_norm(cell_pos[7]),.col_val=0.f },
             }};
 
             polygonize(cell, threshold, verts, indices);

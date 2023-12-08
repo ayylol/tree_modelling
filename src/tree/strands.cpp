@@ -335,6 +335,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         glm::vec3 trial_head = from + segment_length * 
             random_vector(canonical_direction, glm::radians(max_angle));
         float val = grid.eval_pos(trial_head);
+        //float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso);
         if (val<=reject_iso) {
             float distance = glm::distance(trial_head, target_point);
             float angle = glm::angle(trial_head - from, canonical_direction);
