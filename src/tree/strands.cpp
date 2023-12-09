@@ -275,7 +275,7 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
             //FIXME: CHANGE MARKER
             grid.fill_path(strands.size(), strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
             strands.push_back(strand);
-            //texture_grid.fill_path(0, strand, 30.0, 0.028, 0.007, 0.005, inflection);
+            texture_grid.fill_path(strands.size(), strand, 30.0, 0.025, 0.001, 0.003, inflection);
             break;
         case Texture:
             //FIXME: CHANGE MARKER
