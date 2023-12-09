@@ -593,14 +593,14 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
             }
 
             GridCell cell = {{
-                { .pos=cell_pos[0], .val=lazy_eval(slots[0]), .norm=lazy_norm(slots[0]),.col_val=0.f },
-                { .pos=cell_pos[1], .val=lazy_eval(slots[1]), .norm=lazy_norm(slots[1]),.col_val=0.f },
-                { .pos=cell_pos[2], .val=lazy_eval(slots[2]), .norm=lazy_norm(slots[2]),.col_val=0.f },
-                { .pos=cell_pos[3], .val=lazy_eval(slots[3]), .norm=lazy_norm(slots[3]),.col_val=0.f },
-                { .pos=cell_pos[4], .val=lazy_eval(slots[4]), .norm=lazy_norm(slots[4]),.col_val=0.f },
-                { .pos=cell_pos[5], .val=lazy_eval(slots[5]), .norm=lazy_norm(slots[5]),.col_val=0.f },
-                { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=lazy_norm(slots[6]),.col_val=0.f },
-                { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=lazy_norm(slots[7]),.col_val=0.f },
+                { .pos=cell_pos[0], .val=lazy_eval(slots[0]), .norm=lazy_norm(slots[0]),.col_val=texture_space.lazy_eval(slots[0]) },
+                { .pos=cell_pos[1], .val=lazy_eval(slots[1]), .norm=lazy_norm(slots[1]),.col_val=texture_space.lazy_eval(slots[1]) },
+                { .pos=cell_pos[2], .val=lazy_eval(slots[2]), .norm=lazy_norm(slots[2]),.col_val=texture_space.lazy_eval(slots[2]) },
+                { .pos=cell_pos[3], .val=lazy_eval(slots[3]), .norm=lazy_norm(slots[3]),.col_val=texture_space.lazy_eval(slots[3]) },
+                { .pos=cell_pos[4], .val=lazy_eval(slots[4]), .norm=lazy_norm(slots[4]),.col_val=texture_space.lazy_eval(slots[4]) },
+                { .pos=cell_pos[5], .val=lazy_eval(slots[5]), .norm=lazy_norm(slots[5]),.col_val=texture_space.lazy_eval(slots[5]) },
+                { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=lazy_norm(slots[6]),.col_val=texture_space.lazy_eval(slots[6]) },
+                { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=lazy_norm(slots[7]),.col_val=texture_space.lazy_eval(slots[7]) },
             }};
 
             polygonize(cell, threshold, verts, indices);
@@ -744,10 +744,10 @@ void Grid::polygonize(const GridCell& cell, float threshold, vector<Vertex>& ver
     }
 }
 Vertex Grid::vertex_interp(float threshold, const Grid::Sample& a, const Grid::Sample& b) const{
-    vec3 brown0(0.08,0.05,0.01);
-    vec3 brown1(0.2,0.16,0.02);
-    float max_col_val = 5.0f;
+    vec3 col0(0,0,0);
+    vec3 col1(1,1,1);
     float min_col_val = 0.0f;
+    float max_col_val = 15.0f;
     Vertex v = {vec3(),vec3(),vec3()};
     float col_factor;
     if (std::abs(threshold - a.val) < 0.00001) {
@@ -765,17 +765,11 @@ Vertex Grid::vertex_interp(float threshold, const Grid::Sample& a, const Grid::S
     else {
         float mu = (threshold - a.val) / (b.val - a.val);
         v.position = a.pos + mu*(b.pos-a.pos);
-        if (glm::any(glm::isnan(a.norm)) || (glm::any(glm::isnan(b.norm))))
-            v.normal = eval_norm(v.position, 0.0001f);
-        else
-            v.normal = a.norm + mu*(b.norm-a.norm);
-        //v.normal = eval_norm(v.position);
-        //std::cout<<v.normal<<std::endl;
+        v.normal = a.norm + mu*(b.norm-a.norm);
         col_factor = a.col_val + mu*(b.col_val-a.col_val);
     }
     col_factor = std::clamp((col_factor-min_col_val)/(max_col_val-min_col_val),0.f,1.0f);
-    //v.color = (1.0f-col_factor)*brown0+col_factor*brown1;
-    v.color = brown1;
+    v.color = (1.0f-col_factor)*col0+col_factor*col1;
     return v;
 }
 
