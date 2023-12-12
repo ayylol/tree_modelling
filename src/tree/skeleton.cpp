@@ -1,4 +1,5 @@
 #include "tree/skeleton.h"
+#include "glm/ext/matrix_transform.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "glm/gtx/transform.hpp"
 #include "glm/gtx/vector_angle.hpp"
@@ -18,18 +19,15 @@ float Skeleton::get_average_length() const {return average_length;}
 
 
 Skeleton::Skeleton(json& options){
-    auto shoot_stats = parse(shoot_root, leafs, options.at("tree_file"));
-    auto root_stats = parse(root_root, root_tips, options.at("root_file"),shoot_root->frame,BACKWARDS);
-    center_of_mass = shoot_stats.center_of_mass;
+    shoot_stats = parse(shoot_root, leafs, options.at("tree_file"));
+    root_stats = parse(root_root, root_tips, options.at("root_file"),shoot_root->frame,BACKWARDS);
+
+    transform();
+    calculate_stats();
+    //
     float average_shoot_length = (shoot_stats.total_length)/(shoot_stats.num_nodes);
     float average_root_length = (root_stats.total_length)/(root_stats.num_nodes);
-    average_length = (shoot_stats.total_length+root_stats.total_length)/(shoot_stats.num_nodes+root_stats.num_nodes);
-    bounds.first.x =  fmin(shoot_stats.extent.first.x, root_stats.extent.first.x);
-    bounds.first.y =  fmin(shoot_stats.extent.first.y, root_stats.extent.first.y);
-    bounds.first.z =  fmin(shoot_stats.extent.first.z, root_stats.extent.first.z);
-    bounds.second.x = fmax(shoot_stats.extent.second.x,root_stats.extent.second.x);
-    bounds.second.y = fmax(shoot_stats.extent.second.y,root_stats.extent.second.y);
-    bounds.second.z = fmax(shoot_stats.extent.second.z,root_stats.extent.second.z);
+    //
 
     std::cout<<"---- Skeleton Stats ----"<<std::endl;
     std::cout<<"Root Position: "<<frame_position(shoot_root->frame)<<std::endl;
@@ -133,6 +131,42 @@ std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const
     return strand;
 }
 
+void Skeleton::transform_dfs(Node& node, glm::mat4 t){
+    node.frame = t*node.frame;
+    for (auto child : node.children){
+        transform_dfs(node, t);
+    }
+}
+
+void Skeleton::transform(){
+    glm::mat4 shoot_translate = glm::translate(-frame_position(shoot_root->frame));
+    glm::mat4 shoot_rotate = glm::rotate(glm::mat4(), (float)M_PI/2.f, glm::vec3(1,0,0));
+    float shoot_scale_amount = 0.0055/(shoot_stats.total_length/shoot_stats.num_nodes);
+    glm::mat4 shoot_scale = glm::scale(glm::vec3(shoot_scale_amount,shoot_scale_amount,shoot_scale_amount));
+    glm::mat4 shoot_transform = shoot_rotate*shoot_scale*shoot_translate;
+
+    transform_dfs(*shoot_root, shoot_transform);
+    transform_dfs(*shoot_root, glm::mat4());
+}
+
+void Skeleton::calculate_stats(){
+    center_of_mass = shoot_stats.center_of_mass;
+    average_length = (shoot_stats.total_length+root_stats.total_length)/(shoot_stats.num_nodes+root_stats.num_nodes);
+    bounds.first.x =  fmin(shoot_stats.extent.first.x, root_stats.extent.first.x);
+    bounds.first.y =  fmin(shoot_stats.extent.first.y, root_stats.extent.first.y);
+    bounds.first.z =  fmin(shoot_stats.extent.first.z, root_stats.extent.first.z);
+    bounds.second.x = fmax(shoot_stats.extent.second.x,root_stats.extent.second.x);
+    bounds.second.y = fmax(shoot_stats.extent.second.y,root_stats.extent.second.y);
+    bounds.second.z = fmax(shoot_stats.extent.second.z,root_stats.extent.second.z);
+}
+void Skeleton::stats_dfs(Node& node, ParseInfo& stats){
+    stats.num_nodes++;
+    for (auto child : node.children){
+        float dist = glm::length(frame_position(child->frame)-frame_position(node.frame));
+        stats.total_length+=dist;
+        stats_dfs(node, stats);
+    }
+}
 
 Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
                                   std::vector<std::shared_ptr<Node>>& leafs,

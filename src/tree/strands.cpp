@@ -678,37 +678,6 @@ std::optional<glm::vec3> Strands::find_extension_ptfcanoneval(glm::vec3 from, gl
 std::optional<glm::vec3> Strands::find_extension_texture(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
     return {};
 }
-
-/*
-Strands::TargetResult 
-Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, 
-                        size_t start_index, int overshoot){
-    // Initialize vars for hill-climb
-    size_t closest_index = start_index;
-    float lowest_dist2 = glm::distance2(pos, frame_position(path[closest_index]));
-
-    int point_checking = start_index + 1;
-    int overshot = -1;
-
-    // Look for closest point on path
-    while ((point_checking <= path.size()-1) && (overshoot >= overshot)) {
-        float last_lowest_dist2 = lowest_dist2;
-        float dist2 = glm::distance2(pos, frame_position(path[point_checking]));
-        if (dist2 < lowest_dist2) {
-            lowest_dist2 = dist2;
-            closest_index = point_checking;
-        }
-        // Increase overshot counter or reset it
-        if (lowest_dist2 == last_lowest_dist2) {
-            overshot++;
-        } else {
-            overshot = -1;
-        }
-        point_checking++;
-    }
-    return {closest_index, path[closest_index], 0.f};
-}
-*/
 Strands::TargetResult 
 Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, 
                         int start_index, int end_index){
