@@ -63,7 +63,13 @@ class Skeleton{
             std::string filename,
             glm::mat4 init_frame=glm::mat4(0.f),
             Direction dir=FORWARDS);
+        void transform();
+        void transform_dfs(Node& node, glm::mat4 t);
+        void calculate_stats();
+        void stats_dfs(Node& node, ParseInfo& stats);
 
+        ParseInfo shoot_stats;
+        ParseInfo root_stats;
         std::pair<glm::vec3,glm::vec3> bounds;
         glm::vec3 center_of_mass;
         float average_length;
