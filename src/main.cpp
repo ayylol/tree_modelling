@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Tree detail
-    //STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
+    STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
 
     // Creating Meshes
     float surface_val = opt_data.at("mesh_iso");
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
     //STOPWATCH("Getting Occupied Volume", Mesh fine_volume = texture_grid.get_occupied_voxels(0.0f););
     STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_voxels(0.0f););
-    //STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
+    STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
     STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
         if (reset_strands){
-            //strands_geom = detail.get_mesh(strands_start,strands_end);
+            strands_geom = detail.get_mesh(strands_start,strands_end);
             reset_strands = false;
         }
         #define SHOW_CAM_POS 0
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
         if (view_volume) {
             volume_geom.draw(shader, CAMERA, GL_TRIANGLES);
         }
-        //if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
+        if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
         //if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) ground.draw(shader, CAMERA, GL_TRIANGLES);
