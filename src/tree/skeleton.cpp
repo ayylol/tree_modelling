@@ -41,6 +41,7 @@ Skeleton::Skeleton(json& options){
 }
 
 Mesh<VertFlat> Skeleton::get_mesh(){
+    /*
     // Initialize mesh verts and indices
     const float axis_scale=0.005f;
     const VertFlat axis[6] = {
@@ -113,6 +114,68 @@ Mesh<VertFlat> Skeleton::get_mesh(){
         }
     }
     return Mesh(vertices, indices); 
+    */
+    // STICKS
+    // Initialize mesh verts and indices
+    std::vector<VertFlat> vertices;
+    std::vector<GLuint> indices;
+    struct Info{
+        std::shared_ptr<Node> node;
+        GLuint index;   // Index of the node's end point
+        GLuint parent_index=0;   // Index of the node's end point
+        unsigned int children_explored = 0;
+    };
+    Info last_node{shoot_root, 0};
+    std::stack<Info> last_split;
+    bool done = false;
+    bool done_shoot = false;
+    int debug_counter=0;
+    while (!done){
+        unsigned int num_children = last_node.node->children.size();
+        unsigned int explored = last_node.children_explored;
+        // Add node to vertices (first time node is reached)
+        if (explored==0){
+            vertices.push_back(VertFlat{frame_position(last_node.node->frame),random_color()});
+            indices.push_back(last_node.parent_index);
+            indices.push_back(last_node.index);
+        }
+
+        // See how to continue
+        if(num_children==0){
+            // Reached leaf go back to last split
+            if ( last_split.empty() ) {
+                done = true;
+            }
+            else {
+                last_split.top().children_explored++;
+                last_node=last_split.top();
+            }
+        } else if(num_children==1){
+            // Straight path
+            last_node = {last_node.node->children[0],(GLuint)vertices.size(), last_node.index};
+        }else{
+            if (explored<num_children){
+                // Children left to explore
+                if (last_split.empty() || last_split.top().index!=last_node.index){
+                    last_split.push(last_node);
+                }
+                last_node = {last_node.node->children[last_node.children_explored],(GLuint)vertices.size(), last_node.index};
+            }else{
+                // Children all explored
+                if(!last_split.empty()) last_split.pop();
+                if(!last_split.empty()){
+                    last_split.top().children_explored++;
+                    last_node = last_split.top();
+                }else done = true;
+            }
+        }
+        if (done && !done_shoot){
+          done_shoot = true;
+          done = false;
+          last_node = {root_root, 0};
+        }
+    }
+    return Mesh(vertices, indices);
 }
 
 std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const
@@ -131,25 +194,52 @@ std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const
     return strand;
 }
 
-void Skeleton::transform_dfs(Node& node, glm::mat4 t){
-    node.frame = t*node.frame;
-    for (auto child : node.children){
-        transform_dfs(node, t);
+void Skeleton::transform_dfs(Node& node, glm::mat4 t, glm::mat4 s, glm::mat4 r){
+    node.frame = r*s*t*node.frame;
+    for (int i = 0; i<node.children.size();i++){
+        transform_dfs(*node.children[i],t,s,r);
     }
 }
 
 void Skeleton::transform(){
-    glm::mat4 shoot_translate = glm::translate(-frame_position(shoot_root->frame));
-    glm::mat4 shoot_rotate = glm::rotate(glm::mat4(), (float)M_PI/2.f, glm::vec3(1,0,0));
-    float shoot_scale_amount = 0.0055/(shoot_stats.total_length/shoot_stats.num_nodes);
-    glm::mat4 shoot_scale = glm::scale(glm::vec3(shoot_scale_amount,shoot_scale_amount,shoot_scale_amount));
-    glm::mat4 shoot_transform = shoot_rotate*shoot_scale*shoot_translate;
+    //glm::mat4 shoot_t = glm::mat4(1.f);
+    glm::mat4 shoot_t = glm::translate(-frame_position(shoot_root->frame));
+    //glm::mat4 shoot_t = glm::translate(glm::vec3(1,1,1));
+    float shoot_scale_amount = 0.0055f/(shoot_stats.total_length/shoot_stats.num_nodes);
+    glm::mat4 shoot_s = glm::scale(glm::vec3(shoot_scale_amount,shoot_scale_amount,shoot_scale_amount));
+    glm::mat4 shoot_r = glm::rotate(glm::mat4(1.f), (float)-M_PI/2.f, glm::vec3(1,0,0));
+    //glm::mat4 shoot_r = glm::mat4(1.f);
 
-    transform_dfs(*shoot_root, shoot_transform);
-    transform_dfs(*shoot_root, glm::mat4());
+    //glm::mat4 root_t = glm::mat4(1.f);
+    glm::mat4 root_t = glm::translate(-frame_position(root_root->frame));
+    float root_scale_amount = 0.0055f/(root_stats.total_length/root_stats.num_nodes);
+    glm::mat4 root_s = glm::scale(glm::vec3(root_scale_amount,root_scale_amount,root_scale_amount));
+    //glm::mat4 root_r = glm::rotate(glm::mat4(1.f), (float)-M_PI/2.f, glm::vec3(1,0,0));
+    glm::mat4 root_r = glm::mat4(1.f);
+
+    transform_dfs(*shoot_root, shoot_t, shoot_s, shoot_r);
+    transform_dfs(*root_root, root_t, root_s, root_r);
+    std::cout<<frame_position(shoot_root->frame)<<std::endl;
+    std::cout<<frame_position(root_root->frame)<<std::endl;
 }
 
 void Skeleton::calculate_stats(){
+    //Root stats calc
+    root_stats.num_nodes=0;
+    root_stats.total_length=0.f;
+    root_stats.center_of_mass = glm::vec3();
+    root_stats.extent = std::make_pair(glm::vec3(), glm::vec3()),
+    stats_dfs(*root_root,root_stats);
+    root_stats.center_of_mass *= (1.f/root_stats.num_nodes);
+
+    //Root stats calc
+    shoot_stats.num_nodes=0;
+    shoot_stats.total_length=0.f;
+    shoot_stats.center_of_mass = glm::vec3();
+    shoot_stats.extent = std::make_pair(glm::vec3(), glm::vec3()),
+    stats_dfs(*shoot_root,shoot_stats);
+    shoot_stats.center_of_mass *= (1.f/shoot_stats.num_nodes);
+
     center_of_mass = shoot_stats.center_of_mass;
     average_length = (shoot_stats.total_length+root_stats.total_length)/(shoot_stats.num_nodes+root_stats.num_nodes);
     bounds.first.x =  fmin(shoot_stats.extent.first.x, root_stats.extent.first.x);
@@ -160,11 +250,20 @@ void Skeleton::calculate_stats(){
     bounds.second.z = fmax(shoot_stats.extent.second.z,root_stats.extent.second.z);
 }
 void Skeleton::stats_dfs(Node& node, ParseInfo& stats){
+    glm::vec3 position = frame_position(node.frame);
+    stats.extent.first.x = fmin(stats.extent.first.x,position.x);
+    stats.extent.first.y = fmin(stats.extent.first.y,position.y);
+    stats.extent.first.z = fmin(stats.extent.first.z,position.z);
+    stats.extent.second.x = fmax(stats.extent.second.x,position.x);
+    stats.extent.second.y = fmax(stats.extent.second.y,position.y);
+    stats.extent.second.z = fmax(stats.extent.second.z,position.z);
+    stats.center_of_mass += position;
     stats.num_nodes++;
-    for (auto child : node.children){
-        float dist = glm::length(frame_position(child->frame)-frame_position(node.frame));
+    for (int i = 0; i<node.children.size();i++){
+        Node& child = *node.children[i];
+        float dist = glm::length(frame_position(child.frame)-frame_position(node.frame));
         stats.total_length+=dist;
-        stats_dfs(node, stats);
+        stats_dfs(child, stats);
     }
 }
 
@@ -197,11 +296,6 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
         throw std::invalid_argument( "Incorrect file format: Opening parentheses for position not found" );
     glm::vec3 position;
     PARSE_POINT(token, position);
-    /*
-    if (dir == BACKWARDS){
-        position.x-=0.1f;
-    }
-    */
     root->frame = glm::translate(position);
 
     std::stack<std::shared_ptr<Skeleton::Node>> last_split;
@@ -235,11 +329,6 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
         if(token.find("(")!=std::string::npos){
             // Define position of the node  
             PARSE_POINT(token,position);
-            /*
-            if (dir == BACKWARDS){
-                position.x-=0.1f;
-            }
-            */
             std::shared_ptr<Node>next=
                 std::make_shared<Node>(Node{
                         .frame = glm::translate(position),

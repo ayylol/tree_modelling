@@ -64,7 +64,7 @@ class Skeleton{
             glm::mat4 init_frame=glm::mat4(0.f),
             Direction dir=FORWARDS);
         void transform();
-        void transform_dfs(Node& node, glm::mat4 t);
+        void transform_dfs(Node& node, glm::mat4 t, glm::mat4 s, glm::mat4 r);
         void calculate_stats();
         void stats_dfs(Node& node, ParseInfo& stats);
 
