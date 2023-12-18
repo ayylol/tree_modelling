@@ -195,7 +195,7 @@ std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const
 }
 
 void Skeleton::transform_dfs(Node& node, glm::mat4 t, glm::mat4 s, glm::mat4 r){
-    node.frame = r*s*t*node.frame;
+    node.frame = r*s*glm::translate(glm::vec3(t*glm::vec4(frame_position(node.frame),1.f)));
     for (int i = 0; i<node.children.size();i++){
         transform_dfs(*node.children[i],t,s,r);
     }
@@ -217,10 +217,10 @@ void Skeleton::transform(){
     //glm::mat4 root_r = glm::rotate(glm::mat4(1.f), (float)-M_PI/2.f, glm::vec3(1,0,0));
     glm::mat4 root_r = glm::mat4(1.f);
 
-    transform_dfs(*shoot_root, shoot_t, shoot_s, shoot_r);
-    transform_dfs(*root_root, root_t, root_s, root_r);
     std::cout<<frame_position(shoot_root->frame)<<std::endl;
     std::cout<<frame_position(root_root->frame)<<std::endl;
+    transform_dfs(*shoot_root, shoot_t, shoot_s, shoot_r);
+    transform_dfs(*root_root, root_t, root_s, root_r);
 }
 
 void Skeleton::calculate_stats(){
@@ -343,7 +343,7 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
             if (after_root) {
                 after_root = false;
                 if (init_frame != glm::mat4(0.f)){
-                    last_node->frame = init_frame; 
+                    //last_node->frame = init_frame; 
                 } else { // Calculate Frame
                     // Get prev and this tangent
                     glm::vec3 tangent = glm::normalize(dir == FORWARDS ? 
