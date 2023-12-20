@@ -259,7 +259,7 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
                 //done = true;
             }
         }else{
-            next = find_closest(strand.back(), *path, closest_index+1, target.index); 
+            next = find_closest(strand.back(), *path, closest_index+1, std::max(target.index,closest_index+1)); 
         }
 
         if (next.index >= path->size()-1 && on_root) {
@@ -275,8 +275,8 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
             //FIXME: CHANGE MARKER
             grid.fill_path(strands.size(), strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
             strands.push_back(strand);
-            //texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection); // new sca even
-            texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection); // new sca irregular
+            texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection); // new sca regular
+            //texture_grid.fill_path(strands.size(), strand, 30.0, 0.008, 0.001, 0.00000, inflection); // new sca irregular
             //texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection);
             break;
         case Texture:
@@ -684,6 +684,8 @@ Strands::TargetResult
 Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, 
                         int start_index, int end_index){
     //std::cout << start_index << " " << end_index<<std::endl;
+    // FIXME: CHECK THESE ASSERTIONS
+    //std::cout << start_index << " " << end_index << std::endl;
     assert (start_index>=0 && start_index<path.size());
     assert (end_index>=start_index && start_index<path.size());
     size_t closest_index = start_index;

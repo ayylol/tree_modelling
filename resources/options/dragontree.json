@@ -5,19 +5,20 @@
     "phi":0.30000001192092896,
     "theta":4.041592121124268}
 ],
-"grid_scale":0.6,
+"grid_scale":0.5,
 "implicit":{
     "max_val":3.0,
     "range":0.014999999664723873,
     "type":"metaballs"
 },
 "mesh_iso":2.0,
+"tree_file":"./resources/tree_data/OutputFile.txt",
 "root_file":"./resources/tree_data/roots.data",
 "strands":{
     "num_per": 1,
-    "leaf_min_range":0.008,
-    "root_min_range": 0.003,
-    "base_max_range": 0.02,
+    "leaf_min_range":0.012,
+    "root_min_range": 0.012,
+    "base_max_range": 0.012,
     "lookahead_factor":1.0,
     "frame_eval":8.14900016784668,
     "iso_eval":0.0,
@@ -32,6 +33,5 @@
     "segment_offset":0.41200000047683716,
     "target_iso":4.626999855041504
 },
-"tree_file":"./resources/tree_data/reference.txt",
-"image_path":"./images/reference"
+"image_path":"./images/dragontreeresult"
 }

@@ -202,20 +202,18 @@ void Skeleton::transform_dfs(Node& node, glm::mat4 t, glm::mat4 s, glm::mat4 r){
 }
 
 void Skeleton::transform(){
-    //glm::mat4 shoot_t = glm::mat4(1.f);
     glm::mat4 shoot_t = glm::translate(-frame_position(shoot_root->frame));
-    //glm::mat4 shoot_t = glm::translate(glm::vec3(1,1,1));
     float shoot_scale_amount = 0.0055f/(shoot_stats.total_length/shoot_stats.num_nodes);
     glm::mat4 shoot_s = glm::scale(glm::vec3(shoot_scale_amount,shoot_scale_amount,shoot_scale_amount));
+    //glm::mat4 shoot_s = glm::mat4(0.2f);
     glm::mat4 shoot_r = glm::rotate(glm::mat4(1.f), (float)-M_PI/2.f, glm::vec3(1,0,0));
     //glm::mat4 shoot_r = glm::mat4(1.f);
 
-    //glm::mat4 root_t = glm::mat4(1.f);
     glm::mat4 root_t = glm::translate(-frame_position(root_root->frame));
     float root_scale_amount = 0.0055f/(root_stats.total_length/root_stats.num_nodes);
     glm::mat4 root_s = glm::scale(glm::vec3(root_scale_amount,root_scale_amount,root_scale_amount));
-    glm::mat4 root_r = glm::rotate(glm::mat4(1.f), (float)-M_PI/2.f, glm::vec3(1,0,0));
-    //glm::mat4 root_r = glm::mat4(1.f);
+    //glm::mat4 root_r = glm::rotate(glm::mat4(1.f), (float)-M_PI/2.f, glm::vec3(1,0,0));
+    glm::mat4 root_r = glm::mat4(1.f);
 
     std::cout<<frame_position(shoot_root->frame)<<std::endl;
     std::cout<<frame_position(root_root->frame)<<std::endl;
