@@ -6,6 +6,7 @@
 #include "glm/gtx/vector_angle.hpp"
 #include "glm/gtc/epsilon.hpp"
 #include "tree/implicit.h"
+#include <cstdlib>
 #include <glm/gtx/io.hpp>
 
 std::default_random_engine
@@ -132,7 +133,9 @@ void Strands::add_strands(unsigned int amount) {
     lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
         //std::cout<<i<<std::endl;
+        // TODO: Refactor using object member variables here to params?
         lookahead_factor=lookahead_factor_current;
+        //texture_chance=((float)i/amount)-0.3f;
         add_strand(paths[i%paths.size()]);
         lookahead_factor_current+=lhf_step;
     }
@@ -270,12 +273,15 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
     }
     // Occupy strand path
     if (strand.size()<=2) return;
+    float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     switch(type){
         case Structure:
             //FIXME: CHANGE MARKER
             grid.fill_path(strands.size(), strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
             strands.push_back(strand);
-            texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection); // new sca regular
+            if (r < texture_chance) {
+                texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection); // new sca regular
+            }
             //texture_grid.fill_path(strands.size(), strand, 30.0, 0.008, 0.001, 0.00000, inflection); // new sca irregular
             //texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection);
             break;
