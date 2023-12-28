@@ -558,7 +558,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
             if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
                 voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
                 voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
-            if (voxel != occupied_slot && !is_in_grid(voxel))continue;
+            if (voxel != occupied_slot && (!is_in_grid(voxel)||lazy_in_check(voxel,threshold) >= threshold))continue;
 
             ivec3 slots[8]={
                 voxel+cell_order[0],

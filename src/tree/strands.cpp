@@ -72,6 +72,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     if (strand_options.contains("sectorality")) {
         select_method = strand_options.at("sectorality") ? WithAngle : AtRandom;
     }
+    max_val = strand_options.at("max_val");
     segment_length = strand_options.at("segment_length");
     num_trials = strand_options.at("num_trials");
     max_angle = strand_options.at("max_angle");
@@ -91,6 +92,14 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     leaf_min_range = strand_options.at("leaf_min_range");
     base_max_range = strand_options.at("base_max_range");
     root_min_range = strand_options.at("root_min_range");
+
+    if (strand_options.contains("texture")){
+        auto texture_options = strand_options.at("texture");
+        tex_max_val = texture_options.at("max_val");
+        tex_max_range = texture_options.at("base_max_range");
+        tex_shoot_range = texture_options.at("leaf_min_range");
+        tex_root_range = texture_options.at("root_min_range");
+    }
 
     //grid.fill_skeleton(*tree.shoot_root, 0.0000001f);
     //grid.fill_skeleton(*tree.root_root, 0.02f);
@@ -135,7 +144,7 @@ void Strands::add_strands(unsigned int amount) {
         //std::cout<<i<<std::endl;
         // TODO: Refactor using object member variables here to params?
         lookahead_factor=lookahead_factor_current;
-        //texture_chance=((float)i/amount)-0.3f;
+        //texture_chance=((float)i/amount)-0.5f;
         add_strand(paths[i%paths.size()]);
         lookahead_factor_current+=lhf_step;
     }
@@ -277,11 +286,19 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
     switch(type){
         case Structure:
             //FIXME: CHANGE MARKER
-            grid.fill_path(strands.size(), strand, 3.0, base_max_range, leaf_min_range, root_min_range, inflection);
+            grid.fill_path(strands.size(), strand, max_val, base_max_range, leaf_min_range, root_min_range, inflection);
             strands.push_back(strand);
             if (r < texture_chance) {
-                texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection); // new sca regular
+                texture_grid.fill_path(
+                        strands.size(), 
+                        strand, 
+                        tex_max_val, 
+                        tex_max_range, 
+                        tex_shoot_range, 
+                        tex_root_range, 
+                        inflection);
             }
+            //texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection); // new sca regular
             //texture_grid.fill_path(strands.size(), strand, 30.0, 0.008, 0.001, 0.00000, inflection); // new sca irregular
             //texture_grid.fill_path(strands.size(), strand, 30.0, 0.013, 0.001, 0.00000, inflection);
             break;

@@ -86,10 +86,17 @@ private:
     float lookahead_factor_current;
     float lookahead_factor_min = 1.0f;
     float lookahead_factor_max = 2.0f;
-    float texture_chance = 1.0f;
+    float max_val = 3.0f;
     float leaf_min_range;
     float base_max_range;
     float root_min_range;
+    // Texture Strand Vars ///////
+    float texture_chance = 1.0f;
+    float tex_max_val = 30.f;
+    float tex_max_range = 0.013f;
+    float tex_shoot_range = 0.001;
+    float tex_root_range = 0.f;
+    /////////////////////////////
     // Eval Weights
     float iso_eval;
     float target_iso;

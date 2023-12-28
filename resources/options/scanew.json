@@ -18,9 +18,10 @@
 "root_zup":false,
 "strands":{
     "num_per": 1.0,
-    "leaf_min_range":0.012,
-    "root_min_range": 0.012,
-    "base_max_range": 0.012,
+    "max_val": 3.0,
+    "leaf_min_range":0.01,
+    "root_min_range": 0.01,
+    "base_max_range": 0.01,
     "lookahead_factor":1.0,
     "frame_eval":8.14900016784668,
     "iso_eval":0.0,
@@ -33,7 +34,13 @@
     "sectorality":true,
     "segment_length":0.026000000536441803,
     "segment_offset":0.41200000047683716,
-    "target_iso":4.626999855041504
+    "target_iso":4.626999855041504,
+    "texture":{
+        "max_val": 30.0,
+        "base_max_range": 0.000,
+        "leaf_min_range":0.0000,
+        "root_min_range": 0.0000
+    }
 },
 "image_path":"./images/scanew"
 }
