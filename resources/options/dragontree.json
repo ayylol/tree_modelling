@@ -13,6 +13,7 @@
 },
 "mesh_iso":2.0,
 "tree_file":"./resources/tree_data/Dragon2.txt",
+"shoot_zup":false,
 "root_file":"./resources/tree_data/roots.data",
 "strands":{
     "num_per": 1.0,

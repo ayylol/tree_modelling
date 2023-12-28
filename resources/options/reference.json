@@ -12,9 +12,12 @@
     "type":"metaballs"
 },
 "mesh_iso":2.0,
+"tree_file":"./resources/tree_data/reference.txt",
+"shoot_zup":false,
 "root_file":"./resources/tree_data/roots.data",
+"root_zup":true,
 "strands":{
-    "num_per": 1,
+    "num_per": 1.0,
     "leaf_min_range":0.008,
     "root_min_range": 0.003,
     "base_max_range": 0.02,
@@ -32,6 +35,5 @@
     "segment_offset":0.41200000047683716,
     "target_iso":4.626999855041504
 },
-"tree_file":"./resources/tree_data/reference.txt",
 "image_path":"./images/reference"
 }
