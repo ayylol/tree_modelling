@@ -323,7 +323,8 @@ void save_mesh(Mesh<Vertex> mesh){
         glm::vec3 normal = vertex.normal;
         glm::vec3 col = vertex.color;
         if (glm::any(glm::isnan(normal))){
-            std::cout <<"IS NAN"<<std::endl;
+            //std::cout <<"IS NAN"<<std::endl;
+            normal = glm::vec3();
         }
         out <<pos.x<<" "<<pos.y<<" "<<pos.z<<" "
             <<normal.x<<" "<<normal.y<<" "<<normal.z<<" "
