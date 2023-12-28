@@ -73,4 +73,7 @@ class Skeleton{
         std::pair<glm::vec3,glm::vec3> bounds;
         glm::vec3 center_of_mass;
         float average_length;
+
+        bool root_zup;
+        bool shoot_zup;
 };

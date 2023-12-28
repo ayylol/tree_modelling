@@ -13,9 +13,11 @@
 },
 "mesh_iso":2.0,
 "tree_file":"./resources/tree_data/scanewshoot.txt",
+"shoot_zup":false,
 "root_file":"./resources/tree_data/scanewroots.txt",
+"root_zup":false,
 "strands":{
-    "num_per": 1,
+    "num_per": 1.0,
     "leaf_min_range":0.012,
     "root_min_range": 0.012,
     "base_max_range": 0.012,
