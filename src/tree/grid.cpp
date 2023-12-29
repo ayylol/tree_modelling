@@ -125,6 +125,14 @@ float Grid::lazy_in_check(glm::ivec3 slot, float threshold){
 float Grid::lazy_eval(glm::ivec3 slot){
     return lazy_in_check(slot, FLT_MAX);
 }
+float Grid::get_texture_fac(glm::ivec3 slot){
+    const int min=2;
+    const int max=5;
+    int num_strands = grid[slot.x][slot.y][slot.z].size();
+    return std::clamp(
+            (float)(num_strands-min)/(max-min)
+            ,0.f,1.f);
+}
 
 glm::vec3 Grid::lazy_gradient(ivec3 slot){ 
     //float x = (eval_pos(slot - vec3(step_size, 0, 0)) - eval_pos(slot + vec3(step_size, 0, 0)));
@@ -602,6 +610,19 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
                 { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=lazy_norm(slots[6]),.col_val=texture_space.lazy_eval(slots[6]) },
                 { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=lazy_norm(slots[7]),.col_val=texture_space.lazy_eval(slots[7]) },
             }};
+            /*
+            GridCell cell = {{
+                { .pos=cell_pos[0], .val=lazy_eval(slots[0]), .norm=lazy_norm(slots[0]),.col_val=texture_space.get_texture_fac(slots[0])*texture_space.lazy_eval(slots[0]) },
+                { .pos=cell_pos[1], .val=lazy_eval(slots[1]), .norm=lazy_norm(slots[1]),.col_val=texture_space.get_texture_fac(slots[1])*texture_space.lazy_eval(slots[1]) },
+                { .pos=cell_pos[2], .val=lazy_eval(slots[2]), .norm=lazy_norm(slots[2]),.col_val=texture_space.get_texture_fac(slots[2])*texture_space.lazy_eval(slots[2]) },
+                { .pos=cell_pos[3], .val=lazy_eval(slots[3]), .norm=lazy_norm(slots[3]),.col_val=texture_space.get_texture_fac(slots[3])*texture_space.lazy_eval(slots[3]) },
+                { .pos=cell_pos[4], .val=lazy_eval(slots[4]), .norm=lazy_norm(slots[4]),.col_val=texture_space.get_texture_fac(slots[4])*texture_space.lazy_eval(slots[4]) },
+                { .pos=cell_pos[5], .val=lazy_eval(slots[5]), .norm=lazy_norm(slots[5]),.col_val=texture_space.get_texture_fac(slots[5])*texture_space.lazy_eval(slots[5]) },
+                { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=lazy_norm(slots[6]),.col_val=texture_space.get_texture_fac(slots[6])*texture_space.lazy_eval(slots[6]) },
+                { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=lazy_norm(slots[7]),.col_val=texture_space.get_texture_fac(slots[7])*texture_space.lazy_eval(slots[7]) },
+            }};
+            */
+
 
             polygonize(cell, threshold, verts, indices);
         }}}

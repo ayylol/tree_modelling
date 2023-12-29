@@ -144,7 +144,7 @@ void Strands::add_strands(unsigned int amount) {
         //std::cout<<i<<std::endl;
         // TODO: Refactor using object member variables here to params?
         lookahead_factor=lookahead_factor_current;
-        //texture_chance=((float)i/amount)-0.5f;
+        //texture_chance=((float)i/amount)-0.9f;
         add_strand(paths[i%paths.size()]);
         lookahead_factor_current+=lhf_step;
     }
@@ -196,7 +196,7 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
                 if (!target_on_root){
                     target_on_root = true;
                     // FIXME: CHANGED
-                    if (type == Structure) method=CanonIso;
+                    //if (type == Structure) method=CanonIso;
                     if (select_pos == AtRoot && root_path==nullptr){
                         root_path = &(root_frames[match_root(strand[0])]); 
                         transition_node = closest_index;
