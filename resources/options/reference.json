@@ -37,7 +37,7 @@
     "target_iso":4.626999855041504,
     "texture":{
         "max_val": 30.0,
-        "base_max_range": 0.015,
+        "base_max_range": 0.0125,
         "leaf_min_range":0.0001,
         "root_min_range": 0.0000
     }

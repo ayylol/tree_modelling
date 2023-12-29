@@ -5,7 +5,7 @@
     "phi":0.30000001192092896,
     "theta":4.041592121124268}
 ],
-"grid_scale":1.0,
+"grid_scale":0.7,
 "implicit":{
     "max_val":3.0,
     "range":0.014999999664723873,
@@ -35,8 +35,8 @@
     "segment_offset":0.41200000047683716,
     "target_iso":4.626999855041504,
     "texture":{
-        "max_val": 30.0,
-        "base_max_range": 0.000,
+        "max_val": 15.0,
+        "base_max_range": 0.007,
         "leaf_min_range":0.0000,
         "root_min_range": 0.0000
     }

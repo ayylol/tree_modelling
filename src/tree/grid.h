@@ -55,6 +55,8 @@ public:
     glm::vec3 eval_norm(glm::vec3 pos, float step_size=0.0005f) const;
     glm::vec3 eval_gradient(glm::vec3 pos, float step_size=0.0005f) const;
 
+    float get_texture_fac(glm::ivec3 slot);
+
     // TODO: Remove these ////////////////////////
     float get_in_grid(glm::ivec3 index) const;
     float get_in_pos(glm::vec3 pos) const;
