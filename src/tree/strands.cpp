@@ -40,10 +40,10 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     root_vecs.reserve(root_frames.size());
     for (size_t i = 0; i<root_frames.size(); i++){
         // TODO: make the index used for the angle vector a parameter
-        //glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/12]) - tree.get_root_pos();
+        glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/2]) - tree.get_root_pos();
         //glm::vec3 angle_vec = frame_position(root_frames[i][4]) - tree.get_root_pos();
         //glm::vec3 angle_vec = frame_position(root_frames[i][1]) - tree.get_root_pos();
-        glm::vec3 angle_vec = frame_position(root_frames[i][root_frames[i].size()-1]) - tree.get_root_pos();
+        //glm::vec3 angle_vec = frame_position(root_frames[i][root_frames[i].size()-1]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
@@ -145,14 +145,14 @@ void Strands::add_strands(unsigned int amount) {
         // TODO: Refactor using object member variables here to params?
         lookahead_factor=lookahead_factor_current;
         //texture_chance=((float)i/amount)-0.9f;
-        add_strand(paths[i%paths.size()]);
+        add_strand(paths[i%paths.size()],i);
         lookahead_factor_current+=lhf_step;
     }
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
-void Strands::add_strand(size_t shoot_index, StrandType type) {
+void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     if (shoot_index >= shoot_frames.size()) return;
     // Set up strand
     const std::vector<glm::mat4> *shoot_path=&(shoot_frames[shoot_index]);
@@ -216,7 +216,10 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
         std::optional<glm::vec3> ext;
         switch (method){
             case CanonDir:
-                ext = find_extension(strand.back(), last_closest, target.frame);
+                if (target_on_root || on_root)
+                    ext = find_extension(strand.back(), last_closest, target.frame, true);
+                else
+                    ext = find_extension(strand.back(), last_closest, target.frame);
                 break;
             case LocalPosMatching:
                 ext = find_extension_fs(strand.back(), last_closest, target.frame);
@@ -245,12 +248,11 @@ void Strands::add_strand(size_t shoot_index, StrandType type) {
                 ext = find_extension_texture(strand.back(), last_closest, target.frame);
                 break;
         }
-        if (ext){
+        if (ext && grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0){
             strand.push_back(ext.value());
         }else{
             ext = find_extension_canoniso(strand.back(), last_closest, target.frame,false);
-            //strands_terminated++;
-            //break;
+            strand.push_back(ext.value());
         }
 
         //TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10); // Old method
@@ -340,9 +342,14 @@ Strands::find_target(const std::vector<glm::mat4>& path,
     return result;
 }
 
-std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
+std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias){
     glm::vec3 target_point = frame_position(frame_to);
     glm::vec3 canonical_direction = glm::normalize(target_point - frame_position(frame_from));
+    if (bias){
+        glm::vec3 diff = target_point - (from+canonical_direction);
+        diff.y=0.f;
+        canonical_direction+=diff;
+    }
     // Generate trials
     struct Trial {
         glm::vec3 head;
@@ -362,7 +369,17 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         float val = grid.eval_pos(trial_head);
         //float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso);
         if (val<=reject_iso) {
-            float distance = glm::distance(trial_head, target_point);
+            float distance;
+            if (bias){
+                glm::vec3 biased_head = trial_head;
+                biased_head.y /= 1.5;
+                glm::vec3 biased_point = target_point;
+                biased_point.y /= 1.5;
+                distance = glm::distance(biased_head, biased_point);
+            }
+            else{
+                distance = glm::distance(trial_head, target_point);
+            }
             float angle = glm::angle(trial_head - from, canonical_direction);
             trials.push_back({trial_head, distance, angle,val});
             max_val_diff = std::max(max_val_diff,std::abs(val-target_iso));
@@ -753,14 +770,6 @@ size_t Strands::match_root(glm::vec3 position){
         if (!possible_matches.empty()){
             match_index = possible_matches[(int)std::rand() % possible_matches.size()];
         }
-        /*
-        if (possible_matches.empty()){
-            //std::cout<<"Shouldn't reach here"<<std::endl;
-            match_index = 0;
-        }else{
-            match_index = possible_matches[(int)std::rand() % possible_matches.size()-1];
-        }
-        */
     }
     size_t match = root_pool[match_index];
     if (select_pool == NotSelected || select_pool == AtLeastOnce) {
