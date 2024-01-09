@@ -30,7 +30,7 @@ public:
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
 private:
     void add_strands(unsigned int amount);
-    void add_strand(size_t shoot_index, StrandType type = Structure);
+    void add_strand(size_t shoot_index, int age, StrandType type = Structure);
     size_t match_root(glm::vec3 pos);
     //Implicit &evalfunc;
     const Skeleton& tree;
@@ -54,7 +54,7 @@ private:
         float angle;
     };
     TargetResult find_target(const std::vector<glm::mat4>& path, size_t start_index, float travel_dist);
-    std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
+    std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false);
     std::optional<glm::vec3> find_extension_fs(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_heading(glm::vec3 from, glm::mat4 frame);
     std::optional<glm::vec3> find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false, float bias_amount = 1.0f);
@@ -85,7 +85,7 @@ private:
     float lookahead_factor;
     float lookahead_factor_current;
     float lookahead_factor_min = 1.0f;
-    float lookahead_factor_max = 2.0f;
+    float lookahead_factor_max = 3.0f;
     float max_val = 3.0f;
     float leaf_min_range;
     float base_max_range;

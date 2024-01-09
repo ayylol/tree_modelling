@@ -126,8 +126,9 @@ float Grid::lazy_eval(glm::ivec3 slot){
     return lazy_in_check(slot, FLT_MAX);
 }
 float Grid::get_texture_fac(glm::ivec3 slot){
+    if (!is_in_grid(slot)) return 0.f;
     const int min=2;
-    const int max=5;
+    const int max=6;
     int num_strands = grid[slot.x][slot.y][slot.z].size();
     return std::clamp(
             (float)(num_strands-min)/(max-min)
@@ -622,7 +623,6 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
                 { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=lazy_norm(slots[7]),.col_val=texture_space.get_texture_fac(slots[7])*texture_space.lazy_eval(slots[7]) },
             }};
             */
-
 
             polygonize(cell, threshold, verts, indices);
         }}}
