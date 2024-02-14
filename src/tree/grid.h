@@ -5,6 +5,7 @@
 #include <tuple>
 #include <limits>
 #include <algorithm>
+#include <unordered_set>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -13,7 +14,6 @@
 #include <glm/gtx/norm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
-
 
 #include "util/color.h"
 

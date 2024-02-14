@@ -132,8 +132,9 @@ int main(int argc, char *argv[]) {
     float surface_val = opt_data.at("mesh_iso");
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
-    STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
+    //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
     STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
+    STOPWATCH("Getting Strand", Mesh tstrands_geom = detail.get_mesh(0.f,1.f,Strands::Texture););
     STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
@@ -183,8 +184,10 @@ int main(int argc, char *argv[]) {
             //texture_strands.draw(flat_shader, CAMERA, GL_LINES);
 
         }
-        if (view_volume)
-            volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
+        if (view_volume) {
+            tstrands_geom.draw(flat_shader, CAMERA, GL_LINES);
+            //volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
+        }
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
         //if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);

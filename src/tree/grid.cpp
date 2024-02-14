@@ -346,6 +346,7 @@ void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit){
     }
     */
 }
+// THIS ONE
 void Grid::fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point){
     for (int i = 0; i<path.size()-1; i++){
         float b;
@@ -559,6 +560,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
     }
     vector<Vertex> verts;
     vector<GLuint> indices;
+    std::cout<<"OCCUPIED SIZE: "<<occupied.size()<<std::endl;
     for (auto occupied_slot : occupied){
         for (int z = -1; z <= 0; z++) { for (int y = -1; y <= 0; y++) { for (int x = -1; x <= 0; x++) {
             ivec3 offset(x, y, z);
