@@ -29,6 +29,7 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     eval_grid = vector<vector<vector<struct Eval>>>(dimensions.x, 
                 vector<vector<struct Eval>>(dimensions.y,
                 vector<struct Eval>(dimensions.z)));
+    //occupied.reserve(5000000);
     std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 
