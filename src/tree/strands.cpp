@@ -148,16 +148,18 @@ void Strands::add_strands(unsigned int amount) {
         std::cout<<"\rStrand: "<<i+1<< "/"<<amount<<std::flush;
         // TODO: Refactor using object member variables here to params?
         lookahead_factor=lookahead_factor_current;
-        //texture_chance=((float)i/amount)-0.9f;
+        texture_chance=((float)i/amount)-0.6f;
         add_strand(paths[i%paths.size()],i);
         lookahead_factor_current+=lhf_step;
     }
     std::cout<<std::endl;
-    lookahead_factor_current=1.0f;
-    for (size_t i = 0; i < 400; i++) {
-        std::cout<<"\rTexture Strand: "<<i+1<<"/"<<400<<std::flush;
+    /*
+    lookahead_factor_current=3.0f;
+    for (size_t i = 0; i < 0; i++) {
+        std::cout<<"\rTexture Strand: "<<i+1<<"/"<<60<<std::flush;
         add_strand(paths[i%paths.size()],i,Texture);
     }
+    */
     std::cout<<std::endl;
     std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
@@ -304,8 +306,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             //FIXME: CHANGE MARKER
             grid.fill_path(strands.size(), strand, max_val, base_max_range, leaf_min_range, root_min_range, inflection);
             strands.push_back(strand);
-            /*
             if (r < texture_chance) {
+                texture_strands.push_back(strand);
                 texture_grid.fill_path(
                         strands.size(), 
                         strand, 
@@ -315,12 +317,12 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                         tex_root_range, 
                         inflection);
             }
-            */
             break;
         case Texture:
             //FIXME: CHANGE MARKER
             texture_strands.push_back(strand);
             //grid.fill_path(texture_strands.size(), strand, tex_max_val, tex_max_range, tex_shoot_range, tex_root_range, inflection);
+            //texture_grid.fill_path(texture_strands.size(), strand, tex_max_val, tex_max_range, tex_shoot_range, tex_root_range, inflection);
             texture_grid.fill_path(texture_strands.size(), strand, tex_max_val, tex_max_range, tex_shoot_range, tex_root_range, inflection);
             //texture_grid.fill_path(0,strand, 5.0, 0.008, 0.001, 0.0001, inflection);
             break;
@@ -765,49 +767,67 @@ std::optional<glm::vec3> Strands::find_extension_ptfcanoneval(glm::vec3 from, gl
 std::optional<glm::vec3> Strands::find_extension_texture(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to){
     // New texture stepping tests
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    glm::vec3 closest_pos = frame_position(frame_from);
-    glm::vec3 target_extension = frame_position(frame_to);
-    glm::vec3 extension = from+segment_length*glm::normalize(frame_position(frame_to)-frame_position(frame_from));
-    int num_steps = 0;
-    int max_steps = 50;
-    glm::vec3 step =0.02f*(target_extension-extension);
-    // Step until there is a gradient
-    while(glm::all(glm::lessThan(glm::abs(grid.eval_gradient(extension)), glm::vec3(0.0001f)))&&num_steps<=max_steps){
-        extension+=step;
-        num_steps++;
-    }
-    // Step along structure and texture gradient
-    // TODO: This should be changed to also step along the texture gradient
-    max_steps = 200;
-    bool struct_moves_done = false;
-    bool texture_moves_done = false;
-    for(int num_steps = 0; num_steps<max_steps;num_steps++){
-        if (num_steps%2==0){ // Step along 
-            if (glm::any(glm::isnan(grid.eval_gradient(extension)))||
-                    std::abs(grid.eval_pos(extension)-reject_iso)<=0.1) {
-                struct_moves_done=true;
-                break;
-            }else{
-                struct_moves_done=false;
-                glm::vec3 step = 0.001f*(grid.eval_pos(extension)-reject_iso)*grid.eval_gradient(extension);
-                extension += step;
-            }
-        }else{
+    glm::mat4 inv_from = frame_inverse(frame_from);
+    glm::mat4 inv_to = frame_inverse(frame_to);
+    // Calculate Position in local frame
+    glm::vec3 local_pos = inv_from*glm::vec4(from,1.f);
+    local_pos.y = 0.f;
 
+    // Init Eval Bounds
+    float max_val_diff = 0.f;
+    float min_val_diff = FLT_MAX;
+    float max_local_dist2 = 0.f;
+    float min_local_dist2 = FLT_MAX;
+    float max_frame_dist2 = 0.f;
+    float min_frame_dist2 = FLT_MAX;
+
+    // Generate samples
+    struct Trial {
+        glm::vec3 local;
+        glm::vec3 global;
+        float val;
+    };
+    std::vector<Trial> trials;
+    for (int i = 0; i < num_trials; i++) {
+        glm::vec2 sample = local_spread*random_vec2();
+        glm::vec3 local_sample = local_pos;
+        local_sample.x+=sample.x;
+        local_sample.z+=sample.y;
+        glm::vec3 global_sample = frame_to*glm::vec4(local_sample,1.f);
+        float val = grid.eval_pos(global_sample);
+        float tval = texture_grid.eval_pos(global_sample);
+        if (val<0.05f&&tval<0.05f){
+            trials.push_back({local_sample,global_sample, val});
+            // Update Evaluation Bounds
+            max_val_diff = std::max(max_val_diff,std::abs(val-target_iso));
+            min_val_diff = std::min(min_val_diff,std::abs(val-target_iso));
+            max_local_dist2 = std::max(max_local_dist2,glm::distance2(local_sample,local_pos));
+            min_local_dist2 = std::min(min_local_dist2,glm::distance2(local_sample,local_pos));
+            max_frame_dist2 = std::max(max_frame_dist2,glm::length2(local_sample));
+            min_frame_dist2 = std::min(min_frame_dist2,glm::length2(local_sample));
         }
-        if (struct_moves_done&&texture_moves_done) break;
     }
-    /*
-    while(!glm::all(glm::isnan(grid.eval_gradient(extension)))&&std::abs(grid.eval_pos(extension)-reject_iso)>=0.1&&num_steps<=max_steps){
-        glm::vec3 step = 0.001f*(grid.eval_pos(extension)-reject_iso)*grid.eval_gradient(extension);
-        extension += step;
-        num_steps++;
+    if(trials.empty()) return {};
+
+    Trial best_trial = trials[0];
+    float best_fitness = -1.f;
+    for (auto trial : trials){
+        float iso_metric=max_val_diff != min_val_diff ? iso_eval*(max_val_diff-(std::abs(trial.val-target_iso))/(max_val_diff-min_val_diff)) : 0.f; 
+        float local_metric=local_eval*((max_local_dist2-glm::distance2(trial.local,local_pos))/(max_local_dist2-min_local_dist2));
+        float frame_metric=frame_eval*((max_frame_dist2-glm::length2(trial.local))/(max_frame_dist2-min_frame_dist2));
+        float fitness = iso_metric+local_metric+frame_metric;
+        if (best_fitness <= fitness){
+            best_fitness = fitness;
+            best_trial = trial;
+        }
     }
-    */
-    extension = from+segment_length*glm::normalize(extension-from);
+
+    // return best sample
+    glm::vec3 extension = from+segment_length*glm::normalize(best_trial.global-from);
     return extension;
+    //return best_trial.global;
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //return find_extension_ptfiso(from,frame_from,frame_to);
+    //return find_extension(from,frame_from,frame_to);
 }
 Strands::TargetResult 
 Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, 
