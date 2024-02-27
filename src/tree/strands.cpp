@@ -47,6 +47,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
         //glm::vec3 angle_vec = frame_position(root_frames[i][4]) - tree.get_root_pos();
         //glm::vec3 angle_vec = frame_position(root_frames[i][1]) - tree.get_root_pos();
         //glm::vec3 angle_vec = frame_position(root_frames[i][root_frames[i].size()-1]) - tree.get_root_pos();
+        //glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/4]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
@@ -213,7 +214,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                     // FIXME: CHANGED
                     //if (type == Structure) method=CanonIso;
                     if (select_pos == AtRoot && root_path==nullptr){
-                        root_path = &(root_frames[match_root(strand[0])]); 
+                        root_path = &(root_frames[match_root(strand[strand.size()-1])]); 
                         transition_node = closest_index;
                     }
                 }
@@ -434,7 +435,7 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
     glm::mat4 inv_to = frame_inverse(frame_to);
     // Calculate Position in local frame
     glm::vec3 local_pos = inv_from*glm::vec4(from,1.f);
-    local_pos.y = 0.f;
+    local_pos.y=0.f;
 
     // Init Eval Bounds
     float max_val_diff = 0.f;
@@ -521,7 +522,7 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from, glm::m
     // NOTE: Experimental
     if (bias){
         glm::vec3 offset_no_y = target_extension - extension; 
-        offset_no_y.y = 0.f;
+        offset_no_y.y=0.f;
         //std::cout << (from-closest_pos).y <<std::endl;
         //std::uniform_real_distribution<float> rand_offset(0.2f, 0.8f);
         //extension = extension+rand_offset(rng)*offset_no_y;
@@ -850,6 +851,7 @@ Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path,
     return {closest_index, path[closest_index], lowest_dist2};
 }
 
+// TODO: Fix
 size_t Strands::match_root(glm::vec3 position){
     if (root_pool.empty()) {
         root_pool.resize(root_frames.size());
@@ -859,26 +861,28 @@ size_t Strands::match_root(glm::vec3 position){
     if (select_method == AtRandom) {
         match_index = rng() % root_pool.size();
     } else if (select_method == WithAngle) {
+        // CHECK  THIS
         std::vector<size_t> possible_matches={};
         glm::vec3 angle_vec = position - tree.get_root_pos();
+        //glm::vec3 angle_vec = position;
         angle_vec.y = 0.f;
         angle_vec = glm::normalize(angle_vec);
-        float largest_cos = -1.f;
+        double largest_cos = -1.f;
         for (size_t j = 0; j < root_pool.size(); j++) {
-            float cos = glm::dot(angle_vec, root_vecs[root_pool[j]]);
+            double cos = glm::dot(angle_vec, root_vecs[root_pool[j]]);
+            //double cos = glm::angle(angle_vec, root_vecs[root_pool[j]]);
             if (cos == largest_cos){
                 possible_matches.push_back(j);
-            }
-            else if (cos > largest_cos) {
-                possible_matches.clear();
+            } else if (cos > largest_cos) {
                 largest_cos = cos;
-                match_index = j;
+                possible_matches.clear();
                 possible_matches.push_back(j);
             }
         }
-        if (!possible_matches.empty()){
-            match_index = possible_matches[(int)std::rand() % possible_matches.size()];
-        }
+        assert(!possible_matches.empty());
+        //std::cout<<" "<<possible_matches.size()<<std::endl;
+        match_index = possible_matches[(int)std::rand() % possible_matches.size()];
+        //
     }
     size_t match = root_pool[match_index];
     if (select_pool == NotSelected || select_pool == AtLeastOnce) {
