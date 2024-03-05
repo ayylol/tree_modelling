@@ -19,7 +19,9 @@
     "num_trials": 200,
     "reject_iso": 10,
     "segment_length": 0.02800000086426735,
-    "segment_offset": 0.38
+    "segment_offset": 0.38,
+    "root_angle_node": 0.5,
+    "bias_amount": 1.5
   },
   "cameras": [
     {

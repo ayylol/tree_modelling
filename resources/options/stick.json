@@ -30,7 +30,9 @@
     "sectorality":true,
     "segment_length":0.026000000536441803,
     "segment_offset":0.41200000047683716,
-    "target_iso":4.626999855041504
+    "target_iso":4.62699985504150,
+    "root_angle_node": 0.5,
+    "bias_amount": 1.5
 },
 "tree_file":"./resources/tree_data/stick.data",
 "image_path":"./images/old_buttress_method"

@@ -34,11 +34,15 @@
     "segment_length":0.026000000536441803,
     "segment_offset":0.41200000047683716,
     "target_iso":4.626999855041504,
+    "root_angle_node": 0.5,
+    "bias_amount": 1.5,
     "texture":{
         "max_val": 15.0,
         "base_max_range": 0.007,
         "leaf_min_range":0.0000,
-        "root_min_range": 0.0000
+        "root_min_range": 0.0000,
+        "chance_start":0.5,
+        "chance_max":1.0
     }
 },
 "image_path":"./images/dragontreeallstrands"
