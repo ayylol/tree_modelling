@@ -11,6 +11,7 @@
 #include "tree/implicit.h"
 #include <cstdlib>
 #include <glm/gtx/io.hpp>
+#include <omp.h>
 
 std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
@@ -353,6 +354,8 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
     float max_trial_distance = 0.f;
     float min_trial_distance = FLT_MAX;
     float max_trial_angle = 0.f;
+    // TODO: Parallelize this
+    #pragma omp parallel for
     for (int i = 0; i < num_trials; i++) {
         glm::vec3 trial_head = from + segment_length * 
             random_vector(canonical_direction, glm::radians(max_angle));
@@ -380,6 +383,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
             max_trial_angle = fmax(max_trial_angle, angle);
         }
     }
+    //
     // If no valid trials add strand up to this moment
     if (trials.empty()) return {};
     //  Evaluate trials
