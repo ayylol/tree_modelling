@@ -82,7 +82,7 @@ private:
     float local_spread;
     float reject_iso;
     float offset;
-    float lookahead_factor;
+    float lookahead_factor=1.0f;
     float lookahead_factor_current;
     float lookahead_factor_min = 1.0f;
     float lookahead_factor_max = 2.0f;
