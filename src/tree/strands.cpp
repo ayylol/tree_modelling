@@ -38,35 +38,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
         }
         root_frames.push_back(root_frame);
     }
-
-    // Initialize Root Angle Vectors
-    root_vecs.reserve(root_frames.size());
-    for (size_t i = 0; i<root_frames.size(); i++){
-        // TODO: make the index used for the angle vector a parameter
-        glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/2]) - tree.get_root_pos();
-        //glm::vec3 angle_vec = frame_position(root_frames[i][4]) - tree.get_root_pos();
-        //glm::vec3 angle_vec = frame_position(root_frames[i][1]) - tree.get_root_pos();
-        //glm::vec3 angle_vec = frame_position(root_frames[i][root_frames[i].size()-1]) - tree.get_root_pos();
-        //glm::vec3 angle_vec = frame_position(root_frames[i][(root_frames[i].size()-1)/4]) - tree.get_root_pos();
-        angle_vec.y=0.f;
-        angle_vec = glm::normalize(angle_vec);
-        root_vecs.push_back(angle_vec);
-    }
     // Set strand options
     auto strand_options = options.at("strands");
-    /*
-    if (strand_options.at("method")=="canon_dir"){
-        method = CanonDir;
-    }else if (strand_options.at("method")=="local_pos_matching"){
-        method = LocalPosMatching;
-    }else if (strand_options.at("method")=="heading_dir"){
-        method = HeadingDir;
-    }else if (strand_options.at("method")=="canon_iso"){
-        method = CanonIso;
-    } else if (strand_options.at("method")=="ptf_iso"){
-        method = PTFIso;
-    }
-    */
     int num_strands = tree.leafs_size();
     if (strand_options.contains("num_abs")) {
         num_strands = strand_options.at("num_abs");
@@ -92,21 +65,30 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     local_eval/=total_eval_weight;
     frame_eval/=total_eval_weight;
     local_spread = strand_options.at("local_spread");
+    bias_amount = strand_options.at("bias_amount");
     // Implicit Vals
     leaf_min_range = strand_options.at("leaf_min_range");
     base_max_range = strand_options.at("base_max_range");
     root_min_range = strand_options.at("root_min_range");
-
+    // Initialize Root Angle Vectors
+    root_angle_node = std::clamp((float)strand_options.at("root_angle_node"),0.05f,1.f);
+    root_vecs.reserve(root_frames.size());
+    for (size_t i = 0; i<root_frames.size(); i++){
+        glm::vec3 angle_vec = frame_position(root_frames[i][(int)((root_frames[i].size()-1)*root_angle_node)]) - tree.get_root_pos();
+        angle_vec.y=0.f;
+        angle_vec = glm::normalize(angle_vec);
+        root_vecs.push_back(angle_vec);
+    }
+    // Texture vars
     if (strand_options.contains("texture")){
         auto texture_options = strand_options.at("texture");
         tex_max_val = texture_options.at("max_val");
         tex_max_range = texture_options.at("base_max_range");
         tex_shoot_range = texture_options.at("leaf_min_range");
         tex_root_range = texture_options.at("root_min_range");
+        tex_chance_start = (float)texture_options.at("chance_start")*num_strands;
+        tex_max_chance = texture_options.at("chance_max");
     }
-
-    //grid.fill_skeleton(*tree.shoot_root, 0.0000001f);
-    //grid.fill_skeleton(*tree.root_root, 0.02f);
     add_strands(num_strands);
 }
 
@@ -144,25 +126,18 @@ void Strands::add_strands(unsigned int amount) {
     std::iota(paths.begin(),paths.end(),0);
     std::shuffle(paths.begin(), paths.end(), rng);
     float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
+    float texture_chance_step = tex_max_chance / (amount-tex_chance_start);
     lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
         std::cout<<"\rStrand: "<<i+1<< "/"<<amount<<std::flush;
-        // TODO: Refactor using object member variables here to params?
         lookahead_factor=lookahead_factor_current;
-        texture_chance=((float)i/amount)-0.6f;
         add_strand(paths[i%paths.size()],i);
+        if (i >tex_chance_start) tex_chance+=texture_chance_step;
         lookahead_factor_current+=lhf_step;
     }
     std::cout<<std::endl;
-    /*
-    lookahead_factor_current=3.0f;
-    for (size_t i = 0; i < 0; i++) {
-        std::cout<<"\rTexture Strand: "<<i+1<<"/"<<60<<std::flush;
-        add_strand(paths[i%paths.size()],i,Texture);
-    }
-    */
     std::cout<<std::endl;
-    std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
+    //std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
@@ -307,7 +282,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             //FIXME: CHANGE MARKER
             grid.fill_path(strands.size(), strand, max_val, base_max_range, leaf_min_range, root_min_range, inflection);
             strands.push_back(strand);
-            if (r < texture_chance) {
+            if (r < tex_chance) {
                 texture_strands.push_back(strand);
                 texture_grid.fill_path(
                         strands.size(), 
@@ -363,11 +338,13 @@ Strands::find_target(const std::vector<glm::mat4>& path,
 std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias){
     glm::vec3 target_point = frame_position(frame_to);
     glm::vec3 canonical_direction = glm::normalize(target_point - frame_position(frame_from));
+    /*
     if (bias){
         glm::vec3 diff = target_point - (from+canonical_direction);
         diff.y=0.f;
         canonical_direction+=diff;
     }
+    */
     // Generate trials
     struct Trial {
         glm::vec3 head;
@@ -389,10 +366,11 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         if (val<=reject_iso) {
             float distance;
             if (bias){
+                float ba = 2.0f;
                 glm::vec3 biased_head = trial_head;
-                biased_head.y /= 1.5;
+                biased_head.y /= bias_amount;
                 glm::vec3 biased_point = target_point;
-                biased_point.y /= 1.5;
+                biased_point.y /= bias_amount;
                 distance = glm::distance(biased_head, biased_point);
             }
             else{

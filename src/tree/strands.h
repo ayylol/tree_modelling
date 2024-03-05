@@ -90,8 +90,12 @@ private:
     float leaf_min_range;
     float base_max_range;
     float root_min_range;
+    float root_angle_node;
+    float bias_amount = 1.0f;
     // Texture Strand Vars ///////
-    float texture_chance = 1.0f;
+    int tex_chance_start = 0;
+    float tex_max_chance = 1.0f;
+    float tex_chance = 0.0f;
     float tex_max_val = 30.f;
     float tex_max_range = 0.013f;
     float tex_shoot_range = 0.001;
