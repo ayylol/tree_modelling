@@ -339,13 +339,6 @@ Strands::find_target(const std::vector<glm::mat4>& path,
 std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias){
     glm::vec3 target_point = frame_position(frame_to);
     glm::vec3 canonical_direction = glm::normalize(target_point - frame_position(frame_from));
-    /*
-    if (bias){
-        glm::vec3 diff = target_point - (from+canonical_direction);
-        diff.y=0.f;
-        canonical_direction+=diff;
-    }
-    */
     // Generate trials
     struct Trial {
         glm::vec3 head;
@@ -354,6 +347,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         float val;
     };
     std::vector<Trial> trials;
+    trials.reserve(num_trials);
     float max_val_diff = 0.f;
     float min_val_diff = FLT_MAX;
     float max_trial_distance = 0.f;
@@ -858,9 +852,13 @@ size_t Strands::match_root(glm::vec3 position){
                 possible_matches.push_back(j);
             }
         }
-        assert(!possible_matches.empty());
-        //std::cout<<" "<<possible_matches.size()<<std::endl;
-        match_index = possible_matches[(int)std::rand() % possible_matches.size()];
+        //assert(!possible_matches.empty());
+        if (!possible_matches.empty()){
+            match_index = possible_matches[(int)std::rand() % possible_matches.size()];
+        }else{ // Shouldn't happen but idk
+            //assert(!possible_matches.empty());
+            match_index = (int)std::rand() % root_pool.size();
+        }
         //
     }
     size_t match = root_pool[match_index];
