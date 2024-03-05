@@ -13,6 +13,7 @@
 #include <glm/gtx/io.hpp>
 
 #include <nlohmann/json.hpp>
+#include <omp.h>
 
 #include "rendering/EBO.h"
 #include "rendering/VAO.h"
@@ -84,6 +85,10 @@ int main(int argc, char *argv[]) {
         std::cerr << "input an options file" << std::endl;
         return 1;
     }
+
+    int num_threads = 24;
+    omp_set_num_threads(num_threads);
+
     srand(time(NULL));
 
     // Ready window
