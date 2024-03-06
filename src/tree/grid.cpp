@@ -8,6 +8,7 @@
 #include <cmath>
 #include <glm/gtx/io.hpp>
 #include <iostream>
+#include <omp.h>
 
 // Commonly used names
 using glm::ivec3;
@@ -306,7 +307,8 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
             // TODO: Pushing to "occupied" vector messes this up
             int amount_to_add = (l1_end-l1_start)*(l2_end-l2_start);
             if (occupied.size()+amount_to_add > occupied.capacity()){
-                occupied.reserve(occupied.capacity()*2);
+                occupied.reserve(occupied.size()*2);
+                //occupied.reserve(occupied.size()+amount_to_add);
             }
             #pragma omp parallel for
             */
@@ -325,7 +327,6 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
             l1_start = -d1;
             l2_start = -d2;
         } else { // Add extra
-            //std::cout<<"STUFFF IS HAPPENING"<<std::endl;
             // One of these should run
             if (last_axis1 != voxels[i][axis1]){
                 if (last_axis1<voxels[i][axis1]){
@@ -570,7 +571,6 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
     }
     vector<Vertex> verts;
     vector<GLuint> indices;
-    std::cout<<"OCCUPIED SIZE: "<<occupied.size()<<std::endl;
     for (auto occupied_slot : occupied){
         for (int z = -1; z <= 0; z++) { for (int y = -1; y <= 0; y++) { for (int x = -1; x <= 0; x++) {
             ivec3 offset(x, y, z);
@@ -601,7 +601,6 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
                 grid_to_pos(slots[6]),
                 grid_to_pos(slots[7]),
             };
-
             if (lazy_in_check(slots[0],threshold) >= threshold &&
                 lazy_in_check(slots[1],threshold) >= threshold &&
                 lazy_in_check(slots[2],threshold) >= threshold &&
@@ -612,7 +611,6 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
                 lazy_in_check(slots[7],threshold) >= threshold) {
                     continue;
             }
-
             GridCell cell = {{
                 { .pos=cell_pos[0], .val=lazy_eval(slots[0]), .norm=lazy_norm(slots[0]),.col_val=texture_space.lazy_eval(slots[0]) },
                 { .pos=cell_pos[1], .val=lazy_eval(slots[1]), .norm=lazy_norm(slots[1]),.col_val=texture_space.lazy_eval(slots[1]) },
@@ -623,23 +621,10 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
                 { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=lazy_norm(slots[6]),.col_val=texture_space.lazy_eval(slots[6]) },
                 { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=lazy_norm(slots[7]),.col_val=texture_space.lazy_eval(slots[7]) },
             }};
-            /*
-            GridCell cell = {{
-                { .pos=cell_pos[0], .val=lazy_eval(slots[0]), .norm=lazy_norm(slots[0]),.col_val=texture_space.get_texture_fac(slots[0])*texture_space.lazy_eval(slots[0]) },
-                { .pos=cell_pos[1], .val=lazy_eval(slots[1]), .norm=lazy_norm(slots[1]),.col_val=texture_space.get_texture_fac(slots[1])*texture_space.lazy_eval(slots[1]) },
-                { .pos=cell_pos[2], .val=lazy_eval(slots[2]), .norm=lazy_norm(slots[2]),.col_val=texture_space.get_texture_fac(slots[2])*texture_space.lazy_eval(slots[2]) },
-                { .pos=cell_pos[3], .val=lazy_eval(slots[3]), .norm=lazy_norm(slots[3]),.col_val=texture_space.get_texture_fac(slots[3])*texture_space.lazy_eval(slots[3]) },
-                { .pos=cell_pos[4], .val=lazy_eval(slots[4]), .norm=lazy_norm(slots[4]),.col_val=texture_space.get_texture_fac(slots[4])*texture_space.lazy_eval(slots[4]) },
-                { .pos=cell_pos[5], .val=lazy_eval(slots[5]), .norm=lazy_norm(slots[5]),.col_val=texture_space.get_texture_fac(slots[5])*texture_space.lazy_eval(slots[5]) },
-                { .pos=cell_pos[6], .val=lazy_eval(slots[6]), .norm=lazy_norm(slots[6]),.col_val=texture_space.get_texture_fac(slots[6])*texture_space.lazy_eval(slots[6]) },
-                { .pos=cell_pos[7], .val=lazy_eval(slots[7]), .norm=lazy_norm(slots[7]),.col_val=texture_space.get_texture_fac(slots[7])*texture_space.lazy_eval(slots[7]) },
-            }};
-            */
-
             polygonize(cell, threshold, verts, indices);
         }}}
     }
-    std::cout<<"VERTS: " <<verts.size()<<std::endl;
+    std::cout<<"VERTS: " <<verts.size()<<" INDICES: "<<indices.size()<<std::endl;
     return Mesh<Vertex>(verts,indices);
 }
 

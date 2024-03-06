@@ -131,7 +131,7 @@ void Strands::add_strands(unsigned int amount) {
     float texture_chance_step = tex_max_chance / (amount-tex_chance_start);
     lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
-        std::cout<<"\rStrand: "<<i+1<< "/"<<amount<<std::flush;
+        std::cout<<"\rStrand: "<<i+1<< "/"<<amount;
         lookahead_factor=lookahead_factor_current;
         add_strand(paths[i%paths.size()],i);
         if (i >tex_chance_start) tex_chance+=texture_chance_step;
