@@ -210,6 +210,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         switch (method){
             case CanonDir:
                 if (target_on_root || on_root)
+                //if (on_root)
                     ext = find_extension(strand.back(), last_closest, target.frame, true);
                 else
                     ext = find_extension(strand.back(), last_closest, target.frame);
@@ -258,12 +259,14 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             if (shoot_closest.travelled < root_closest.travelled){
                 next = shoot_closest;
             }else{
-                //method=CanonIso;
                 next = root_closest;
                 path = root_path;
                 on_root = true;
                 inflection = strand.size()-1;
                 lookahead_factor=1.0f;
+                //method=LocalPosMatching;
+                //method=CanonIso;
+                //method=PTFIso;
                 //done = true;
             }
         }else{
@@ -364,7 +367,6 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         if (val<=reject_iso) {
             float distance;
             if (bias){
-                float ba = 2.0f;
                 glm::vec3 biased_head = trial_head;
                 biased_head.y /= bias_amount;
                 glm::vec3 biased_point = target_point;
@@ -429,6 +431,8 @@ std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from, glm::mat4 fr
         float val;
     };
     std::vector<Trial> trials;
+    trials.reserve(num_trials);
+    #pragma omp parallel for
     for (int i = 0; i < num_trials; i++) {
         glm::vec2 sample = local_spread*random_vec2();
         glm::vec3 local_sample = local_pos;

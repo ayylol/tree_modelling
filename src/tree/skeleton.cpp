@@ -24,7 +24,7 @@ Skeleton::Skeleton(json& options){
 
     root_zup = options.contains("root_zup") ? (bool)options.at("root_zup") : true;
     shoot_zup = options.contains("shoot_zup") ? (bool)options.at("shoot_zup") : true;
-    transform();
+    //transform();
     calculate_stats();
     //
     float average_shoot_length = (shoot_stats.total_length)/(shoot_stats.num_nodes);
@@ -43,9 +43,9 @@ Skeleton::Skeleton(json& options){
 }
 
 Mesh<VertFlat> Skeleton::get_mesh(){
-    /*
+    // FRAMES
     // Initialize mesh verts and indices
-    const float axis_scale=0.005f;
+    const float axis_scale=0.0045f;
     const VertFlat axis[6] = {
         {glm::vec3(0,0,0),glm::vec3(1,0,0)},{axis_scale*glm::vec3(1,0,0),glm::vec3(1,0,0)},
         {glm::vec3(0,0,0),glm::vec3(0,1,0)},{axis_scale*glm::vec3(0,1,0),glm::vec3(0,1,0)},
@@ -116,7 +116,7 @@ Mesh<VertFlat> Skeleton::get_mesh(){
         }
     }
     return Mesh(vertices, indices); 
-    */
+    /*
     // STICKS
     // Initialize mesh verts and indices
     std::vector<VertFlat> vertices;
@@ -178,6 +178,7 @@ Mesh<VertFlat> Skeleton::get_mesh(){
         }
     }
     return Mesh(vertices, indices);
+    */
 }
 
 std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const
@@ -197,7 +198,9 @@ std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const
 }
 
 void Skeleton::transform_dfs(Node& node, glm::mat4 t, glm::mat4 s, glm::mat4 r){
-    node.frame = r*s*glm::translate(glm::vec3(t*glm::vec4(frame_position(node.frame),1.f)));
+    //node.frame = r*s*glm::translate(glm::vec3(t*glm::vec4(frame_position(node.frame),1.f)));
+    glm::vec4 p = glm::vec4(frame_position(s*glm::translate(glm::vec3(t*glm::vec4(frame_position(node.frame),1.f)))),1.f);
+    node.frame[3]=p;
     for (int i = 0; i<node.children.size();i++){
         transform_dfs(*node.children[i],t,s,r);
     }
@@ -207,7 +210,6 @@ void Skeleton::transform(){
     glm::mat4 shoot_t = glm::translate(-frame_position(shoot_root->frame));
     float shoot_scale_amount = 0.0055f/(shoot_stats.total_length/shoot_stats.num_nodes);
     glm::mat4 shoot_s = glm::scale(glm::vec3(shoot_scale_amount,shoot_scale_amount,shoot_scale_amount));
-    //glm::mat4 shoot_s = glm::mat4(0.2f);
     glm::mat4 shoot_r = shoot_zup ? 
         glm::mat4(1.f) : 
         glm::rotate(glm::mat4(1.f), (float)-M_PI/2.f, glm::vec3(1,0,0));
@@ -345,7 +347,7 @@ Skeleton::ParseInfo Skeleton::parse(std::shared_ptr<Node>& root,
             if (after_root) {
                 after_root = false;
                 if (init_frame != glm::mat4(0.f)){
-                    //last_node->frame = init_frame; 
+                    last_node->frame = init_frame; 
                 } else { // Calculate Frame
                     // Get prev and this tangent
                     glm::vec3 tangent = glm::normalize(dir == FORWARDS ? 
