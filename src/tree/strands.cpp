@@ -108,7 +108,8 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
     if (strand_list.size()!=0){
         for (int i = start * (strand_list.size()-1); i<= end * (strand_list.size()-1); i++){
             auto path = strand_list[i];
-            glm::vec3 color = (1-((float)i/strand_list.size()))*blue+((float)i/strand_list.size())*red;
+            float percent = ((float)i/strand_list.size()-start)/(end-start);
+            glm::vec3 color = (1-percent)*blue+(percent)*red;
             size_t start_index = vertices.size();
             for (auto position : path) {
                 vertices.push_back(Vertex{position, color});
