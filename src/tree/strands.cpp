@@ -13,13 +13,17 @@
 #include <glm/gtx/io.hpp>
 #include <omp.h>
 
-std::vector<glm::vec3> Smooth(const std::vector<glm::vec3>& in){
+std::vector<glm::vec3> smooth(const std::vector<glm::vec3>& in, int times, float influence){
     size_t n = in.size();
+    std::vector<glm::vec3> old = in;
     std::vector<glm::vec3> smoothed = in;
-    smoothed[0]=0.75f*in[0]+0.25f*in[1];
-    smoothed[n-1]=0.25f*in[n-2]+0.75f*in[n-1];
-    for (int i=1; i<n-2;++i){
-        smoothed[i]=0.25f*in[i-1]+0.5f*in[i]+0.25f*in[i+1];
+    while(times--){
+        smoothed[0]=(1-influence)*old[0]+influence*old[1];
+        smoothed[n-1]=influence*old[n-2]+(1.f-influence)*old[n-1];
+        for (int i=1; i<n-2;++i){
+            smoothed[i]=influence*old[i-1]+(1.f-2*influence)*old[i]+influence*old[i+1];
+        }
+        old = smoothed;
     }
     return smoothed;
 }
@@ -294,7 +298,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     // Occupy strand path
     if (strand.size()<=2) return;
     // Smooth
-    strand = Smooth(strand);
+    strand = smooth(strand, 2, 0.2);
     //
     float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     switch(type){
