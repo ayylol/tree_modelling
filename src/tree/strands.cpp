@@ -69,7 +69,6 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     segment_length = strand_options.at("segment_length");
     num_trials = strand_options.at("num_trials");
     max_angle = strand_options.at("max_angle");
-    //offset = strand_options.at("segment_offset");
     lookahead_factor_max = strand_options.at("lookahead_max");
     lookahead_factor_min = strand_options.at("lookahead_min");
     reject_iso = strand_options.at("reject_iso");
