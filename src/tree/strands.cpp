@@ -258,7 +258,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 break;
         }
 
-        if (ext && grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0){
+        if (ext && (age<root_frames.size()||grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0)){
             strand.push_back(ext.value());
         }else{
             ext = find_extension_canoniso(strand.back(), last_closest, target.frame,false);
@@ -297,7 +297,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     // Occupy strand path
     if (strand.size()<=2) return;
     // Smooth
-    strand = smooth(strand, 2, 0.2);
+    strand = smooth(strand, 1, 0.2);
     //
     float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     switch(type){
