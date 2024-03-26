@@ -258,12 +258,10 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 break;
         }
 
-        if (ext && (age<root_frames.size()||grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0)){
-            strand.push_back(ext.value());
-        }else{
+        if (!(ext && (age<root_frames.size()||grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0))){
             ext = find_extension_canoniso(strand.back(), last_closest, target.frame,false);
-            strand.push_back(ext.value());
         }
+        strand.push_back(ext.value());
 
         //TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10); // Old method
         TargetResult next;
