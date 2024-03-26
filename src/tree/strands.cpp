@@ -9,6 +9,7 @@
 #include "glm/gtc/epsilon.hpp"
 #include "glm/vector_relational.hpp"
 #include "tree/implicit.h"
+#include <algorithm>
 #include <cstdlib>
 #include <glm/gtx/io.hpp>
 #include <omp.h>
@@ -147,7 +148,6 @@ void Strands::add_strands(unsigned int amount) {
     lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
         std::cout<<"\rStrand: "<<i+1<< "/"<<amount;
-        lookahead_factor=lookahead_factor_current;
         add_strand(paths[i%paths.size()],i);
         if (i >tex_chance_start) tex_chance+=texture_chance_step;
         lookahead_factor_current+=lhf_step;
@@ -167,6 +167,13 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     size_t closest_index = 0;
     glm::mat4 last_closest = (*path)[closest_index];
     std::vector<glm::vec3> strand{frame_position(last_closest)};
+    // Set up lookahead value
+    lookahead_factor=lookahead_factor_current; // CHANGE THIS
+    /*
+    const int la_start=0.4*(shoot_path->size()-1);
+    const int la_peak=0.5*(shoot_path->size()-1);
+    lookahead_factor=1.0f;
+    */
     // Set up root path (if selectpos is at leaf)
     if (select_pos == AtLeaf) 
         root_path = &(root_frames[match_root(strand[0])]); 
@@ -186,7 +193,23 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             break;
     }
     int transition_node = 0;
+    //std::cout<<std::endl;
     while (!done) {
+        /*
+        // Calculate lookahead factor
+        float la_interp = on_root ? 0.0f : 
+            closest_index <= la_start ? 0.0f :
+            closest_index<=la_peak ? 
+                (float)(closest_index-la_start)/(la_peak-la_start) : 
+                1.f;
+                //(1.f-(float)(closest_index-la_peak)/(path->size()-1-la_peak));
+//            std::clamp(closest_index<=la_peak ? 
+//              (float)(closest_index-la_start)/(la_peak-la_start) : 
+//              (1.f-(float)(closest_index-la_peak)/(path->size()-1-la_peak)),
+//             0.f,1.f);
+        //std::cout<<la_interp<<std::endl;
+        lookahead_factor = (1-la_interp)*lookahead_factor_min+la_interp*lookahead_factor_current;
+        */
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
         float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
