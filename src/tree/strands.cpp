@@ -333,22 +333,23 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     }
     // Occupy strand path
     if (strand.size()<=2) return;
-    // Smooth
-    //strand = smooth(strand, 500, 0.3, 0.00001f, inflection*0.4f, inflection, inflection+((strand.size()-inflection-1)*0.2f));
-    //strand = smooth(strand, 300, 0.3, 0.00001f, inflection*0.75f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
-    strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
-    //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.15f));
     //
     float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     switch(type){
         case Structure:
             //FIXME: CHANGE MARKER
-            grid.fill_path(strands.size(), strand, max_val, base_max_range, leaf_min_range, root_min_range, inflection);
+            // Smooth
+            //strand = smooth(strand, 500, 0.3, 0.00001f, inflection*0.4f, inflection, inflection+((strand.size()-inflection-1)*0.2f));
+            //strand = smooth(strand, 300, 0.3, 0.00001f, inflection*0.75f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
+            //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
+            //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.15f));
+            strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
             strands.push_back(strand);
             if (r < tex_chance) {
                 texture_strands.push_back(strand);
                 texture_grid.fill_path( strands.size(), strand, tex_max_val, tex_max_range, tex_shoot_range, tex_root_range, inflection);
             }
+            grid.fill_path(strands.size(), strand, max_val, base_max_range, leaf_min_range, root_min_range, inflection);
             break;
         case Texture:
             //FIXME: CHANGE MARKER
@@ -902,8 +903,17 @@ Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path,
 // TODO: Fix
 size_t Strands::match_root(glm::vec3 position){
     if (root_pool.empty()) {
-        root_pool.resize(root_frames.size());
-        std::iota(root_pool.begin(), root_pool.end(), 0);
+        if (select_pool==All){
+            for (size_t i=0; i<root_frames.size();++i){
+                if (root_frames[i].size()>=100){
+                    //std::cout<<root_frames[i].size()<<std::endl;
+                    root_pool.push_back(i);
+                }
+            }
+        }else{
+            root_pool.resize(root_frames.size());
+            std::iota(root_pool.begin(), root_pool.end(), 0);
+        }
     }
     size_t match_index = 0;
     if (select_method == AtRandom) {
