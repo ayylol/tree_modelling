@@ -13,16 +13,34 @@
 #include <cstdlib>
 #include <glm/gtx/io.hpp>
 #include <omp.h>
+#include <algorithm>
+#include <ostream>
 
-std::vector<glm::vec3> smooth(const std::vector<glm::vec3>& in, int times, float influence){
+std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3>& in, int times, float peak_influence, float min_influence, int start, int peak, int end){
     size_t n = in.size();
+    start=std::max(1,start);
+    end=std::min((int)n-2,end);
+    peak=std::clamp(peak,start,end);
     std::vector<glm::vec3> old = in;
     std::vector<glm::vec3> smoothed = in;
     while(times--){
-        smoothed[0]=(1-influence)*old[0]+influence*old[1];
-        smoothed[n-1]=influence*old[n-2]+(1.f-influence)*old[n-1];
+        float influence=min_influence;
+        float i_inc=(peak_influence-min_influence)/(peak-start);
+        float i_dec=(peak_influence-min_influence)/(peak-end);
+        //smoothed[0]=(1-influence)*old[0]+influence*old[1];
+        //smoothed[n-1]=influence*old[n-2]+(1.f-influence)*old[n-1];
+        //for (int i=start; i<end;++i){
         for (int i=1; i<n-2;++i){
+            if (i>=start&&i<peak){influence+=i_inc;}
+            else if(i>=peak&&i<end) {influence+=i_dec;}
             smoothed[i]=influence*old[i-1]+(1.f-2*influence)*old[i]+influence*old[i+1];
+        }
+        for (auto it=smoothed.begin()+1; it!=(smoothed.end()-1);++it){
+            float d = glm::distance(*it,*(it-1))+glm::distance(*it,*(it+1));
+            if (d<segment_length*1){
+                smoothed.erase(it);
+                it--;
+            }
         }
         old = smoothed;
     }
@@ -148,6 +166,7 @@ void Strands::add_strands(unsigned int amount) {
     lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
         std::cout<<"\rStrand: "<<i+1<< "/"<<amount;
+        //std::flush(std::cout);
         add_strand(paths[i%paths.size()],i);
         if (i >tex_chance_start) tex_chance+=texture_chance_step;
         lookahead_factor_current+=lhf_step;
@@ -168,12 +187,10 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     glm::mat4 last_closest = (*path)[closest_index];
     std::vector<glm::vec3> strand{frame_position(last_closest)};
     // Set up lookahead value
-    lookahead_factor=lookahead_factor_current; // CHANGE THIS
-    /*
-    const int la_start=0.4*(shoot_path->size()-1);
-    const int la_peak=0.5*(shoot_path->size()-1);
-    lookahead_factor=1.0f;
-    */
+    //lookahead_factor=lookahead_factor_current; // CHANGE THIS
+    const int la_start=0.3*(shoot_path->size()-1);
+    const int la_peak=0.9*(shoot_path->size()-1);
+    //lookahead_factor=1.0f;
     // Set up root path (if selectpos is at leaf)
     if (select_pos == AtLeaf) 
         root_path = &(root_frames[match_root(strand[0])]); 
@@ -185,6 +202,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     switch(type){
         case Structure:
             method=CanonDir;
+            //method=LocalPosMatching;
             break;
         case Texture:
             method=TextureExt;
@@ -195,7 +213,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     int transition_node = 0;
     //std::cout<<std::endl;
     while (!done) {
-        /*
         // Calculate lookahead factor
         float la_interp = on_root ? 0.0f : 
             closest_index <= la_start ? 0.0f :
@@ -209,7 +226,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
 //             0.f,1.f);
         //std::cout<<la_interp<<std::endl;
         lookahead_factor = (1-la_interp)*lookahead_factor_min+la_interp*lookahead_factor_current;
-        */
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
         float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
@@ -227,6 +243,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 if (!target_on_root){
                     target_on_root = true;
                     // FIXME: CHANGED
+                    //method=CanonIso;
                     //if (type == Structure) method=CanonIso;
                     if (select_pos == AtRoot && root_path==nullptr){
                         root_path = &(root_frames[match_root(strand[strand.size()-1])]); 
@@ -282,6 +299,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         }
 
         if (!(ext && (age<root_frames.size()||grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0))){
+        //if(!ext){
             ext = find_extension_canoniso(strand.back(), last_closest, target.frame,false);
         }
         strand.push_back(ext.value());
@@ -300,14 +318,12 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 on_root = true;
                 inflection = strand.size()-1;
                 lookahead_factor=1.0f;
-                //method=LocalPosMatching;
-                //method=CanonIso;
-                //method=PTFIso;
-                //done = true;
             }
         }else{
             next = find_closest(strand.back(), *path, closest_index+1, std::max(target.index,closest_index+1)); 
         }
+
+        //strand[strand.size()-1] = move_extension(strand.back(), next.frame);
 
         if (next.index >= path->size()-1 && on_root) {
             done = true;
@@ -318,7 +334,10 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     // Occupy strand path
     if (strand.size()<=2) return;
     // Smooth
-    strand = smooth(strand, 1, 0.2);
+    //strand = smooth(strand, 500, 0.3, 0.00001f, inflection*0.4f, inflection, inflection+((strand.size()-inflection-1)*0.2f));
+    //strand = smooth(strand, 300, 0.3, 0.00001f, inflection*0.75f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
+    strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
+    //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.15f));
     //
     float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     switch(type){
@@ -328,14 +347,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             strands.push_back(strand);
             if (r < tex_chance) {
                 texture_strands.push_back(strand);
-                texture_grid.fill_path(
-                        strands.size(), 
-                        strand, 
-                        tex_max_val, 
-                        tex_max_range, 
-                        tex_shoot_range, 
-                        tex_root_range, 
-                        inflection);
+                texture_grid.fill_path( strands.size(), strand, tex_max_val, tex_max_range, tex_shoot_range, tex_root_range, inflection);
             }
             break;
         case Texture:
@@ -850,6 +862,22 @@ std::optional<glm::vec3> Strands::find_extension_texture(glm::vec3 from, glm::ma
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //return find_extension(from,frame_from,frame_to);
 }
+
+glm::vec3 Strands::move_extension(glm::vec3 head, glm::mat4 closest){
+    // step towards closest until field is gets to reject value
+    glm::vec3 close=frame_position(closest);
+    float a=0.f,b=1.f;
+    glm::vec3 new_head;
+    for (int i=0;i<15;++i){
+        float p=(b+a)/2.f;
+        new_head=p*close+(1.f-p)*head;
+        float val = grid.eval_pos(new_head);
+        if (val > reject_iso) a=p;
+        else b=p;
+    }
+    return new_head;
+}
+
 Strands::TargetResult 
 Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, 
                         int start_index, int end_index){

@@ -42,6 +42,11 @@ private:
     Grid &texture_grid;
 
     // Strand Creation Helper Functions
+    std::vector<glm::vec3> smooth(
+            const std::vector<glm::vec3>& in, 
+            int times, float peak_influence, float min_influence, 
+            int start, int peak, int end);
+    glm::vec3 move_extension(glm::vec3 head, glm::mat4 closest);
 
     struct TargetResult{
         size_t index;
