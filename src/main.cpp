@@ -483,11 +483,11 @@ void processInput(GLFWwindow *window) {
     }
     // Affect upper bounds
     if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS){
-        strands_end = std::max(strands_start, strands_end-0.005f);
+        strands_end = std::max(strands_start, strands_end-0.0025f);
         reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS){
-        strands_end = std::min(1.0f, strands_end+0.005f);
+        strands_end = std::min(1.0f, strands_end+0.0025f);
         reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_PRESS && !has_exported){

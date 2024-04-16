@@ -27,9 +27,6 @@ std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3>& in, int tim
         float influence=min_influence;
         float i_inc=(peak_influence-min_influence)/(peak-start);
         float i_dec=(peak_influence-min_influence)/(peak-end);
-        //smoothed[0]=(1-influence)*old[0]+influence*old[1];
-        //smoothed[n-1]=influence*old[n-2]+(1.f-influence)*old[n-1];
-        //for (int i=start; i<end;++i){
         for (int i=1; i<n-2;++i){
             if (i>=start&&i<peak){influence+=i_inc;}
             else if(i>=peak&&i<end) {influence+=i_dec;}
@@ -110,6 +107,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     root_vecs.reserve(root_frames.size());
     for (size_t i = 0; i<root_frames.size(); i++){
         glm::vec3 angle_vec = frame_position(root_frames[i][(int)((root_frames[i].size()-1)*root_angle_node)]) - tree.get_root_pos();
+        //glm::vec3 angle_vec = frame_position(root_frames[i][std::min(50,(int)root_frames[i].size()-1)]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
@@ -323,7 +321,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             next = find_closest(strand.back(), *path, closest_index+1, std::max(target.index,closest_index+1)); 
         }
 
-        //strand[strand.size()-1] = move_extension(strand.back(), next.frame);
+        //if (age>root_frames.size()) strand[strand.size()-1] = move_extension(strand.back(), next.frame);
 
         if (next.index >= path->size()-1 && on_root) {
             done = true;
@@ -343,7 +341,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             //strand = smooth(strand, 300, 0.3, 0.00001f, inflection*0.75f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
             //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
             //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.15f));
-            strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
+            strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
             strands.push_back(strand);
             if (r < tex_chance) {
                 texture_strands.push_back(strand);
@@ -869,9 +867,9 @@ glm::vec3 Strands::move_extension(glm::vec3 head, glm::mat4 closest){
     glm::vec3 close=frame_position(closest);
     float a=0.f,b=1.f;
     glm::vec3 new_head;
-    for (int i=0;i<15;++i){
+    for (int i=0;i<16;++i){
         float p=(b+a)/2.f;
-        new_head=p*close+(1.f-p)*head;
+        new_head=(1.f-p)*close+p*head;
         float val = grid.eval_pos(new_head);
         if (val > reject_iso) a=p;
         else b=p;
@@ -906,7 +904,6 @@ size_t Strands::match_root(glm::vec3 position){
         if (select_pool==All){
             for (size_t i=0; i<root_frames.size();++i){
                 if (root_frames[i].size()>=100){
-                    //std::cout<<root_frames[i].size()<<std::endl;
                     root_pool.push_back(i);
                 }
             }
@@ -939,9 +936,11 @@ size_t Strands::match_root(glm::vec3 position){
         }
         //assert(!possible_matches.empty());
         if (!possible_matches.empty()){
-            match_index = possible_matches[(int)std::rand() % possible_matches.size()];
+            int i =std::rand() % possible_matches.size();
+            //std::cout<<' '<<i<<' '<<possible_matches.size()<<std::endl;
+            match_index = possible_matches[i];
         }else{ // Shouldn't happen but idk
-            //assert(!possible_matches.empty());
+            assert(!possible_matches.empty());
             match_index = (int)std::rand() % root_pool.size();
         }
         //
