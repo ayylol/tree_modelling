@@ -106,8 +106,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     root_angle_node = std::clamp((float)strand_options.at("root_angle_node"),0.05f,1.f);
     root_vecs.reserve(root_frames.size());
     for (size_t i = 0; i<root_frames.size(); i++){
-        glm::vec3 angle_vec = frame_position(root_frames[i][(int)((root_frames[i].size()-1)*root_angle_node)]) - tree.get_root_pos();
-        //glm::vec3 angle_vec = frame_position(root_frames[i][std::min(50,(int)root_frames[i].size()-1)]) - tree.get_root_pos();
+        //glm::vec3 angle_vec = frame_position(root_frames[i][(int)((root_frames[i].size()-1)*root_angle_node)]) - tree.get_root_pos();
+        glm::vec3 angle_vec = frame_position(root_frames[i][std::min(50,(int)root_frames[i].size()-1)]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
@@ -296,8 +296,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 break;
         }
 
-        if (!(ext && (age<root_frames.size()||grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0))){
-        //if(!ext){
+        //if (!(ext && (age<root_frames.size()||grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0))){
+        if(!ext){
             ext = find_extension_canoniso(strand.back(), last_closest, target.frame,false);
         }
         strand.push_back(ext.value());
@@ -321,7 +321,13 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             next = find_closest(strand.back(), *path, closest_index+1, std::max(target.index,closest_index+1)); 
         }
 
-        //if (age>root_frames.size()) strand[strand.size()-1] = move_extension(strand.back(), next.frame);
+        if (age>root_frames.size() && (on_root)) {
+            strand[strand.size()-1] = move_extension(strand.back(), next.frame, 1.0);
+        } else if (!on_root && !target_on_root && 
+                grid.eval_pos(frame_position(next.frame))>=reject_iso && 
+                grid.eval_pos(strand.back())<reject_iso-10.0f) {
+            strand[strand.size()-1] = move_extension(strand.back(), next.frame, reject_iso);
+        }
 
         if (next.index >= path->size()-1 && on_root) {
             done = true;
@@ -341,7 +347,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             //strand = smooth(strand, 300, 0.3, 0.00001f, inflection*0.75f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
             //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
             //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.15f));
-            strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
+            strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.8f));
             strands.push_back(strand);
             if (r < tex_chance) {
                 texture_strands.push_back(strand);
@@ -862,16 +868,18 @@ std::optional<glm::vec3> Strands::find_extension_texture(glm::vec3 from, glm::ma
     //return find_extension(from,frame_from,frame_to);
 }
 
-glm::vec3 Strands::move_extension(glm::vec3 head, glm::mat4 closest){
+glm::vec3 Strands::move_extension(glm::vec3 head, glm::mat4 closest, float iso){
     // step towards closest until field is gets to reject value
     glm::vec3 close=frame_position(closest);
     float a=0.f,b=1.f;
-    glm::vec3 new_head;
-    for (int i=0;i<16;++i){
+    glm::vec3 new_head=head;
+    float val = grid.eval_pos(head);
+    if (val>iso) return head;
+    for (int i=0;i<16 && std::abs(val-iso)>0.1;++i){
         float p=(b+a)/2.f;
         new_head=(1.f-p)*close+p*head;
-        float val = grid.eval_pos(new_head);
-        if (val > reject_iso) a=p;
+        val = grid.eval_pos(new_head);
+        if (val > iso) a=p;
         else b=p;
     }
     return new_head;
