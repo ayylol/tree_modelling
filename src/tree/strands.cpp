@@ -107,7 +107,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     root_vecs.reserve(root_frames.size());
     for (size_t i = 0; i<root_frames.size(); i++){
         //glm::vec3 angle_vec = frame_position(root_frames[i][(int)((root_frames[i].size()-1)*root_angle_node)]) - tree.get_root_pos();
-        glm::vec3 angle_vec = frame_position(root_frames[i][std::min(50,(int)root_frames[i].size()-1)]) - tree.get_root_pos();
+        glm::vec3 angle_vec = frame_position(root_frames[i][std::min(30,(int)root_frames[i].size()-1)]) - tree.get_root_pos();
         angle_vec.y=0.f;
         angle_vec = glm::normalize(angle_vec);
         root_vecs.push_back(angle_vec);
@@ -187,8 +187,11 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     // Set up lookahead value
     //lookahead_factor=lookahead_factor_current; // CHANGE THIS
     const int la_start=0.3*(shoot_path->size()-1);
-    const int la_peak=0.9*(shoot_path->size()-1);
+    const int la_peak=0.7*(shoot_path->size()-1);
     //lookahead_factor=1.0f;
+    // Set up lookahead root reduction
+    float red_start=100.f;
+    float red_end=30.f;
     // Set up root path (if selectpos is at leaf)
     if (select_pos == AtLeaf) 
         root_path = &(root_frames[match_root(strand[0])]); 
@@ -251,7 +254,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 if(method==HeadingDir){
                     target = {closest_index,(*root_path)[0],0.0};
                 }else{
-                    target = find_target(*root_path, 0, distance_to_travel-target.travelled);
+                    float alpha=(float)closest_index/shoot_path->size();
+                    float reduction=(1-alpha)*red_start+alpha*red_end;
+                    target = find_target(*root_path, 0, (distance_to_travel-target.travelled)/reduction);
                 }
             }else {
                 //done = true;
@@ -323,6 +328,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
 
         if (age>root_frames.size() && (on_root)) {
             strand[strand.size()-1] = move_extension(strand.back(), next.frame, 1.0);
+        } else if (age>root_frames.size() && target_on_root) {
+            strand[strand.size()-1] = move_extension(strand.back(), next.frame, 5.0);
         } else if (!on_root && !target_on_root && 
                 grid.eval_pos(frame_position(next.frame))>=reject_iso && 
                 grid.eval_pos(strand.back())<reject_iso-10.0f) {
@@ -353,7 +360,12 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 texture_strands.push_back(strand);
                 texture_grid.fill_path( strands.size(), strand, tex_max_val, tex_max_range, tex_shoot_range, tex_root_range, inflection);
             }
-            grid.fill_path(strands.size(), strand, max_val, base_max_range, leaf_min_range, root_min_range, inflection);
+            grid.fill_path(strands.size(), strand, 
+                    max_val, 
+                    base_max_range, 
+                    leaf_min_range, 
+                    root_min_range, 
+                    inflection);
             break;
         case Texture:
             //FIXME: CHANGE MARKER
