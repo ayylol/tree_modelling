@@ -190,8 +190,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     const int la_peak=0.7*(shoot_path->size()-1);
     //lookahead_factor=1.0f;
     // Set up lookahead root reduction
-    float red_start=100.f;
-    float red_end=30.f;
+    float red_start=10.f;
+    float red_end=1.f;
     // Set up root path (if selectpos is at leaf)
     if (select_pos == AtLeaf) 
         root_path = &(root_frames[match_root(strand[0])]); 
@@ -243,6 +243,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             if (!on_root){ // switch path
                 if (!target_on_root){
                     target_on_root = true;
+                    //inflection = strand.size()-1;
                     // FIXME: CHANGED
                     //method=CanonIso;
                     //if (type == Structure) method=CanonIso;
@@ -326,14 +327,15 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             next = find_closest(strand.back(), *path, closest_index+1, std::max(target.index,closest_index+1)); 
         }
 
-        if (age>root_frames.size() && (on_root)) {
-            strand[strand.size()-1] = move_extension(strand.back(), next.frame, 1.0);
+        if (on_root) {
+            strand[strand.size()-1] = move_extension(strand.back(), frame_position(next.frame), 5.0);
         } else if (age>root_frames.size() && target_on_root) {
-            strand[strand.size()-1] = move_extension(strand.back(), next.frame, 5.0);
+            TargetResult root_closest = find_closest(strand.back(), *root_path, 0, target.index);
+            strand[strand.size()-1] = move_extension(strand.back(), (0.75f*frame_position(root_closest.frame)+0.25f*frame_position(next.frame)), 8.0);
         } else if (!on_root && !target_on_root && 
                 grid.eval_pos(frame_position(next.frame))>=reject_iso && 
                 grid.eval_pos(strand.back())<reject_iso-10.0f) {
-            strand[strand.size()-1] = move_extension(strand.back(), next.frame, reject_iso);
+            strand[strand.size()-1] = move_extension(strand.back(), frame_position(next.frame), reject_iso);
         }
 
         if (next.index >= path->size()-1 && on_root) {
@@ -354,7 +356,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             //strand = smooth(strand, 300, 0.3, 0.00001f, inflection*0.75f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
             //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
             //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.15f));
-            strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.8f));
+            //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.8f));
+            strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.95f, inflection, inflection+((strand.size()-inflection-1)*0.8f));
             strands.push_back(strand);
             if (r < tex_chance) {
                 texture_strands.push_back(strand);
@@ -880,9 +883,8 @@ std::optional<glm::vec3> Strands::find_extension_texture(glm::vec3 from, glm::ma
     //return find_extension(from,frame_from,frame_to);
 }
 
-glm::vec3 Strands::move_extension(glm::vec3 head, glm::mat4 closest, float iso){
+glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso){
     // step towards closest until field is gets to reject value
-    glm::vec3 close=frame_position(closest);
     float a=0.f,b=1.f;
     glm::vec3 new_head=head;
     float val = grid.eval_pos(head);
