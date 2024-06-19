@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
             tstrands_geom.draw(flat_shader, CAMERA, GL_LINES);
             //volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         }
-        if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_POINTS);
+        if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
         //if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) ground.draw(shader, CAMERA, GL_TRIANGLES);
