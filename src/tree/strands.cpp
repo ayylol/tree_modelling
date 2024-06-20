@@ -87,6 +87,10 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     max_angle = strand_options.at("max_angle");
     lookahead_factor_max = strand_options.at("lookahead_max");
     lookahead_factor_min = strand_options.at("lookahead_min");
+    la_interp_start = std::clamp((float)strand_options.at("la_interp_start"), 0.f, 1.f);
+    la_interp_peak = std::clamp((float)strand_options.at("la_interp_peak"), 0.f, 1.f);
+    la_red_max = strand_options.at("la_red_max");
+    la_red_min = strand_options.at("la_red_min");
     reject_iso = strand_options.at("reject_iso");
     target_iso = strand_options.at("target_iso");
     iso_eval = strand_options.at("iso_eval");
@@ -114,13 +118,13 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     }
     // Texture vars
     if (strand_options.contains("texture")){
-        auto texture_options = strand_options.at("texture");
-        tex_max_val = texture_options.at("max_val");
-        tex_max_range = texture_options.at("base_max_range");
-        tex_shoot_range = texture_options.at("leaf_min_range");
-        tex_root_range = texture_options.at("root_min_range");
-        tex_chance_start = (float)texture_options.at("chance_start")*num_strands;
-        tex_max_chance = texture_options.at("chance_max");
+        auto tex_options = strand_options.at("texture");
+        tex_max_val = tex_options.at("max_val");
+        tex_max_range = tex_options.at("base_max_range");
+        tex_shoot_range = tex_options.at("leaf_min_range");
+        tex_root_range = tex_options.at("root_min_range");
+        tex_chance_start = (float)tex_options.at("chance_start")*num_strands;
+        tex_max_chance = tex_options.at("chance_max");
     }
     add_strands(num_strands);
 }
@@ -186,12 +190,10 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     std::vector<glm::vec3> strand{frame_position(last_closest)};
     // Set up lookahead value
     //lookahead_factor=lookahead_factor_current; // CHANGE THIS
-    const int la_start=0.3*(shoot_path->size()-1);
-    const int la_peak=0.7*(shoot_path->size()-1);
+    const int la_start_node=la_interp_start*(shoot_path->size()-1);
+    const int la_peak_node=la_interp_peak*(shoot_path->size()-1);
     //lookahead_factor=1.0f;
     // Set up lookahead root reduction
-    float red_start=10.f;
-    float red_end=1.f;
     // Set up root path (if selectpos is at leaf)
     if (select_pos == AtLeaf) 
         root_path = &(root_frames[match_root(strand[0])]); 
@@ -216,9 +218,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     while (!done) {
         // Calculate lookahead factor
         float la_interp = on_root ? 0.0f : 
-            closest_index <= la_start ? 0.0f :
-            closest_index<=la_peak ? 
-                (float)(closest_index-la_start)/(la_peak-la_start) : 
+            closest_index <= la_start_node ? 0.0f :
+            closest_index<=la_peak_node ? 
+                (float)(closest_index-la_start_node)/(la_peak_node-la_start_node) : 
                 1.f;
                 //(1.f-(float)(closest_index-la_peak)/(path->size()-1-la_peak));
 //            std::clamp(closest_index<=la_peak ? 
@@ -256,7 +258,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                     target = {closest_index,(*root_path)[0],0.0};
                 }else{
                     float alpha=(float)closest_index/shoot_path->size();
-                    float reduction=(1-alpha)*red_start+alpha*red_end;
+                    float reduction=(1-alpha)*la_red_max+alpha*la_red_min;
                     target = find_target(*root_path, 0, (distance_to_travel-target.travelled)/reduction);
                 }
             }else {
