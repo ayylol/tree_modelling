@@ -86,20 +86,27 @@ private:
     float max_angle;
     float local_spread;
     float reject_iso;
-    float lookahead_factor=1.0f;
+    // Lookahead Vars
     float lookahead_factor_current;
+    float lookahead_factor=1.0f;
     float lookahead_factor_min = 1.0f;
     float lookahead_factor_max = 2.0f;
     float la_interp_start=0.3;
     float la_interp_peak=0.5;
     float la_red_max=10.f;
     float la_red_min=1.f;
+    // Biasing
+    float bias_amount = 1.0f;
+    // Smoothing vars
+    int sm_iter = 100;
+    float sm_start = 0.9;
+    float sm_end = 0.7;
+    //
     float max_val = 3.0f;
     float leaf_min_range;
     float base_max_range;
     float root_min_range;
     float root_angle_node;
-    float bias_amount = 1.0f;
     // Texture Strand Vars ///////
     int tex_chance_start = 0;
     float tex_max_chance = 1.0f;
