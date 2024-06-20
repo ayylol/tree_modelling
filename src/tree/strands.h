@@ -99,6 +99,8 @@ private:
     float bias_amount = 1.0f;
     // Smoothing vars
     int sm_iter = 100;
+    float sm_min = 0.001;
+    float sm_peak = 0.15;
     float sm_start = 0.9;
     float sm_end = 0.7;
     //

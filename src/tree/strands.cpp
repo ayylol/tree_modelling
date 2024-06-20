@@ -94,6 +94,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     la_red_min = strand_options.at("la_red_min");
     // Smooth
     sm_iter = strand_options.at("sm_iter");
+    sm_min = strand_options.at("sm_min");
+    sm_peak = strand_options.at("sm_peak");
     sm_start = std::clamp((float)strand_options.at("sm_start"), 0.f, 1.f);
     sm_end = std::clamp((float)strand_options.at("sm_end"), 0.f, 1.f);
     //
@@ -358,7 +360,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     switch(type){
         case Structure:
             // Smooth
-            strand = smooth(strand, sm_iter, 0.15f, 0.001f, inflection * sm_start, 
+            strand = smooth(strand, sm_iter, sm_peak, sm_min, inflection * sm_start, 
                             inflection, inflection + ((strand.size() - 
                                 inflection - 1) * sm_end));
             strands.push_back(strand);
