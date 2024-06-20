@@ -85,12 +85,18 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     segment_length = strand_options.at("segment_length");
     num_trials = strand_options.at("num_trials");
     max_angle = strand_options.at("max_angle");
+    // LA
     lookahead_factor_max = strand_options.at("lookahead_max");
     lookahead_factor_min = strand_options.at("lookahead_min");
     la_interp_start = std::clamp((float)strand_options.at("la_interp_start"), 0.f, 1.f);
     la_interp_peak = std::clamp((float)strand_options.at("la_interp_peak"), 0.f, 1.f);
     la_red_max = strand_options.at("la_red_max");
     la_red_min = strand_options.at("la_red_min");
+    // Smooth
+    sm_iter = strand_options.at("sm_iter");
+    sm_start = std::clamp((float)strand_options.at("sm_start"), 0.f, 1.f);
+    sm_end = std::clamp((float)strand_options.at("sm_end"), 0.f, 1.f);
+    //
     reject_iso = strand_options.at("reject_iso");
     target_iso = strand_options.at("target_iso");
     iso_eval = strand_options.at("iso_eval");
@@ -348,18 +354,13 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     }
     // Occupy strand path
     if (strand.size()<=2) return;
-    //
     float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     switch(type){
         case Structure:
-            //FIXME: CHANGE MARKER
             // Smooth
-            //strand = smooth(strand, 500, 0.3, 0.00001f, inflection*0.4f, inflection, inflection+((strand.size()-inflection-1)*0.2f));
-            //strand = smooth(strand, 300, 0.3, 0.00001f, inflection*0.75f, inflection, inflection+((strand.size()-inflection-1)*0.4f));
-            //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.1f));
-            //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.15f));
-            //strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.9f, inflection, inflection+((strand.size()-inflection-1)*0.8f));
-            strand = smooth(strand, 100, 0.15f, 0.001f, inflection*0.95f, inflection, inflection+((strand.size()-inflection-1)*0.8f));
+            strand = smooth(strand, sm_iter, 0.15f, 0.001f, inflection * sm_start, 
+                            inflection, inflection + ((strand.size() - 
+                                inflection - 1) * sm_end));
             strands.push_back(strand);
             if (r < tex_chance) {
                 texture_strands.push_back(strand);
