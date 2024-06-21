@@ -338,14 +338,12 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         }
 
         if (on_root) {
-            strand[strand.size()-1] = move_extension(strand.back(), frame_position(next.frame), 5.0);
+            strand[strand.size()-1] = move_extension(strand.back(), frame_position(next.frame), strand[strand.size()-2], 5.0);
         } else if (age>root_frames.size() && target_on_root) {
             TargetResult root_closest = find_closest(strand.back(), *root_path, 0, target.index);
-            strand[strand.size()-1] = move_extension(strand.back(), (0.75f*frame_position(root_closest.frame)+0.25f*frame_position(next.frame)), 8.0);
-        } else if (!on_root && !target_on_root && 
-                grid.eval_pos(frame_position(next.frame))>=reject_iso && 
-                grid.eval_pos(strand.back())<reject_iso-10.0f) {
-            strand[strand.size()-1] = move_extension(strand.back(), frame_position(next.frame), reject_iso);
+            strand[strand.size()-1] = move_extension(strand.back(), (0.75f*frame_position(root_closest.frame)+0.25f*frame_position(next.frame)), strand[strand.size()-2], 8.0);
+        } else if (!on_root && !target_on_root) {
+            strand[strand.size()-1] = move_extension(strand.back(), frame_position(next.frame), strand[strand.size()-2], reject_iso);
         }
 
         if (next.index >= path->size()-1 && on_root) {
@@ -440,7 +438,8 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
             random_vector(canonical_direction, glm::radians(max_angle));
         float val = grid.eval_pos(trial_head);
         //float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso);
-        if (val<=reject_iso) {
+        //if (val<=reject_iso) {
+        if (true) { // FIXME: CURRENTLY NOT REJECTING ANYTHING
             float distance;
             if (bias){
                 glm::vec3 biased_head = trial_head;
@@ -888,20 +887,30 @@ std::optional<glm::vec3> Strands::find_extension_texture(glm::vec3 from, glm::ma
     //return find_extension(from,frame_from,frame_to);
 }
 
-glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso){
+glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, glm::vec3 last, float iso){
     // step towards closest until field is gets to reject value
     float a=0.f,b=1.f;
+    float val=grid.eval_pos(head);
+    /*
+    if (val>iso) {
+      return head;
+    }
+    */
+    glm::vec3 nudge_vec=glm::normalize(head-close)*segment_length;
+    while (val>(iso/4.f)){
+      head+=nudge_vec;
+      val=grid.eval_pos(head);
+    }
     glm::vec3 new_head=head;
-    float val = grid.eval_pos(head);
-    if (val>iso) return head;
     for (int i=0;i<16 && std::abs(val-iso)>0.1;++i){
         float p=(b+a)/2.f;
         new_head=(1.f-p)*close+p*head;
-        val = grid.eval_pos(new_head);
+        val=grid.eval_pos(new_head);
         if (val > iso) a=p;
         else b=p;
     }
     return new_head;
+    //return last+glm::normalize(new_head-last)*segment_length;
 }
 
 Strands::TargetResult 
