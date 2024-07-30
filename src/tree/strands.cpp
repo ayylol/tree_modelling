@@ -1,14 +1,10 @@
 #include "strands.h"
 #include "glm/common.hpp"
-#include "glm/ext/quaternion_common.hpp"
 #include "glm/ext/scalar_constants.hpp"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
-#include "glm/gtx/quaternion.hpp"
 #include "glm/gtx/vector_angle.hpp"
-#include "glm/gtc/epsilon.hpp"
 #include "glm/vector_relational.hpp"
-#include "tree/implicit.h"
 #include <algorithm>
 #include <cstdlib>
 #include <glm/gtx/io.hpp>
@@ -337,16 +333,40 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             next = find_closest(strand.back(), *path, closest_index+1, std::max(target.index,closest_index+1)); 
         }
 
+        // Binary search for final extension
+        if (target_on_root){
+          _interp+=0.1f;
+          _interp=std::min(_interp,1.f);
+          TargetResult root_closest = 
+              find_closest(strand.back(),*root_path, 0, target.index);
+          float alpha=std::min(root_closest.index/(root_path->size()*0.5f),1.f);
+          bsearch_iso=reject_iso*(1.f-alpha)+5.0f*alpha;
+        }else {
+          _interp=0.f;
+          bsearch_iso=reject_iso;
+        }
         if (on_root) {
-            strand[strand.size()-1] = move_extension(strand.back(), frame_position(next.frame), 5.0);
+            strand[strand.size()-1] = 
+              move_extension(strand.back(), 
+                  frame_position(next.frame), bsearch_iso);
         } else if (age>root_frames.size() && target_on_root) {
-            TargetResult root_closest = find_closest(strand.back(), *root_path, 0, target.index);
-            strand[strand.size()-1] = move_extension(strand.back(), (0.75f*frame_position(root_closest.frame)+0.25f*frame_position(next.frame)), 8.0);
+            TargetResult root_closest = 
+              find_closest(strand.back(),*root_path, 0, target.index);
+            //std::cout<<_interp<<std::endl;
+            float alpha=_interp;
+            strand[strand.size()-1] = 
+              move_extension(strand.back(),
+                  frame_position(root_closest.frame)*alpha
+                  +frame_position(next.frame)*(1.f-alpha), 
+                  bsearch_iso);
         } else if (!on_root && !target_on_root && 
                 grid.eval_pos(frame_position(next.frame))>=reject_iso && 
                 grid.eval_pos(strand.back())<reject_iso-10.0f) {
-            strand[strand.size()-1] = move_extension(strand.back(), frame_position(next.frame), reject_iso);
+            strand[strand.size()-1] = 
+              move_extension(strand.back(), 
+                  frame_position(next.frame), bsearch_iso);
         }
+        //
 
         if (next.index >= path->size()-1 && on_root) {
             done = true;
@@ -925,7 +945,6 @@ Strands::find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path,
     return {closest_index, path[closest_index], lowest_dist2};
 }
 
-// TODO: Fix
 size_t Strands::match_root(glm::vec3 position){
     if (root_pool.empty()) {
         if (select_pool==All){

@@ -86,6 +86,9 @@ private:
     float max_angle;
     float local_spread;
     float reject_iso;
+    // Experimental
+    float bsearch_iso;
+    float _interp;
     // Lookahead Vars
     float lookahead_factor_current;
     float lookahead_factor=1.0f;
