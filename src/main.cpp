@@ -70,7 +70,8 @@ bool view_mesh = true,
      view_skeleton = false,
      view_ground = false,
      view_bound = false,
-     interactive = true;
+     interactive = true,
+     next_stage=false;
 
 bool has_exported = false;
 bool export_mesh = false;
@@ -132,6 +133,7 @@ int main(int argc, char *argv[]) {
 
     // Tree detail
     STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
+    detail.next_stage();
 
     // Creating Meshes
     float surface_val = opt_data.at("mesh_iso");
@@ -171,6 +173,12 @@ int main(int argc, char *argv[]) {
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
+        if (next_stage){
+          detail.next_stage();
+          tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
+          strands_geom=detail.get_mesh();
+          next_stage=false;
+        }
         if (reset_strands){
             strands_geom = detail.get_mesh(strands_start,strands_end);
             reset_strands = false;
@@ -352,7 +360,8 @@ void save_mesh(Mesh<Vertex> mesh){
 float speed_factor = 1.f;
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
      pressed5 = false, pressed6 = false, pressed7 = false,
-     pressedperiod = false, pressedenter = false, pressedga = false;
+     pressedperiod = false, pressedenter = false, pressedga = false,
+     pressedn = false;
 void processInput(GLFWwindow *window) {
     // Mouse input
     double mouse_current_x, mouse_current_y;
@@ -471,6 +480,12 @@ void processInput(GLFWwindow *window) {
         pressed7 = true;
     }
     if (glfwGetKey(window, GLFW_KEY_7) == GLFW_RELEASE && pressed7) pressed7 = false;
+
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !pressedn){ // Toggle
+        next_stage = true;
+        pressedn = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE && pressedn) pressedn = false;
     // Strand Geom Keybinds
     // Affect Lower bounds
     if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){

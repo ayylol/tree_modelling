@@ -130,7 +130,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
         tex_chance_start = (float)tex_options.at("chance_start")*num_strands;
         tex_max_chance = tex_options.at("chance_max");
     }
-    add_strands(num_strands);
+    //add_strands(num_strands);
 }
 
 Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
@@ -163,11 +163,16 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
     return Mesh(vertices, indices);
 }
 
+void Strands::next_stage(){
+  start_node+=5;
+  add_strands(5);
+}
 void Strands::add_strands(unsigned int amount) {
     std::vector<size_t> paths(shoot_frames.size());
     std::iota(paths.begin(),paths.end(),0);
     std::shuffle(paths.begin(), paths.end(), rng);
-    float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
+    //float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
+    float lhf_step = (lookahead_factor_max-lookahead_factor)/(paths.size());
     float texture_chance_step = tex_max_chance / (amount-tex_chance_start);
     lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
@@ -189,7 +194,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     const std::vector<glm::mat4> *shoot_path=&(shoot_frames[shoot_index]);
     const std::vector<glm::mat4> *root_path=nullptr;
     const std::vector<glm::mat4> *path = shoot_path;
-    size_t closest_index = 0;
+    //size_t closest_index = 0;
+    size_t closest_index = std::clamp((int)shoot_path->size()-start_node,0,(int)shoot_path->size()-50);
     glm::mat4 last_closest = (*path)[closest_index];
     std::vector<glm::vec3> strand{frame_position(last_closest)};
     // Set up lookahead value
@@ -200,7 +206,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     // Set up lookahead root reduction
     // Set up root path (if selectpos is at leaf)
     if (select_pos == AtLeaf) 
-        root_path = &(root_frames[match_root(strand[0])]); 
+        root_path = &(root_frames[match_root(strand[closest_index])]); 
     // Loop until on root, and target node is the end
     bool on_root = false;
     bool target_on_root = false;
