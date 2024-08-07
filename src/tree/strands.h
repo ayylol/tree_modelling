@@ -28,6 +28,7 @@ public:
     };
     Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options);
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
+    void next_stage();
 private:
     void add_strands(unsigned int amount);
     void add_strand(size_t shoot_index, int age, StrandType type = Structure);
@@ -87,6 +88,7 @@ private:
     float local_spread;
     float reject_iso;
     // Experimental
+    int start_node=50;
     float bsearch_iso;
     float _interp;
     // Lookahead Vars
