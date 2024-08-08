@@ -164,8 +164,7 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
 }
 
 void Strands::next_stage(){
-  start_node+=5;
-  add_strands(5);
+  add_strands(10);
 }
 void Strands::add_strands(unsigned int amount) {
     std::vector<size_t> paths(shoot_frames.size());
@@ -194,8 +193,20 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     const std::vector<glm::mat4> *shoot_path=&(shoot_frames[shoot_index]);
     const std::vector<glm::mat4> *root_path=nullptr;
     const std::vector<glm::mat4> *path = shoot_path;
-    //size_t closest_index = 0;
-    size_t closest_index = std::clamp((int)shoot_path->size()-start_node,0,(int)shoot_path->size()-50);
+    //size_t closest_index = std::clamp((int)shoot_path->size()-start_node,0,(int)shoot_path->size()-50);
+    // Find start index
+    size_t closest_index;
+    size_t a=0,b=shoot_path->size()-1;
+    while (b-a>5){
+      closest_index=a+(b-a)/2;
+      if (grid.eval_pos(frame_position((*path)[closest_index]))<=0.01f) {
+        a=closest_index;
+      } else {
+        b=closest_index;
+      }
+    }
+    closest_index=std::clamp(closest_index-20,(size_t)0,(size_t)shoot_path->size()-20);
+    //
     glm::mat4 last_closest = (*path)[closest_index];
     std::vector<glm::vec3> strand{frame_position(last_closest)};
     // Set up lookahead value
@@ -224,8 +235,13 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             break;
     }
     int transition_node = 0;
+    int num_extensions;
     //std::cout<<std::endl;
     while (!done) {
+        if(on_root){
+          num_extensions--;
+          if (num_extensions==0) done=true;
+        }
         // Calculate lookahead factor
         float la_interp = on_root ? 0.0f : 
             closest_index <= la_start_node ? 0.0f :
@@ -334,6 +350,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 on_root = true;
                 inflection = strand.size()-1;
                 lookahead_factor=1.0f;
+                num_extensions=strand.size();
             }
         }else{
             next = find_closest(strand.back(), *path, closest_index+1, std::max(target.index,closest_index+1)); 
