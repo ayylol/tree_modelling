@@ -154,9 +154,9 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
             int j=0;
             for (auto position : path) {
                 glm::vec3 color = 
-                  j < inflection_points[i].first ? red : 
-                  j < inflection_points[i].second ? blue :
-                  red;
+                  j < inflection_points[i].first ? blue : 
+                  j < inflection_points[i].second ? red :
+                  blue;
                 vertices.push_back(Vertex{position, color});
                 j++;
             }
