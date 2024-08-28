@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl
 
     // Parse options
-    auto option_file =std::ifstream(argv[1]);
+    auto option_file = std::ifstream(argv[1]);
     json opt_data = json::parse(option_file);
 
     // Creating tree
@@ -133,7 +133,6 @@ int main(int argc, char *argv[]) {
 
     // Tree detail
     STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
-    detail.next_stage();
 
     // Creating Meshes
     float surface_val = opt_data.at("mesh_iso");
@@ -174,7 +173,7 @@ int main(int argc, char *argv[]) {
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
         if (next_stage){
-          detail.next_stage();
+          detail.add_strands(10);
           tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
           strands_geom=detail.get_mesh();
           next_stage=false;

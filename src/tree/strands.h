@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <nlohmann/json_fwd.hpp>
 #include <random>
 #include <utility>
 #include <vector>
@@ -17,6 +16,7 @@
 #include "tree/grid.h"
 #include "tree/implicit.h"
 #include "tree/skeleton.h"
+#include <nlohmann/json.hpp>
 
 #include "util/geometry.h"
 
@@ -28,9 +28,8 @@ public:
     };
     Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options);
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
-    void next_stage();
-private:
     void add_strands(unsigned int amount);
+private:
     void add_strand(size_t shoot_index, int age, StrandType type = Structure);
     size_t match_root(glm::vec3 pos);
     //Implicit &evalfunc;
@@ -38,6 +37,7 @@ private:
     std::vector<std::vector<glm::mat4>> shoot_frames;
     std::vector<std::vector<glm::mat4>> root_frames;
     std::vector<std::vector<glm::vec3>> strands;
+    std::vector<std::pair<size_t,size_t>> inflection_points;
     std::vector<std::vector<glm::vec3>> texture_strands;
     Grid &grid;
     Grid &texture_grid;

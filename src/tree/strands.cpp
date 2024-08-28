@@ -130,7 +130,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
         tex_chance_start = (float)tex_options.at("chance_start")*num_strands;
         tex_max_chance = tex_options.at("chance_max");
     }
-    //add_strands(num_strands);
+    add_strands(num_strands);
 }
 
 Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
@@ -138,8 +138,9 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
     end = std::min(1.0f,end);
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
-    glm::vec3 blue(0,0,1);  // Placed Earlier
     glm::vec3 red(1,0,0);   // Placed Later
+    glm::vec3 green(0,1,0);
+    glm::vec3 blue(0,0,1);  // Placed Earlier
     //float start = 0.;
     //float end = 1.0;
     auto& strand_list = type==Structure ? strands : texture_strands;
@@ -148,10 +149,16 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
         for (int i = start * (strand_list.size()-1); i<= end * (strand_list.size()-1); i++){
             auto path = strand_list[i];
             float percent = ((float)i/strand_list.size()-start)/(end-start);
-            glm::vec3 color = (1-percent)*blue+(percent)*red;
+            //glm::vec3 color = (1-percent)*blue+(percent)*red;
             size_t start_index = vertices.size();
+            int j=0;
             for (auto position : path) {
+                glm::vec3 color = 
+                  j < inflection_points[i].first ? red : 
+                  j < inflection_points[i].second ? blue :
+                  red;
                 vertices.push_back(Vertex{position, color});
+                j++;
             }
             size_t end_index = vertices.size();
             for (int i = start_index; i < end_index - 1; i++) {
@@ -163,9 +170,6 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
     return Mesh(vertices, indices);
 }
 
-void Strands::next_stage(){
-  add_strands(10);
-}
 void Strands::add_strands(unsigned int amount) {
     std::vector<size_t> paths(shoot_frames.size());
     std::iota(paths.begin(),paths.end(),0);
@@ -176,7 +180,7 @@ void Strands::add_strands(unsigned int amount) {
     lookahead_factor_current=lookahead_factor;
     for (size_t i = 0; i < amount; i++) {
         std::cout<<"\rStrand: "<<i+1<< "/"<<amount;
-        //std::flush(std::cout);
+        std::flush(std::cout);
         add_strand(paths[i%paths.size()],i);
         if (i >tex_chance_start) tex_chance+=texture_chance_step;
         lookahead_factor_current+=lhf_step;
@@ -236,7 +240,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     }
     int transition_node = 0;
     int num_extensions;
-    //std::cout<<std::endl;
+    
+    inflection_points.push_back({0,0});
     while (!done) {
         if(on_root){
           num_extensions--;
@@ -270,6 +275,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         if (target.index == path->size()-1) {
             if (!on_root){ // switch path
                 if (!target_on_root){
+                    inflection_points[inflection_points.size()-1].first=strand.size()-1;
                     target_on_root = true;
                     //inflection = strand.size()-1;
                     // FIXME: CHANGED
@@ -351,6 +357,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 inflection = strand.size()-1;
                 lookahead_factor=1.0f;
                 num_extensions=strand.size();
+                inflection_points[inflection_points.size()-1].second=strand.size()-1;
             }
         }else{
             next = find_closest(strand.back(), *path, closest_index+1, std::max(target.index,closest_index+1)); 
@@ -358,7 +365,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
 
         // Binary search for final extension
         if (target_on_root){
-          _interp+=0.1f;
+          _interp+=0.01f;
           _interp=std::min(_interp,1.f);
           TargetResult root_closest = 
               find_closest(strand.back(),*root_path, 0, target.index);
@@ -992,6 +999,7 @@ size_t Strands::match_root(glm::vec3 position){
         angle_vec.y = 0.f;
         angle_vec = glm::normalize(angle_vec);
         double largest_cos = -1.f;
+        assert("Root pool empty" && root_pool.size()!=0);
         for (size_t j = 0; j < root_pool.size(); j++) {
             double cos = glm::dot(angle_vec, root_vecs[root_pool[j]]);
             //double cos = glm::angle(angle_vec, root_vecs[root_pool[j]]);
@@ -1009,7 +1017,8 @@ size_t Strands::match_root(glm::vec3 position){
             //std::cout<<' '<<i<<' '<<possible_matches.size()<<std::endl;
             match_index = possible_matches[i];
         }else{ // Shouldn't happen but idk
-            assert(!possible_matches.empty());
+            std::cout<<"No matches for: "<<position<<std::endl;
+            //assert("No root matches" && !possible_matches.empty());
             match_index = (int)std::rand() % root_pool.size();
         }
         //
