@@ -28,6 +28,8 @@ std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3>& in, int tim
             else if(i>=peak&&i<end) {influence+=i_dec;}
             smoothed[i]=influence*old[i-1]+(1.f-2*influence)*old[i]+influence*old[i+1];
         }
+        /*
+         * TODO: REENABLE
         for (auto it=smoothed.begin()+1; it!=(smoothed.end()-1);++it){
             float d = glm::distance(*it,*(it-1))+glm::distance(*it,*(it+1));
             if (d<segment_length*1){
@@ -35,6 +37,7 @@ std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3>& in, int tim
                 it--;
             }
         }
+        */
         old = smoothed;
     }
     return smoothed;
@@ -133,9 +136,31 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
     add_strands(num_strands);
 }
 
-Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
+Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
+  glm::vec3 col1(0.4,0,0);
+  glm::vec3 col2(0,0.4,0);
+  strand = std::clamp(strand, 0.0f, 1.f);
+  node = std::clamp(node, 0.0f, 1.f);
+  size_t strand_i = strand*(strands.size()-1);
+  size_t node_i = node*(strands[strand_i].size()-1);
+  std::vector<Vertex> vertices;
+  vertices.push_back(Vertex(strands[strand_i][node_i],col2));
+  int i=0;
+  for (auto node : node_info[strand_i][node_i]){
+    glm::vec3 color = ++i!=2 ? col1 : col2;
+    vertices.push_back(Vertex(node,color));
+  }
+  std::vector<GLuint> indices;
+  if (node_info[strand_i][node_i].size() == 3){
+    indices={0,2,1,3};
+  }else{
+    indices={0,1};
+  }
+  return Mesh(vertices, indices);
+}
+Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const{
     start = std::max(0.0f,start);
-    end = std::min(1.0f,end);
+    end = std::clamp(end, start, 1.f);
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     glm::vec3 red(1,0,0);   // Placed Later
@@ -213,6 +238,14 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     //
     glm::mat4 last_closest = (*path)[closest_index];
     std::vector<glm::vec3> strand{frame_position(last_closest)};
+
+    // SETUP AUXILARY INFO
+    inflection_points.push_back({0,0});
+    node_info.push_back({});
+    node_info.back().push_back({});
+    node_info.back().back().push_back(frame_position(last_closest));
+    // SETUP AUXILARY INFO
+
     // Set up lookahead value
     //lookahead_factor=lookahead_factor_current; // CHANGE THIS
     const int la_start_node=la_interp_start*(shoot_path->size()-1);
@@ -241,7 +274,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     int transition_node = 0;
     int num_extensions;
     
-    inflection_points.push_back({0,0});
     while (!done) {
         if(on_root){
           num_extensions--;
@@ -341,6 +373,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             ext = find_extension_canoniso(strand.back(), last_closest, target.frame,false);
         }
         strand.push_back(ext.value());
+        node_info.back().push_back({});
 
         //TargetResult next = find_closest(strand.back(), *path, closest_index+1, 10); // Old method
         TargetResult next;
@@ -375,6 +408,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
           _interp=0.f;
           bsearch_iso=reject_iso;
         }
+        node_info.back().back().push_back(frame_position(next.frame));
         if (on_root) {
             strand[strand.size()-1] = 
               move_extension(strand.back(), 
@@ -384,11 +418,12 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
               find_closest(strand.back(),*root_path, 0, target.index);
             //std::cout<<_interp<<std::endl;
             float alpha=_interp;
+            glm::vec3 bin_point = frame_position(root_closest.frame)*alpha
+                  +frame_position(next.frame)*(1.f-alpha);
             strand[strand.size()-1] = 
-              move_extension(strand.back(),
-                  frame_position(root_closest.frame)*alpha
-                  +frame_position(next.frame)*(1.f-alpha), 
-                  bsearch_iso);
+              move_extension(strand.back(),bin_point, bsearch_iso);
+            node_info.back().back().push_back(bin_point);
+            node_info.back().back().push_back(frame_position(root_closest.frame));
         } else if (!on_root && !target_on_root && 
                 grid.eval_pos(frame_position(next.frame))>=reject_iso && 
                 grid.eval_pos(strand.back())<reject_iso-10.0f) {
@@ -414,6 +449,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                             inflection, inflection + ((strand.size() - 
                                 inflection - 1) * sm_end));
             strands.push_back(strand);
+            assert(strand.size() == node_info.back().size());
+            assert(strands.size() == node_info.size());
             if (r < tex_chance) {
                 texture_strands.push_back(strand);
                 texture_grid.fill_path( strands.size(), strand, tex_max_val, tex_max_range, tex_shoot_range, tex_root_range, inflection);

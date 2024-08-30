@@ -45,6 +45,7 @@ Skeleton::Skeleton(json& options){
 Mesh<VertFlat> Skeleton::get_mesh(){
     // FRAMES
     // Initialize mesh verts and indices
+    /*
     const float axis_scale=0.0045f;
     const VertFlat axis[6] = {
         {glm::vec3(0,0,0),glm::vec3(1,0,0)},{axis_scale*glm::vec3(1,0,0),glm::vec3(1,0,0)},
@@ -116,7 +117,7 @@ Mesh<VertFlat> Skeleton::get_mesh(){
         }
     }
     return Mesh(vertices, indices); 
-    /*
+    */
     // STICKS
     // Initialize mesh verts and indices
     std::vector<VertFlat> vertices;
@@ -178,7 +179,6 @@ Mesh<VertFlat> Skeleton::get_mesh(){
         }
     }
     return Mesh(vertices, indices);
-    */
 }
 
 std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const

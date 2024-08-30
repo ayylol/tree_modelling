@@ -78,7 +78,8 @@ bool export_mesh = false;
 
 bool reset_strands = false;
 float strands_start = 0.0f,
-      strands_end = 1.0f;
+      strands_end = 1.0f,
+      node_vis_f = 0.5f;
 
 int main(int argc, char *argv[]) {
     // Validating input
@@ -139,9 +140,12 @@ int main(int argc, char *argv[]) {
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
     //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
-    STOPWATCH("Getting Strand", Mesh strands_geom = detail.get_mesh(););
-    STOPWATCH("Getting Strand", Mesh tstrands_geom = detail.get_mesh(0.f,1.f,Strands::Texture););
-    STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
+    STOPWATCH("Getting Strand", 
+        Mesh strands_geom = detail.get_mesh();
+        Mesh tstrands_geom = detail.get_mesh(0.f,1.f,Strands::Texture);
+        Mesh node_vis = detail.visualize_node(0,0);
+    );
+    //STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
         STOPWATCH("Exporting Data", 
@@ -180,6 +184,7 @@ int main(int argc, char *argv[]) {
         }
         if (reset_strands){
             strands_geom = detail.get_mesh(strands_start,strands_end);
+            node_vis = detail.visualize_node(strands_end,node_vis_f);
             reset_strands = false;
         }
         #define SHOW_CAM_POS 0
@@ -202,6 +207,10 @@ int main(int argc, char *argv[]) {
         }
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
         //if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
+        if (view_normals) {
+          node_vis.draw(flat_shader, CAMERA, GL_POINTS);
+          node_vis.draw(flat_shader, CAMERA, GL_LINES);
+        }
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) ground.draw(shader, CAMERA, GL_TRIANGLES);
         if (view_bound) bound_geom.draw(flat_shader, CAMERA, GL_LINES);
@@ -266,7 +275,7 @@ GLFWwindow *openGLInit() {
     glfwSetScrollCallback(window, scroll_callback);
 
     // OpenGL drawing settings
-    glPointSize(2.f);
+    glPointSize(8.f);
     //glPolygonMode( GL_BACK, GL_LINE );
     //glPolygonMode( GL_FRONT, GL_POINT );
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -492,16 +501,27 @@ void processInput(GLFWwindow *window) {
         reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_APOSTROPHE) == GLFW_PRESS){
+        if (strands_start == strands_end) strands_end+= 0.0001f;
         strands_start = std::min(strands_end, strands_start+0.005f);
         reset_strands = true;
     }
     // Affect upper bounds
     if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS){
-        strands_end = std::max(strands_start, strands_end-0.0025f);
+        if (strands_end == strands_start) strands_start-= 0.0001f;
+        strands_end = std::max(strands_start, strands_end-0.005f);
         reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS){
-        strands_end = std::min(1.0f, strands_end+0.0025f);
+        strands_end = std::min(1.0f, strands_end+0.005f);
+        reset_strands = true;
+    }
+    // Affect node vis
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+        node_vis_f= std::max(node_vis_f-0.005f, 0.f);
+        reset_strands = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+        node_vis_f= std::min(node_vis_f+0.005f, 1.f);
         reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_PRESS && !has_exported){
