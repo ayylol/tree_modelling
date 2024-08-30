@@ -28,6 +28,7 @@ public:
     };
     Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options);
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
+    Mesh<Vertex> visualize_node(float strand, float node) const;
     void add_strands(unsigned int amount);
 private:
     void add_strand(size_t shoot_index, int age, StrandType type = Structure);
@@ -39,6 +40,7 @@ private:
     std::vector<std::vector<glm::vec3>> strands;
     std::vector<std::pair<size_t,size_t>> inflection_points;
     std::vector<std::vector<glm::vec3>> texture_strands;
+    std::vector<std::vector<std::vector<glm::vec3>>> node_info;
     Grid &grid;
     Grid &texture_grid;
 
@@ -71,6 +73,9 @@ private:
     //TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, int start_index, int end_index);
 
+    // Node observed
+    float node_observed=0.0;
+    size_t strand_observed=0;
     // Strand Creation Vars
     enum Method{
         CanonDir,
