@@ -137,24 +137,22 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid& texture_grid, nlohmann:
 }
 
 Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
-  glm::vec3 col1(0.4,0,0);
-  glm::vec3 col2(0,0.4,0);
+  glm::vec3 col1(0,1,0);
+  glm::vec3 col2(1,0,1);
   strand = std::clamp(strand, 0.0f, 1.f);
   node = std::clamp(node, 0.0f, 1.f);
   size_t strand_i = strand*(strands.size()-1);
   size_t node_i = node*(strands[strand_i].size()-1);
   std::vector<Vertex> vertices;
   vertices.push_back(Vertex(strands[strand_i][node_i],col2));
-  int i=0;
   for (auto node : node_info[strand_i][node_i]){
-    glm::vec3 color = ++i!=2 ? col1 : col2;
-    vertices.push_back(Vertex(node,color));
+    vertices.push_back(Vertex(node,col2));
   }
   std::vector<GLuint> indices;
-  if (node_info[strand_i][node_i].size() == 3){
-    indices={0,2,1,3};
+  if (node_info[strand_i][node_i].size() == 4){
+    indices={0,2,1,3,4};
   }else{
-    indices={0,1};
+    indices={0,1,2};
   }
   return Mesh(vertices, indices);
 }
@@ -225,7 +223,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     //size_t closest_index = std::clamp((int)shoot_path->size()-start_node,0,(int)shoot_path->size()-50);
     // Find start index
     size_t closest_index;
-    size_t a=0,b=shoot_path->size()-1;
+    size_t a=0,b=shoot_path->size()-20;
     while (b-a>5){
       closest_index=a+(b-a)/2;
       if (grid.eval_pos(frame_position((*path)[closest_index]))<=0.01f) {
@@ -234,7 +232,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         b=closest_index;
       }
     }
-    closest_index=std::clamp(closest_index-20,(size_t)0,(size_t)shoot_path->size()-20);
+    if (closest_index>20) closest_index-=20;
+    closest_index=std::clamp(closest_index,(size_t)0,(size_t)shoot_path->size()-20);
     //
     glm::mat4 last_closest = (*path)[closest_index];
     std::vector<glm::vec3> strand{frame_position(last_closest)};
@@ -294,7 +293,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         lookahead_factor = (1-la_interp)*lookahead_factor_min+la_interp*lookahead_factor_current;
         // Start of this segment is head of last
         glm::vec3 start(strand[strand.size() - 1]);
-        float distance_to_travel = lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start));
+        float la_max = 10.0f;
+        float distance_to_travel = std::min(lookahead_factor*(segment_length + glm::distance(frame_position(last_closest), start)),la_max);
+        //if (distance_to_travel>=3.0) std::cout<<distance_to_travel<<std::endl;
 
         // Find target
         TargetResult target;
@@ -329,6 +330,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                 //done = true;
             }
         }
+        // ADD TARGET to visualization
+        node_info.back().back().push_back(frame_position(target.frame));
 
         // Add extension
         std::optional<glm::vec3> ext;
@@ -380,7 +383,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         if (!on_root && target_on_root){
             //std::cout<<"transition"<<std::endl;
             TargetResult shoot_closest = find_closest(strand.back(), *shoot_path, closest_index+1, shoot_path->size()-1); 
-            TargetResult root_closest = find_closest(strand.back(), *root_path, 0, target.index); 
+            TargetResult root_closest = find_closest(strand.back(), *root_path, 0, root_path->size()-1);
             if (shoot_closest.travelled < root_closest.travelled){
                 next = shoot_closest;
             }else{
@@ -413,7 +416,11 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             strand[strand.size()-1] = 
               move_extension(strand.back(), 
                   frame_position(next.frame), bsearch_iso);
-        } else if (age>root_frames.size() && target_on_root) {
+        } else if (age>root_frames.size() && target_on_root){
+            /*
+                    && grid.eval_pos(frame_position(next.frame))>=reject_iso && 
+                    grid.eval_pos(strand.back())<reject_iso-10.0f) {
+                    */
             TargetResult root_closest = 
               find_closest(strand.back(),*root_path, 0, target.index);
             //std::cout<<_interp<<std::endl;
