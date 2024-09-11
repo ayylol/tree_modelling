@@ -332,44 +332,15 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         }
         // ADD TARGET to visualization
         node_info.back().back().push_back(frame_position(target.frame));
+        // end of find target section
 
         // Add extension
         std::optional<glm::vec3> ext;
-        switch (method){
-            case CanonDir:
-                if (target_on_root || on_root)
-                //if (on_root)
-                    ext = find_extension(strand.back(), last_closest, target.frame, true);
-                else
-                    ext = find_extension(strand.back(), last_closest, target.frame);
-                break;
-            case LocalPosMatching:
-                ext = find_extension_fs(strand.back(), last_closest, target.frame);
-                break;
-            case HeadingDir:
-                ext = find_extension_heading(strand.back(), target.frame);
-                break;
-            case CanonIso:
-                if (!on_root) ext = find_extension_canoniso(
-                        strand.back(), last_closest, target.frame, true, std::max(((float)closest_index-transition_node)/(path->size()-transition_node), 0.2f));
-                else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
-                //ext = find_extension_canoniso(strand.back(), last_closest, target.frame, true, std::max(((float)closest_index-transition_node)/(path->size()-transition_node), 0.2f));
-                //find_extension_canoniso(strand.back(), last_closest, target.frame, false);
-                //else ext = find_extension_canoniso(strand.back(), last_closest, target.frame, false);
-                break;
-            case PTFIso:
-                ext = find_extension_ptfiso(strand.back(), last_closest, target.frame);
-                break;
-            case CanonPTFEval:
-                ext = find_extension_canonptfeval(strand.back(), last_closest, target.frame);
-                break;
-            case PTFCanonEval:
-                ext = find_extension_ptfcanoneval(strand.back(), last_closest, target.frame);
-                break;
-            case TextureExt:
-                ext = find_extension_texture(strand.back(), last_closest, target.frame);
-                break;
-        }
+        if (target_on_root || on_root)
+        //if (on_root)
+            ext = find_extension(strand.back(), last_closest, target.frame, true);
+        else
+            ext = find_extension(strand.back(), last_closest, target.frame);
 
         //if (!(ext && (age<root_frames.size()||grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0))){
         if(!ext){
@@ -384,7 +355,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             //std::cout<<"transition"<<std::endl;
             TargetResult shoot_closest = find_closest(strand.back(), *shoot_path, closest_index+1, shoot_path->size()-1); 
             TargetResult root_closest = find_closest(strand.back(), *root_path, 0, root_path->size()-1);
-            if (shoot_closest.travelled < root_closest.travelled){
+            if (shoot_closest.travelled < root_closest.travelled){ //note travelled here is dist2 between closest and node
                 next = shoot_closest;
             }else{
                 next = root_closest;
