@@ -371,11 +371,11 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         }
 
         // Binary search for final extension
-        if (target_on_root){
+        if (target_on_root&&!on_root){
           _interp+=0.01f;
           _interp=std::min(_interp,1.f);
           TargetResult root_closest = 
-              find_closest(strand.back(),*root_path, 0, target.index);
+              find_closest(strand.back(),*root_path, 0, root_path->size()-1);
           float alpha=std::min(root_closest.index/(root_path->size()*0.5f),1.f);
           bsearch_iso=reject_iso*(1.f-alpha)+5.0f*alpha;
         }else {
