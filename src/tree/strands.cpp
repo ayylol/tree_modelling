@@ -374,7 +374,10 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         // Binary search for final extension
         if (target_on_root){
           _interp+=0.01f;
+          _interp_bias+=0.05f; //Parameter
           _interp=std::min(_interp,1.f);
+          _interp_bias=std::min(_interp_bias,1.f);
+          //std::cout<<_interp_bias<<std::endl;
           TargetResult root_closest = 
               find_closest(strand.back(),*root_path, 0, root_path->size()-1);
           float alpha=std::min(root_closest.index/(root_path->size()*0.5f),1.f);
@@ -382,6 +385,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
           //bsearch_iso=reject_iso*(1.f-alpha)+(reject_iso-10)*alpha;
         }else {
           _interp=0.f;
+          _interp_bias=0.f;
           bsearch_iso=reject_iso;
         }
         node_info.back().back().push_back(frame_position(next.frame));
@@ -495,10 +499,11 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from, glm::mat4 frame
         if (val<=reject_iso) {
             float distance;
             if (bias){
+                float current_bias=(1-_interp_bias)+bias_amount*_interp_bias;
                 glm::vec3 biased_head = trial_head;
-                biased_head.y /= bias_amount;
+                biased_head.y /= current_bias;
                 glm::vec3 biased_point = target_point;
-                biased_point.y /= bias_amount;
+                biased_point.y /= current_bias;
                 distance = glm::distance(biased_head, biased_point);
             }
             else{

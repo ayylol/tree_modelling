@@ -96,6 +96,7 @@ private:
     int start_node=50;
     float bsearch_iso;
     float _interp;
+    float _interp_bias;
     // Lookahead Vars
     float lookahead_factor_current;
     float lookahead_factor=1.0f;
