@@ -385,15 +385,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
           bsearch_iso=reject_iso;
         }
         node_info.back().back().push_back(frame_position(next.frame));
-        if (on_root) {
-            strand[strand.size()-1] = 
-              move_extension(strand.back(), 
-                  frame_position(next.frame), bsearch_iso);
-        } else if (age>root_frames.size() && target_on_root){
-            /*
-                    && grid.eval_pos(frame_position(next.frame))>=reject_iso && 
-                    grid.eval_pos(strand.back())<reject_iso-10.0f) {
-                    */
+        if (target_on_root && !on_root){
             TargetResult root_closest = 
               find_closest(strand.back(),*root_path, 0, target.index);
             //std::cout<<_interp<<std::endl;
@@ -404,9 +396,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
               move_extension(strand.back(),bin_point, bsearch_iso);
             node_info.back().back().push_back(bin_point);
             node_info.back().back().push_back(frame_position(root_closest.frame));
-        } else if (!on_root && !target_on_root && 
-                grid.eval_pos(frame_position(next.frame))>=reject_iso && 
-                grid.eval_pos(strand.back())<reject_iso-10.0f) {
+        }else{
             strand[strand.size()-1] = 
               move_extension(strand.back(), 
                   frame_position(next.frame), bsearch_iso);
