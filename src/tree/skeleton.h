@@ -29,6 +29,7 @@ class Skeleton{
         std::pair<glm::vec3,glm::vec3> get_bounds() const;
         glm::vec3 get_com() const;
         glm::vec3 get_root_pos() const;
+        glm::mat4 get_root_frame() const;
         float get_average_length() const;
 
         enum path_type{

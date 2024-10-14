@@ -71,7 +71,7 @@ bool view_mesh = true,
      view_ground = false,
      view_bound = false,
      interactive = true,
-     next_stage=false;
+     next_stage = false;
 
 bool has_exported = false;
 bool export_mesh = false;
@@ -501,13 +501,13 @@ void processInput(GLFWwindow *window) {
         reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_APOSTROPHE) == GLFW_PRESS){
-        if (strands_start == strands_end) strands_end+= 0.0001f;
+        if (strands_start == strands_end) strands_end+= 0.00005f;
         strands_start = std::min(strands_end, strands_start+0.005f);
         reset_strands = true;
     }
     // Affect upper bounds
     if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS){
-        if (strands_end == strands_start) strands_start-= 0.0001f;
+        if (strands_end == strands_start) strands_start-= 0.00005f;
         strands_end = std::max(strands_start, strands_end-0.005f);
         reset_strands = true;
     }
@@ -517,11 +517,11 @@ void processInput(GLFWwindow *window) {
     }
     // Affect node vis
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-        node_vis_f= std::max(node_vis_f-0.005f, 0.f);
+        node_vis_f= std::max(node_vis_f-0.002f, 0.f);
         reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-        node_vis_f= std::min(node_vis_f+0.005f, 1.f);
+        node_vis_f= std::min(node_vis_f+0.002f, 1.f);
         reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_PRESS && !has_exported){
