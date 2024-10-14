@@ -277,10 +277,8 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
     }
     int axis1 = (main_axis + 1) % 3;
     int axis2 = (main_axis + 2) % 3;
-    // Try to find what the exact overshoot should be
-    const float SEGMENT_OVERSHOOT = 40.f;
-    vec3 segment_start = p1 - diff * implicit.cutoff * SEGMENT_OVERSHOOT;
-    vec3 segment_end = p2 + diff * implicit.cutoff * SEGMENT_OVERSHOOT;
+    vec3 segment_start = p1 - dir * implicit.cutoff;
+    vec3 segment_end = p2 + dir * implicit.cutoff;
 
 
     glm::vec3 axis1_dir = glm::vec3(0,0,0);

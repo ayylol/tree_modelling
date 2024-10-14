@@ -32,7 +32,8 @@ public:
     void add_strands(unsigned int amount);
 private:
     void add_strand(size_t shoot_index, int age, StrandType type = Structure);
-    size_t match_root(glm::vec3 pos);
+    size_t match_root(glm::vec3 pos, glm::mat4 frame);
+    std::pair<size_t,size_t> match_root_all(glm::vec3 pos);
     //Implicit &evalfunc;
     const Skeleton& tree;
     std::vector<std::vector<glm::mat4>> shoot_frames;
