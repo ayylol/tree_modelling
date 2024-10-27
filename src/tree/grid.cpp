@@ -269,6 +269,9 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
     vec3 diff = p2 - p1;
     vec3 dir = glm::normalize(diff);
     vec3 variance = glm::abs(diff);
+    vec3 segment_start = p1 - dir * implicit.cutoff;
+    vec3 segment_end = p2 + dir * implicit.cutoff;
+
     int main_axis = 0;
     if (variance.y > variance.x && variance.y > variance.z) {
         main_axis = 1;
@@ -277,10 +280,6 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
     }
     int axis1 = (main_axis + 1) % 3;
     int axis2 = (main_axis + 2) % 3;
-    vec3 segment_start = p1 - dir * implicit.cutoff;
-    vec3 segment_end = p2 + dir * implicit.cutoff;
-
-
     glm::vec3 axis1_dir = glm::vec3(0,0,0);
     axis1_dir[axis1] = 1.0;
     glm::vec3 axis2_dir = glm::vec3(0,0,0);
@@ -290,7 +289,7 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
         d2 = n;
 
     vector<ivec3> voxels = get_voxels_line(segment_start, segment_end);
-    glm::ivec3 init_slot = pos_to_grid(p1);
+    glm::ivec3 init_slot = pos_to_grid(segment_start);
     int last_main_axis = init_slot[main_axis];
     int last_axis1 = init_slot[axis1];
     int last_axis2 = init_slot[axis2];
