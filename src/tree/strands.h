@@ -26,7 +26,7 @@ public:
         Structure,
         Texture
     };
-    Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options);
+    Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options, bool is_strangler=false);
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
     void add_strands(unsigned int amount);
@@ -78,6 +78,7 @@ private:
     float node_observed=0.0;
     size_t strand_observed=0;
     // Strand Creation Vars
+    bool is_strangler;
     enum Method{
         CanonDir,
         LocalPosMatching,

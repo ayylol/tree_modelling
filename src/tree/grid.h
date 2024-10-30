@@ -25,7 +25,7 @@
 class Grid
 {
 public:
-    Grid(const Skeleton& tree, float percent_overshoot, float scale_factor=1.f);
+    Grid(const Skeleton& tree, float percent_overshoot, float scale_factor=1.f, float max_col_val=15.0);
 
     float get_scale() { return scale; }
     glm::vec3 get_center() { return center; }
@@ -116,6 +116,7 @@ private:
   using GridCell = std::array<Sample,8>;
   void polygonize(const GridCell &cell, float threshold, std::vector<Vertex> &verts, std::vector<GLuint> &indices) const;
   Vertex vertex_interp(float threshold, const Sample& a, const Sample& b) const; 
+  float max_col_val;
 
 };
 

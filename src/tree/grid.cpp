@@ -17,7 +17,7 @@ using glm::vec3;
 using std::tuple;
 using std::vector;
 
-Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
+Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor, float max_col_val) : max_col_val(max_col_val){
     vec3 bounds_size = tree.get_bounds().second - tree.get_bounds().first;
     back_bottom_left = tree.get_bounds().first - (bounds_size * percent_overshoot);
     vec3 front_top_right = tree.get_bounds().second + (bounds_size * percent_overshoot);
@@ -762,7 +762,7 @@ Vertex Grid::vertex_interp(float threshold, const Grid::Sample& a, const Grid::S
     vec3 col0(0,0,0);
     vec3 col1(1,1,1);
     float min_col_val = 0.0f;
-    float max_col_val = 15.0f;
+    //float max_col_val = 15.0f;
     Vertex v = {vec3(),vec3(),vec3()};
     float col_factor;
     if (std::abs(threshold - a.val) < 0.00001) {

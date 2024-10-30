@@ -58,9 +58,9 @@ glm::vec2 random_vec2();
 float lookahead_frame(float dist);
 
 Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
-                 nlohmann::json options)
+                 nlohmann::json options, bool is_strangler)
     : grid(grid), texture_grid(texture_grid),
-      // evalfunc(evalfunc),
+      is_strangler(is_strangler),
       tree(tree) {
   // Set up root & shoot paths
   for (size_t i = 0; i < tree.leafs_size(); i++) {
@@ -232,7 +232,8 @@ void Strands::add_strands(unsigned int amount) {
   for (size_t i = 0; i < amount; i++) {
     std::cout << "\rStrand: " << i + 1 << "/" << amount;
     std::flush(std::cout);
-    add_strand(paths[i % paths.size()], i);
+    //add_strand(paths[i % paths.size()], i);
+    add_strand(paths[is_strangler ? 0 : (i % paths.size())], i);
     if (i > tex_chance_start)
       tex_chance += texture_chance_step;
     lookahead_factor_current += lhf_step;
@@ -434,7 +435,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
           find_closest(strand.back(), *root_path, 0, root_path->size() - 1);
       float alpha =
           std::min(root_closest.index / (root_path->size() * 0.5f), 1.f);
-      bsearch_iso = reject_iso * (1.f - alpha) + 5.0f * alpha;
+      //bsearch_iso = reject_iso * (1.f - alpha) + 5.0f * alpha;
+      bsearch_iso = reject_iso;
       // bsearch_iso=reject_iso*(1.f-alpha)+(reject_iso-10)*alpha;
     } else {
       _interp = 0.f;
@@ -487,13 +489,19 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     strands.push_back(strand);
     assert(strand.size() == node_info.back().size());
     assert(strands.size() == node_info.size());
-    if (r < tex_chance) {
+    //if (r < tex_chance) {
+    if (false) {
       texture_strands.push_back(strand);
       texture_grid.fill_path(strands.size(), strand, tex_max_val, tex_max_range,
                              tex_shoot_range, tex_root_range, inflection);
     }
-    grid.fill_path(strands.size(), strand, max_val, base_max_range,
-                   leaf_min_range, root_min_range, inflection);
+    if (is_strangler){
+      texture_grid.fill_path(strands.size(), strand, max_val, base_max_range,
+          leaf_min_range, root_min_range, inflection);
+    }else{
+      grid.fill_path(strands.size(), strand, max_val, base_max_range,
+          leaf_min_range, root_min_range, inflection);
+    }
     break;
   case Texture:
     // FIXME: CHANGE MARKER

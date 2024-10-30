@@ -83,8 +83,8 @@ float strands_start = 0.0f,
 
 int main(int argc, char *argv[]) {
     // Validating input
-    if (argc != 2) {
-        std::cerr << "input an options file" << std::endl;
+    if (argc != 3) {
+        std::cerr << "input an options file, and a strangler options file" << std::endl;
         return 1;
     }
 
@@ -111,6 +111,8 @@ int main(int argc, char *argv[]) {
     // Parse options
     auto option_file = std::ifstream(argv[1]);
     json opt_data = json::parse(option_file);
+    auto strangler_option_file = std::ifstream(argv[2]);
+    json strangler_opt_data = json::parse(strangler_option_file);
 
     // Creating tree
     STOPWATCH("Parsing Skeleton", Skeleton tree(opt_data););
@@ -118,7 +120,7 @@ int main(int argc, char *argv[]) {
     // Grid
     STOPWATCH("Initializing Grid",
             Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
-            Grid texture_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+            Grid texture_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"),1.0);
             );
     // Make camera according to grid
     cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
@@ -134,11 +136,13 @@ int main(int argc, char *argv[]) {
 
     // Tree detail
     STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
+    STOPWATCH("Adding Strands",Strands strangler(tree, gr, texture_grid, strangler_opt_data, true););
 
     // Creating Meshes
     float surface_val = opt_data.at("mesh_iso");
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
     STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
+    STOPWATCH("Polygonizing Strangler Isosurface", Mesh strangler_geom = texture_grid.get_occupied_geom(surface_val, texture_grid););
     //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
     STOPWATCH("Getting Strand", 
         Mesh strands_geom = detail.get_mesh();
@@ -202,7 +206,8 @@ int main(int argc, char *argv[]) {
 
         }
         if (view_volume) {
-            tstrands_geom.draw(flat_shader, CAMERA, GL_LINES);
+            strangler_geom.draw(shader, CAMERA, GL_TRIANGLES);
+            //tstrands_geom.draw(flat_shader, CAMERA, GL_LINES);
             //volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         }
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
