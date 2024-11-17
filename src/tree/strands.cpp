@@ -224,7 +224,16 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
 void Strands::add_strands(unsigned int amount) {
   std::vector<size_t> paths(shoot_frames.size());
   std::iota(paths.begin(), paths.end(), 0);
-  std::shuffle(paths.begin(), paths.end(), rng);
+  if (!is_strangler) std::shuffle(paths.begin(), paths.end(), rng);
+  else
+    sort(paths.begin(), paths.end(), [&](int a, int b) {
+        glm::vec3 p1=frame_position(shoot_frames[a][0]);
+        p1.y=0;
+        glm::vec3 p2=frame_position(shoot_frames[b][0]);
+        p2.y=0;
+        return glm::length2(p1) < glm::length2(p2);
+    });
+  size_t strangler_i = rand() % 10;
   // float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
   float lhf_step = (lookahead_factor_max - lookahead_factor) / (paths.size());
   float texture_chance_step = tex_max_chance / (amount - tex_chance_start);
@@ -233,7 +242,7 @@ void Strands::add_strands(unsigned int amount) {
     std::cout << "\rStrand: " << i + 1 << "/" << amount;
     std::flush(std::cout);
     //add_strand(paths[i % paths.size()], i);
-    add_strand(paths[is_strangler ? 0 : (i % paths.size())], i);
+    add_strand(paths[is_strangler ? strangler_i : (i % paths.size())], i);
     if (i > tex_chance_start)
       tex_chance += texture_chance_step;
     lookahead_factor_current += lhf_step;
@@ -406,10 +415,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         next = shoot_closest;
       } else {
         //rematch root
-        /*
+        // TOGGLE
         root_path = &(root_frames[match_root(strand[strand.size() - 1],
                                              (*path)[closest_index])]);
-                                             */
         next = root_closest;
         path = root_path;
         on_root = true;
