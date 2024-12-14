@@ -425,7 +425,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
 
     // Binary search for final extension
     if (target_on_root) {
-      _interp += 0.01f;
+      _interp += 0.1f;
       _interp_bias += 0.1f; // Parameter
       _interp = std::min(_interp, 1.f);
       _interp_bias = std::min(_interp_bias, 1.f);
