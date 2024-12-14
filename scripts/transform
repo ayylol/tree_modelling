@@ -1,0 +1,16 @@
+#!/bin/bash
+NAME=tree$(ls ../tree_modelling/build/trees/ | wc -l)
+OUT=~/Documents/projects/tree_modelling/build/trees
+IN=~/Documents/projects/tree_sca
+################################
+cp $IN/tree.txt ./in_shoot.txt
+cp $IN/roots.txt ./in_root.txt
+./a.out < ./in_shoot.txt > shoot.txt
+./a.out < ./in_root.txt > root.txt
+################################
+mkdir $OUT/$NAME
+touch $OUT/$NAME/observations.md
+cp $OUT/template/params.json $OUT/$NAME/params.json
+cp ./root.txt $OUT/$NAME/root.txt
+cp ./shoot.txt $OUT/$NAME/shoot.txt
+sed -i "s/template/$NAME/g" $OUT/$NAME/params.json
