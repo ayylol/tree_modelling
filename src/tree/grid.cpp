@@ -759,8 +759,8 @@ void Grid::polygonize(const GridCell& cell, float threshold, vector<Vertex>& ver
     }
 }
 Vertex Grid::vertex_interp(float threshold, const Grid::Sample& a, const Grid::Sample& b) const{
-    vec3 col0(0,0,0);
-    vec3 col1(1,1,1);
+    vec3 col1(0,0,0);
+    vec3 col0(.4,.2,.2);
     float min_col_val = 0.0f;
     float max_col_val = 15.0f;
     Vertex v = {vec3(),vec3(),vec3()};

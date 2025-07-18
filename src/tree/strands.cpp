@@ -225,8 +225,8 @@ void Strands::add_strands(unsigned int amount) {
   std::vector<size_t> paths(shoot_frames.size());
   std::iota(paths.begin(), paths.end(), 0);
   std::shuffle(paths.begin(), paths.end(), rng);
-  // float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
-  float lhf_step = (lookahead_factor_max - lookahead_factor) / (paths.size());
+  float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
+  //float lhf_step = (lookahead_factor_max - lookahead_factor) / (paths.size());
   float texture_chance_step = tex_max_chance / (amount - tex_chance_start);
   lookahead_factor_current = lookahead_factor;
   for (size_t i = 0; i < amount; i++) {
@@ -434,7 +434,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
           find_closest(strand.back(), *root_path, 0, root_path->size() - 1);
       float alpha =
           std::min(root_closest.index / (root_path->size() * 0.5f), 1.f);
-      bsearch_iso = reject_iso * (1.f - alpha) + 5.0f * alpha;
+      bsearch_iso = reject_iso * (1.f - alpha) + reject_iso * alpha;
       // bsearch_iso=reject_iso*(1.f-alpha)+(reject_iso-10)*alpha;
     } else {
       _interp = 0.f;

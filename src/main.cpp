@@ -60,6 +60,11 @@ void cycle_camera(int dir) {
 }
 #define CAMERA cameras[curr_cam]
 
+int curr_mesh=0;
+bool add_mesh=false;
+float isoval;
+float isoval_step;
+
 std::string image_prefix = "./tree";
 
 // Toggles
@@ -73,7 +78,6 @@ bool view_mesh = true,
      interactive = true,
      next_stage = false;
 
-bool has_exported = false;
 bool export_mesh = false;
 
 bool reset_strands = false;
@@ -136,9 +140,7 @@ int main(int argc, char *argv[]) {
     STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
 
     // Creating Meshes
-    float surface_val = opt_data.at("mesh_iso");
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
-    STOPWATCH("Polygonizing Isosurface", Mesh tree_geom = gr.get_occupied_geom(surface_val, texture_grid););
     //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
     STOPWATCH("Getting Strand", 
         Mesh strands_geom = detail.get_mesh();
@@ -147,11 +149,26 @@ int main(int argc, char *argv[]) {
     );
     //STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
+
+    STOPWATCH("Polygonizing Isosurface", 
+        float surface_val = opt_data.at("mesh_iso");
+        int num_meshes = 1;
+        if (opt_data.contains("num_meshes")) num_meshes = opt_data.at("num_meshes"); 
+        isoval_step = surface_val/num_meshes;
+        std::vector<Mesh<Vertex>> mesh_list;
+        mesh_list.reserve(num_meshes);
+        for (int i = 0; i < num_meshes; i++){
+          isoval = (i+1)*isoval_step;
+          mesh_list.push_back(gr.get_occupied_geom(isoval, texture_grid));
+        }
+        if (num_meshes == 1) isoval_step = -0.5;
+    );
+    Mesh<Vertex> *tree_geom=&mesh_list[curr_mesh];
+
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
         STOPWATCH("Exporting Data", 
                     //gr.export_data("data.txt");
-                    save_mesh(tree_geom);
-                    has_exported = true;
+                    save_mesh(*tree_geom);
                 );
     }
 
@@ -176,11 +193,18 @@ int main(int argc, char *argv[]) {
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
+      /*
         if (next_stage){
           detail.add_strands(10);
           tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
           strands_geom=detail.get_mesh();
           next_stage=false;
+        }
+        */
+        if (add_mesh){
+          isoval+=isoval_step;
+          mesh_list.push_back(gr.get_occupied_geom(isoval, texture_grid));
+          add_mesh=false;
         }
         if (reset_strands){
             strands_geom = detail.get_mesh(strands_start,strands_end);
@@ -197,7 +221,8 @@ int main(int argc, char *argv[]) {
 
         // Draw the meshes here
         if (view_mesh) {
-            tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
+            curr_mesh = curr_mesh%mesh_list.size();
+            mesh_list[curr_mesh].draw(shader, CAMERA, GL_TRIANGLES);
             //texture_strands.draw(flat_shader, CAMERA, GL_LINES);
 
         }
@@ -224,8 +249,7 @@ int main(int argc, char *argv[]) {
         }
         if (export_mesh){
             STOPWATCH("Exporting Data", 
-            save_mesh(tree_geom);
-            has_exported = true;
+            save_mesh(*tree_geom);
             export_mesh = false;
             );
         }
@@ -369,7 +393,7 @@ float speed_factor = 1.f;
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
      pressed5 = false, pressed6 = false, pressed7 = false,
      pressedperiod = false, pressedenter = false, pressedga = false,
-     pressedn = false;
+     pressedn = false, pressedt = false, pressedg = false;
 void processInput(GLFWwindow *window) {
     // Mouse input
     double mouse_current_x, mouse_current_y;
@@ -524,9 +548,21 @@ void processInput(GLFWwindow *window) {
         node_vis_f= std::min(node_vis_f+0.002f, 1.f);
         reset_strands = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_PRESS && !has_exported){
+    if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_PRESS){
         export_mesh = true;
     }
+
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && !pressedt){ // Toggle
+        curr_mesh++;
+        pressedt = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE && pressedt) pressedt = false;
+
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !pressedg){ // Toggle
+        add_mesh = true;
+        pressedg = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE && pressedg) pressedg = false;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
