@@ -317,12 +317,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                           ? (float)(closest_index - la_start_node) /
                                 (la_peak_node - la_start_node)
                           : 1.f;
-    //(1.f-(float)(closest_index-la_peak)/(path->size()-1-la_peak));
-    //            std::clamp(closest_index<=la_peak ?
-    //              (float)(closest_index-la_start)/(la_peak-la_start) :
-    //              (1.f-(float)(closest_index-la_peak)/(path->size()-1-la_peak)),
-    //             0.f,1.f);
-    // std::cout<<la_interp<<std::endl;
     lookahead_factor = (1 - la_interp) * lookahead_factor_min +
                        la_interp * lookahead_factor_current;
     // Start of this segment is head of last
@@ -332,38 +326,32 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         lookahead_factor * (segment_length +
                             glm::distance(frame_position(last_closest), start)),
         la_max);
-    // if (distance_to_travel>=3.0) std::cout<<distance_to_travel<<std::endl;
 
     // Find target
-    TargetResult target;
-    if (method == HeadingDir) {
-      target = {closest_index, (*path)[closest_index], 0.0};
-    } else {
-      target = find_target(*path, closest_index, distance_to_travel);
+    TargetResult target = find_target(*path, closest_index, distance_to_travel);
+    if (!on_root && target_on_root && target.index != path->size()-1){
+      // Target is in transition area but the target here crept back onto shoot
+      // so we nudge it back into the root so things dont crash
+      target.index = 0;
+      target.frame = (*root_path)[0];
     }
-
     if (target.index == path->size() - 1) {
       if (!on_root) { // switch path
         if (!target_on_root) {
           inflection_points[inflection_points.size() - 1].first =
               strand.size() - 1;
           target_on_root = true;
-          // inflection = strand.size()-1;
           if (root_path == nullptr) {
             root_path = &(root_frames[match_root(strand[strand.size() - 1],
                                                  (*path)[closest_index])]);
             transition_node = closest_index;
           }
         }
-        if (method == HeadingDir) {
-          target = {closest_index, (*root_path)[0], 0.0};
-        } else {
-          float alpha = (float)closest_index / shoot_path->size();
-          float reduction = (1 - alpha) * la_red_max + alpha * la_red_min;
-          target =
-              find_target(*root_path, 0,
-                          (distance_to_travel - target.travelled) / reduction);
-        }
+        float alpha = (float)closest_index / shoot_path->size();
+        float reduction = (1 - alpha) * la_red_max + alpha * la_red_min;
+        target =
+            find_target(*root_path, 0,
+                        (distance_to_travel - target.travelled) / reduction);
       } else {
         // done = true;
       }
@@ -375,13 +363,10 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     // Add extension
     std::optional<glm::vec3> ext;
     if (target_on_root || on_root)
-      // if (on_root)
       ext = find_extension(strand.back(), last_closest, target.frame, true);
     else
       ext = find_extension(strand.back(), last_closest, target.frame);
 
-    // if (!(ext &&
-    // (age<root_frames.size()||grid.lazy_eval(grid.pos_to_grid(ext.value()))!=0))){
     if (!ext) {
       ext = find_extension_canoniso(strand.back(), last_closest, target.frame,
                                     false);
@@ -389,11 +374,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     strand.push_back(ext.value());
     node_info.back().push_back({});
 
-    // TargetResult next = find_closest(strand.back(), *path, closest_index+1,
-    // 10); // Old method
     TargetResult next;
     if (!on_root && target_on_root) {
-      // std::cout<<"transition"<<std::endl;
       TargetResult shoot_closest =
           find_closest(strand.back(), *shoot_path, closest_index + 1,
                        shoot_path->size() - 1);
@@ -429,7 +411,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       _interp_bias += 0.1f; // Parameter
       _interp = std::min(_interp, 1.f);
       _interp_bias = std::min(_interp_bias, 1.f);
-      // std::cout<<_interp_bias<<std::endl;
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, root_path->size() - 1);
       float alpha =
@@ -445,7 +426,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     if (target_on_root && !on_root) {
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, target.index);
-      // std::cout<<_interp<<std::endl;
       float alpha = _interp;
       glm::vec3 bin_point = frame_position(root_closest.frame) * alpha +
                             frame_position(next.frame) * (1.f - alpha);
@@ -559,9 +539,11 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
 // TODO: Parallelize this
 #pragma omp parallel for
   for (int i = 0; i < num_trials; i++) {
-    glm::vec3 trial_head =
-        from + segment_length *
-                   random_vector(canonical_direction, glm::radians(max_angle));
+    glm::vec3 r_vec = random_vector(canonical_direction, glm::radians(max_angle));
+    glm::vec3 trial_head = from + segment_length * r_vec;
+    assert(!glm::any(glm::isnan(from)));
+    assert(!glm::any(glm::isnan(r_vec)));
+    assert(!glm::any(glm::isnan(trial_head)));
     float val = grid.eval_pos(trial_head);
     // float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso);
     if (val <= reject_iso) {
@@ -593,6 +575,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
       best_fitness = trials[i].distance;
     }
   }
+  assert(!glm::any(glm::isnan(trials[best_trial].head)));
   return trials[best_trial].head;
 }
 
@@ -1108,9 +1091,7 @@ glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
 Strands::TargetResult Strands::find_closest(glm::vec3 pos,
                                             const std::vector<glm::mat4> &path,
                                             int start_index, int end_index) {
-  // std::cout << start_index << " " << end_index<<std::endl;
   //  FIXME: CHECK THESE ASSERTIONS
-  // std::cout << start_index << " " << end_index << std::endl;
   assert(start_index >= 0 && start_index < path.size());
   assert(end_index >= start_index && start_index < path.size());
   size_t closest_index = start_index;
@@ -1130,10 +1111,8 @@ std::pair<size_t,size_t> Strands::match_root_all(glm::vec3 position) {
   position.y=0;
   float closest_d2=FLT_MAX;
   std::vector<std::pair<size_t,size_t>> matches={{0,0}};
-  //std::cout<<"Searching "<<root_frames.size()<<" roots"<<std::endl;
   for (size_t i=0; i<root_frames.size(); ++i){
     std::vector<glm::mat4> &path=root_frames[i];
-    //std::cout<<"Root "<<i<<" has "<<path.size()<<" nodes"<<std::endl;
     for (size_t j=0; j<path.size(); ++j){
       glm::vec3 root_p = frame_position(path[j]); root_p.y=0;
       float d2 = glm::distance2(position,frame_position(path[j]));
@@ -1146,8 +1125,8 @@ std::pair<size_t,size_t> Strands::match_root_all(glm::vec3 position) {
       }
     }
   }
-  //std::cout<<matches.size()<<std::endl;
-  return matches[(size_t)std::rand() % matches.size()];
+  auto r = matches[(size_t)std::rand() % matches.size()];
+  return r;
 }
 size_t Strands::match_root(glm::vec3 position, glm::mat4 frame) {
   if (root_pool.empty()) {
@@ -1222,7 +1201,13 @@ glm::vec3 random_vector(glm::vec3 axis, float angle) {
   float r = sqrtf(1 - x * x);
   float y = glm::sin(a) * r;
   float z = glm::cos(a) * r;
-  return rotation * glm::vec3(x, y, z);
+  glm::vec3 v = rotation * glm::vec3(x, y, z);
+  // Can be nan if axis is -x_axis
+  if (glm::any(glm::isnan(v))){
+    v = glm::vec3(x*axis.x, y, z);
+  }
+  assert(!glm::any(glm::isnan(v)));
+  return v;
   // CODE CITED
 }
 glm::vec2 random_vec2() {
