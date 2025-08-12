@@ -83,6 +83,13 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   } else if (strand_options.contains("num_per")) {
     num_strands = (int)(num_strands * (float)strand_options.at("num_per"));
   }
+
+  stages_left = 1;
+  if (strand_options.contains("intermediate_stages")) {
+    stages_left = strand_options.at("intermediate_stages");
+  }
+  strands_per_stage = num_strands / stages_left;
+
   if (strand_options.contains("sectorality")) {
     select_method = strand_options.at("sectorality") ? WithAngle : AtRandom;
   }
@@ -146,7 +153,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
     tex_max_chance = tex_options.at("chance_max");
   }
   tex_chance_step = tex_max_chance / (num_strands - tex_chance_start);
-  add_strands(num_strands);
+  //add_stage();
 }
 
 Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
@@ -209,12 +216,22 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
   return Mesh(vertices, indices);
 }
 
+int Strands::add_stage(){
+  if (stages_left == 0) return 0;
+  if (stages_left == 1) {
+    add_strands(1+num_strands-strands.size());
+  } else {
+    add_strands(strands_per_stage);
+  }
+  return --stages_left;
+}
+
 void Strands::add_strands(unsigned int amount) {
   std::vector<size_t> paths(shoot_frames.size());
   std::iota(paths.begin(), paths.end(), 0);
   std::shuffle(paths.begin(), paths.end(), rng);
   for (size_t i = 0; i < amount; i++) {
-    std::cout << "\rStrand: " << i + 1 << "/" << amount;
+    std::cout << "\rStrand: " << strands.size() << "/" << num_strands;
     std::flush(std::cout);
     strand_lookahead_max = lookahead_factor_min + laf_step*strands.size();
     tex_chance = tex_chance_step*(strands.size()-tex_chance_start);

@@ -30,6 +30,7 @@ public:
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
     void add_strands(unsigned int amount);
+    int add_stage();
 private:
     void add_strand(size_t shoot_index, int age, StrandType type = Structure);
     size_t match_root(glm::vec3 pos, glm::mat4 frame);
@@ -75,6 +76,8 @@ private:
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, int start_index, int end_index);
 
     int num_strands;
+    int stages_left;
+    int strands_per_stage;
     // Node observed
     float node_observed=0.0;
     size_t strand_observed=0;
