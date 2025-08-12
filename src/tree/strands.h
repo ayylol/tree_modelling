@@ -74,6 +74,7 @@ private:
     //TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, int start_index, int end_index);
 
+    int num_strands;
     // Node observed
     float node_observed=0.0;
     size_t strand_observed=0;
@@ -99,10 +100,10 @@ private:
     float _interp;
     float _interp_bias;
     // Lookahead Vars
-    float lookahead_factor_current;
-    float lookahead_factor=1.0f;
+    float strand_lookahead_max;
     float lookahead_factor_min = 1.0f;
     float lookahead_factor_max = 2.0f;
+    float laf_step;
     float la_interp_start=0.3;
     float la_interp_peak=0.5;
     float la_red_max=10.f;
@@ -129,6 +130,7 @@ private:
     float tex_max_range = 0.013f;
     float tex_shoot_range = 0.001;
     float tex_root_range = 0.f;
+    float tex_chance_step;
     /////////////////////////////
     // Eval Weights
     float iso_eval;

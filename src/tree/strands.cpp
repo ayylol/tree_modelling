@@ -77,7 +77,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   }
   // Set strand options
   auto strand_options = options.at("strands");
-  int num_strands = tree.leafs_size();
+  num_strands = tree.leafs_size();
   if (strand_options.contains("num_abs")) {
     num_strands = strand_options.at("num_abs");
   } else if (strand_options.contains("num_per")) {
@@ -99,6 +99,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
       std::clamp((float)strand_options.at("la_interp_peak"), 0.f, 1.f);
   la_red_max = strand_options.at("la_red_max");
   la_red_min = strand_options.at("la_red_min");
+  laf_step = (lookahead_factor_max-lookahead_factor_min)/(num_strands);
   // Smooth
   sm_iter = strand_options.at("sm_iter");
   sm_min = strand_options.at("sm_min");
@@ -126,20 +127,6 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
       std::clamp((float)strand_options.at("root_angle_node"), 0.05f, 1.f);
   root_vecs.reserve(root_frames.size());
   for (size_t i = 0; i < root_frames.size(); i++) {
-    // glm::vec3 angle_vec =
-    // frame_position(root_frames[i][(int)((root_frames[i].size()-1)*root_angle_node)])
-    // - tree.get_root_pos();
-    /*
-    glm::vec3 angle_vec =
-        frame_position(
-            root_frames[i][std::min(60, (int)root_frames[i].size() - 1)]) -
-        tree.get_root_pos();
-        */
-    /*
-    glm::vec3 angle_vec =
-        frame_position(
-            root_frames[i][root_frames[i].size() - 1]) - tree.get_root_pos();
-            */
     glm::vec3 angle_vec =
         frame_position(
             root_frames[i][std::max(20,(int)root_frames[i].size() - 100)]) -
@@ -158,6 +145,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
     tex_chance_start = (float)tex_options.at("chance_start") * num_strands;
     tex_max_chance = tex_options.at("chance_max");
   }
+  tex_chance_step = tex_max_chance / (num_strands - tex_chance_start);
   add_strands(num_strands);
 }
 
@@ -225,17 +213,12 @@ void Strands::add_strands(unsigned int amount) {
   std::vector<size_t> paths(shoot_frames.size());
   std::iota(paths.begin(), paths.end(), 0);
   std::shuffle(paths.begin(), paths.end(), rng);
-  float lhf_step = (lookahead_factor_max-lookahead_factor)/(amount);
-  //float lhf_step = (lookahead_factor_max - lookahead_factor) / (paths.size());
-  float texture_chance_step = tex_max_chance / (amount - tex_chance_start);
-  lookahead_factor_current = lookahead_factor;
   for (size_t i = 0; i < amount; i++) {
     std::cout << "\rStrand: " << i + 1 << "/" << amount;
     std::flush(std::cout);
+    strand_lookahead_max = lookahead_factor_min + laf_step*strands.size();
+    tex_chance = tex_chance_step*(strands.size()-tex_chance_start);
     add_strand(paths[i % paths.size()], i);
-    if (i > tex_chance_start)
-      tex_chance += texture_chance_step;
-    lookahead_factor_current += lhf_step;
   }
   std::cout << std::endl;
   std::cout << std::endl;
@@ -280,11 +263,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   // SETUP AUXILARY INFO
 
   // Set up lookahead value
-  // lookahead_factor=lookahead_factor_current; // CHANGE THIS
   const int la_start_node = la_interp_start * (shoot_path->size() - 1);
   const int la_peak_node = la_interp_peak * (shoot_path->size() - 1);
-  // lookahead_factor=1.0f;
-  //  Set up lookahead root reduction
   //  Loop until on root, and target node is the end
   bool on_root = false;
   bool target_on_root = false;
@@ -317,8 +297,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                           ? (float)(closest_index - la_start_node) /
                                 (la_peak_node - la_start_node)
                           : 1.f;
-    lookahead_factor = (1 - la_interp) * lookahead_factor_min +
-                       la_interp * lookahead_factor_current;
+    float lookahead_factor = (1 - la_interp) * lookahead_factor_min +
+                       la_interp * strand_lookahead_max;
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
     float la_max = 10.0f;
@@ -395,7 +375,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         path = root_path;
         on_root = true;
         inflection = strand.size() - 1;
-        lookahead_factor = 1.0f;
         num_extensions = strand.size();
         inflection_points[inflection_points.size() - 1].second =
             strand.size() - 1;
@@ -579,112 +558,6 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
   return trials[best_trial].head;
 }
 
-// Local frame based sample finding
-std::optional<glm::vec3> Strands::find_extension_fs(glm::vec3 from,
-                                                    glm::mat4 frame_from,
-                                                    glm::mat4 frame_to) {
-  assert(false);
-  return {};
-  /*
-    glm::mat4 inv_from = frame_inverse(frame_from);
-    glm::mat4 inv_to = frame_inverse(frame_to);
-    // Calculate Position in local frame
-    glm::vec3 local_pos = inv_from*glm::vec4(from,1.f);
-    local_pos.y=0.f;
-
-    // Init Eval Bounds
-    float min_val_diff = FLT_MAX;
-    float max_local_dist2 = 0.f;
-    float min_local_dist2 = FLT_MAX;
-    float max_frame_dist2 = 0.f;
-    float min_frame_dist2 = FLT_MAX;
-
-    // Generate samples
-    struct Trial {
-        glm::vec3 local;
-        glm::vec3 global;
-        float val;
-    };
-    std::vector<Trial> trials;
-    trials.reserve(num_trials);
-    #pragma omp parallel for
-    for (int i = 0; i < num_trials; i++) {
-        glm::vec2 sample = local_spread*random_vec2();
-        glm::vec3 local_sample = local_pos;
-        local_sample.x+=sample.x;
-        local_sample.z+=sample.y;
-        glm::vec3 global_sample = frame_to*glm::vec4(local_sample,1.f);
-        float val = grid.eval_pos(global_sample);
-        if (val<reject_iso){
-            trials.push_back({local_sample,global_sample, val});
-            // Update Evaluation Bounds
-            max_val_diff = std::max(max_val_diff,std::abs(val-target_iso));
-            min_val_diff = std::min(min_val_diff,std::abs(val-target_iso));
-            max_local_dist2 =
-    std::max(max_local_dist2,glm::distance2(local_sample,local_pos));
-            min_local_dist2 =
-    std::min(min_local_dist2,glm::distance2(local_sample,local_pos));
-            max_frame_dist2 =
-    std::max(max_frame_dist2,glm::length2(local_sample)); min_frame_dist2 =
-    std::min(min_frame_dist2,glm::length2(local_sample));
-        }
-    }
-    if(trials.empty()) return {};
-
-    Trial best_trial = trials[0];
-    float best_fitness = -1.f;
-    for (auto trial : trials){
-        float iso_metric=max_val_diff != min_val_diff ?
-    iso_eval*(max_val_diff-(std::abs(trial.val-target_iso))/(max_val_diff-min_val_diff))
-    : 0.f; float
-    local_metric=local_eval*((max_local_dist2-glm::distance2(trial.local,local_pos))/(max_local_dist2-min_local_dist2));
-        float
-    frame_metric=frame_eval*((max_frame_dist2-glm::length2(trial.local))/(max_frame_dist2-min_frame_dist2));
-        float fitness = iso_metric+local_metric+frame_metric;
-        if (best_fitness <= fitness){
-            best_fitness = fitness;
-            best_trial = trial;
-        }
-    }
-
-    // return best sample
-    glm::vec3 extension =
-    from+segment_length*glm::normalize(best_trial.global-from); return
-    extension;
-    //return best_trial.global;
-    */
-}
-std::optional<glm::vec3> Strands::find_extension_heading(glm::vec3 from,
-                                                         glm::mat4 frame) {
-  glm::vec3 target_extension = frame * glm::vec4(0, -segment_length, 0, 1);
-  glm::vec3 extension =
-      from - (glm::mat3(frame) * glm::vec3(0, segment_length, 0));
-  // Step until gradient is found
-  int num_steps = 0;
-  int max_steps = 10;
-  glm::vec3 step = 0.1f * (target_extension - extension);
-  while (glm::all(glm::lessThan(glm::abs(grid.eval_gradient(extension)),
-                                glm::vec3(0.00001f))) &&
-         num_steps <= max_steps) {
-    extension += step;
-    num_steps++;
-  }
-  num_steps = 0;
-  max_steps = 20;
-  // Step along gradient
-  while (!glm::all(glm::lessThan(glm::abs(grid.eval_gradient(extension)),
-                                 glm::vec3(0.00001f))) &&
-         std::abs(grid.eval_pos(extension) - reject_iso) >= 0.4 &&
-         num_steps <= max_steps) {
-    glm::vec3 step =
-        (grid.eval_pos(extension) - reject_iso) * grid.eval_gradient(extension);
-    extension += step;
-    num_steps++;
-  }
-  extension = from + segment_length * glm::normalize(extension - from);
-  return extension;
-}
-
 std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from,
                                                           glm::mat4 frame_from,
                                                           glm::mat4 frame_to,
@@ -701,23 +574,8 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from,
   if (bias) {
     glm::vec3 offset_no_y = target_extension - extension;
     offset_no_y.y = 0.f;
-    // std::cout << (from-closest_pos).y <<std::endl;
-    // std::uniform_real_distribution<float> rand_offset(0.2f, 0.8f);
-    // extension = extension+rand_offset(rng)*offset_no_y;
-    // extension = extension + offset_no_y;
-    // extension = extension +
-    // std::min(std::abs((from-closest_pos).y)/0.02f,1.0f)*offset_no_y;
-    // extension = extension +
-    // std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(1-glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)),
-    // glm::vec3(0,1,0))))*offset_no_y; extension = extension +
-    // std::min(std::abs((from-closest_pos).y)/0.03f,std::abs(glm::dot(glm::vec3(frame_from*glm::vec4(0,1,0,0)),
-    // glm::vec3(0,1,0))))*offset_no_y;
     extension = extension + bias_amount * offset_no_y;
-    // std::cout<<std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0)))<<std::endl;
-    // extension =
-    // extension+(1.0f-std::abs(glm::dot(frame_from*glm::vec4(0,1,0,0),glm::vec4(0,1,0,0))))*offset_no_y;
   }
-  //
   int num_steps = 0;
   int max_steps = 50;
   glm::vec3 step = 0.02f * (target_extension - extension);
@@ -729,21 +587,6 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from,
     extension += step;
     num_steps++;
   }
-  // NOTE: EXPERIMENTAL
-  /*
-  if (bias){
-      glm::vec3 offset_no_y = target_extension - extension;
-      offset_no_y.y = 0.f;
-      //std::cout << (from-closest_pos).y <<std::endl;
-      std::uniform_real_distribution<float> rand_offset(0.2f, 0.6f);
-      //extension = extension+rand_offset(rng)*offset_no_y;
-      //extension = extension + offset_no_y;
-      //extension = extension +
-  std::min(std::abs((from-closest_pos).y)/0.03f,1.0f)*offset_no_y; extension =
-  extension +
-  std::min(std::abs((from-closest_pos).y)/0.02f,rand_offset(rng))*offset_no_y;
-  }
-  */
   // Step along gradient
   num_steps = 0;
   max_steps = 100;
@@ -758,315 +601,6 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from,
   }
   extension = from + segment_length * glm::normalize(extension - from);
   return extension;
-}
-
-std::optional<glm::vec3> Strands::find_extension_ptfiso(glm::vec3 from,
-                                                        glm::mat4 frame_from,
-                                                        glm::mat4 frame_to) {
-  glm::mat4 inv_from = frame_inverse(frame_from);
-  glm::mat4 inv_to = frame_inverse(frame_to);
-  // Calculate Position in local frame
-  glm::vec3 local_pos = inv_from * glm::vec4(from, 1.f);
-  local_pos.y = 0.f;
-  glm::vec3 extension_local = local_pos;
-  glm::vec3 extension = frame_to * glm::vec4(extension_local, 1.f);
-  int num_steps = 0;
-  int max_steps = 20;
-  while (glm::all(glm::isnan(grid.get_norm_pos(extension))) &&
-         num_steps <= max_steps) {
-    extension_local -= (1.f / max_steps) * local_pos;
-    extension = frame_to * glm::vec4(extension_local, 1.f);
-    num_steps++;
-  }
-  glm::vec3 direction = extension_local;
-  if (glm::length2(extension_local) < 0.000001f) {
-    glm::vec2 rand_dir = random_vec2();
-    direction.x = rand_dir.x;
-    direction.z = rand_dir.y;
-  }
-  direction = 0.0001f * glm::normalize(direction);
-  num_steps = 0;
-  max_steps = 200;
-  // while(!glm::all(glm::isnan(grid.get_norm_pos(extension)))&&std::abs(grid.eval_pos(extension)-0.1)>=0.01f&&num_steps<=max_steps){
-  while (!glm::all(glm::isnan(grid.get_norm_pos(extension))) &&
-         std::abs(grid.eval_pos(extension) - 0.01) >= 0.01f &&
-         num_steps <= max_steps) {
-    if (grid.eval_pos(extension) >= 0.1) {
-      extension_local += direction;
-    } else {
-      extension_local -= direction;
-    }
-    extension = frame_to * glm::vec4(extension_local, 1.f);
-    num_steps++;
-  }
-  ////// Texture Rotation
-  // extension = find_extension_canoniso(from, frame_from, frame_to);
-  num_steps = 0;
-  max_steps = 10;
-  glm::mat3 r =
-      glm::rotate(glm::mat4(1.f), glm::pi<float>() / 40.f, glm::vec3(0, 1, 0));
-  while (texture_grid.eval_pos(extension) > 0.f && num_steps <= max_steps) {
-    extension_local = r * extension_local;
-    extension = frame_to * glm::vec4(extension_local, 1.f);
-    num_steps++;
-  }
-  direction = extension_local;
-  if (glm::length2(direction) < 0.000001f) {
-    glm::vec2 rand_dir = random_vec2();
-    direction.x = rand_dir.x;
-    direction.z = rand_dir.y;
-  }
-  direction = 0.0001f * glm::normalize(direction);
-  num_steps = 0;
-  max_steps = 200;
-  while (!glm::all(glm::isnan(grid.get_norm_pos(extension))) &&
-         std::abs(grid.eval_pos(extension) - 0.01) >= 0.01f &&
-         num_steps <= max_steps) {
-    if (grid.eval_pos(extension) >= 0.1) {
-      extension_local += direction;
-    } else {
-      extension_local -= direction;
-    }
-    extension = frame_to * glm::vec4(extension_local, 1.f);
-    num_steps++;
-  }
-  /////////////////////////////////////
-  extension = from + segment_length * glm::normalize(extension - from);
-  return extension;
-}
-
-std::optional<glm::vec3>
-Strands::find_extension_canonptfeval(glm::vec3 from, glm::mat4 frame_from,
-                                     glm::mat4 frame_to) {
-  glm::vec3 target_point = frame_position(frame_to);
-  glm::vec3 canonical_direction =
-      glm::normalize(target_point - frame_position(frame_from));
-
-  glm::mat4 inv_from = frame_inverse(frame_from);
-  glm::mat4 inv_to = frame_inverse(frame_to);
-  glm::vec3 local_pos = inv_from * glm::vec4(from, 1.f);
-  local_pos.y = 0.f;
-
-  // Init Eval Bounds
-  float max_val_diff = 0.f;
-  float min_val_diff = FLT_MAX;
-  float max_local_dist2 = 0.f;
-  float min_local_dist2 = FLT_MAX;
-  float max_frame_dist2 = 0.f;
-  float min_frame_dist2 = FLT_MAX;
-  // Generate trials
-  struct Trial {
-    glm::vec3 global;
-    glm::vec3 local;
-    float val;
-  };
-  std::vector<Trial> trials;
-  for (int i = 0; i < num_trials; i++) {
-    glm::vec3 trial_head =
-        from + segment_length *
-                   random_vector(canonical_direction, glm::radians(max_angle));
-    float val = grid.eval_pos(trial_head);
-    if (val <= reject_iso) {
-      glm::vec3 trial_local = inv_to * glm::vec4(trial_head, 1.f);
-      glm::vec3 trial_local_projected =
-          glm::vec3(trial_local.x, 0.f, trial_local.z);
-      float distance = glm::distance(trial_head, target_point);
-      float angle = glm::angle(trial_head - from, canonical_direction);
-      trials.push_back({trial_head, trial_local, val});
-      max_val_diff = std::max(max_val_diff, std::abs(val - target_iso));
-      min_val_diff = std::min(min_val_diff, std::abs(val - target_iso));
-      max_local_dist2 = std::max(
-          max_local_dist2, glm::distance2(trial_local_projected, local_pos));
-      min_local_dist2 = std::min(
-          min_local_dist2, glm::distance2(trial_local_projected, local_pos));
-      max_frame_dist2 = std::max(max_frame_dist2, glm::length2(trial_local));
-      min_frame_dist2 = std::min(min_frame_dist2, glm::length2(trial_local));
-    }
-  }
-  // If no valid trials add strand up to this moment
-  if (trials.empty())
-    return {};
-  //  Evaluate trials
-  Trial best_trial = trials[0];
-  float best_fitness = 0.f;
-  for (auto trial : trials) {
-    glm::vec3 local_projected = glm::vec3(trial.local.x, 0.f, trial.local.z);
-    float iso_metric =
-        max_val_diff != min_val_diff
-            ? iso_eval * (max_val_diff - (std::abs(trial.val - target_iso)) /
-                                             (max_val_diff - min_val_diff))
-            : 0.f;
-    float local_metric =
-        local_eval *
-        ((max_local_dist2 - glm::distance2(local_projected, local_pos)) /
-         (max_local_dist2 - min_local_dist2));
-    float frame_metric =
-        frame_eval * ((max_frame_dist2 - glm::length2(trial.local)) /
-                      (max_frame_dist2 - min_frame_dist2));
-    float fitness = iso_metric + local_metric + frame_metric;
-    if (fitness >= best_fitness) {
-      best_trial = trial;
-      best_fitness = fitness;
-    }
-  }
-  return best_trial.global;
-}
-std::optional<glm::vec3>
-Strands::find_extension_ptfcanoneval(glm::vec3 from, glm::mat4 frame_from,
-                                     glm::mat4 frame_to) {
-  glm::vec3 target_point = frame_position(frame_to);
-  glm::vec3 canonical_direction =
-      glm::normalize(target_point - frame_position(frame_from));
-
-  glm::mat4 inv_from = frame_inverse(frame_from);
-  glm::mat4 inv_to = frame_inverse(frame_to);
-  glm::vec3 local_pos = inv_from * glm::vec4(from, 1.f);
-  local_pos.y = 0.f;
-
-  // Init Eval Bounds
-  float max_val_diff = 0.f;
-  float min_val_diff = FLT_MAX;
-  float max_trial_distance = 0.f;
-  float min_trial_distance = FLT_MAX;
-  float max_trial_angle = 0.f;
-  // Generate trials
-  struct Trial {
-    glm::vec3 global;
-    glm::vec3 local;
-    float val;
-    float distance;
-    float angle;
-  };
-  std::vector<Trial> trials;
-  for (int i = 0; i < num_trials; i++) {
-    glm::vec2 sample = local_spread * random_vec2();
-    glm::vec3 local_sample = local_pos;
-    local_sample.x += sample.x;
-    local_sample.z += sample.y;
-    glm::vec3 global_sample = frame_to * glm::vec4(local_sample, 1.f);
-    float val = grid.eval_pos(global_sample);
-    if (val <= reject_iso) {
-      float distance = glm::distance(global_sample, target_point);
-      float angle = glm::angle(global_sample - from, canonical_direction);
-      trials.push_back({global_sample, local_sample, val, distance, angle});
-      // Update Evaluation Bounds
-      max_val_diff = std::max(max_val_diff, std::abs(val - target_iso));
-      min_val_diff = std::min(min_val_diff, std::abs(val - target_iso));
-      max_trial_distance = fmax(max_trial_distance, distance);
-      min_trial_distance = fmin(min_trial_distance, distance);
-      max_trial_angle = fmax(max_trial_angle, angle);
-    } else {
-    }
-  }
-  // If no valid trials add strand up to this moment
-  if (trials.empty())
-    return {};
-  //  Evaluate trials
-  Trial best_trial = trials[0];
-  float best_fitness = 0.f;
-  for (auto trial : trials) {
-    /*
-    float iso_metric = max_val_diff != min_val_diff ?
-        iso_eval*(max_val_diff-(std::abs(trial.val-target_iso))/(max_val_diff-min_val_diff))
-        : 0.f;
-        */
-    float iso_metric = 0.f;
-    float distance_metric =
-        max_trial_distance != min_trial_distance
-            ? frame_eval * (1 - (trial.distance - min_trial_distance) /
-                                    (max_trial_distance - min_trial_distance))
-            : 0.f;
-    float direction_metric = local_eval * (1 - (trial.angle / max_trial_angle));
-    float fitness = distance_metric + direction_metric + iso_metric;
-    if (fitness >= best_fitness) {
-      best_trial = trial;
-      best_fitness = fitness;
-    }
-  }
-  glm::vec3 extension =
-      from + segment_length * glm::normalize(best_trial.global - from);
-  return extension;
-}
-
-std::optional<glm::vec3> Strands::find_extension_texture(glm::vec3 from,
-                                                         glm::mat4 frame_from,
-                                                         glm::mat4 frame_to) {
-  // New texture stepping tests
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  glm::mat4 inv_from = frame_inverse(frame_from);
-  glm::mat4 inv_to = frame_inverse(frame_to);
-  // Calculate Position in local frame
-  glm::vec3 local_pos = inv_from * glm::vec4(from, 1.f);
-  local_pos.y = 0.f;
-
-  // Init Eval Bounds
-  float max_val_diff = 0.f;
-  float min_val_diff = FLT_MAX;
-  float max_local_dist2 = 0.f;
-  float min_local_dist2 = FLT_MAX;
-  float max_frame_dist2 = 0.f;
-  float min_frame_dist2 = FLT_MAX;
-
-  // Generate samples
-  struct Trial {
-    glm::vec3 local;
-    glm::vec3 global;
-    float val;
-  };
-  std::vector<Trial> trials;
-  for (int i = 0; i < num_trials; i++) {
-    glm::vec2 sample = local_spread * random_vec2();
-    glm::vec3 local_sample = local_pos;
-    local_sample.x += sample.x;
-    local_sample.z += sample.y;
-    glm::vec3 global_sample = frame_to * glm::vec4(local_sample, 1.f);
-    float val = grid.eval_pos(global_sample);
-    float tval = texture_grid.eval_pos(global_sample);
-    if (val < 0.05f && tval < 0.05f) {
-      trials.push_back({local_sample, global_sample, val});
-      // Update Evaluation Bounds
-      max_val_diff = std::max(max_val_diff, std::abs(val - target_iso));
-      min_val_diff = std::min(min_val_diff, std::abs(val - target_iso));
-      max_local_dist2 =
-          std::max(max_local_dist2, glm::distance2(local_sample, local_pos));
-      min_local_dist2 =
-          std::min(min_local_dist2, glm::distance2(local_sample, local_pos));
-      max_frame_dist2 = std::max(max_frame_dist2, glm::length2(local_sample));
-      min_frame_dist2 = std::min(min_frame_dist2, glm::length2(local_sample));
-    }
-  }
-  if (trials.empty())
-    return {};
-
-  Trial best_trial = trials[0];
-  float best_fitness = -1.f;
-  for (auto trial : trials) {
-    float iso_metric =
-        max_val_diff != min_val_diff
-            ? iso_eval * (max_val_diff - (std::abs(trial.val - target_iso)) /
-                                             (max_val_diff - min_val_diff))
-            : 0.f;
-    float local_metric =
-        local_eval *
-        ((max_local_dist2 - glm::distance2(trial.local, local_pos)) /
-         (max_local_dist2 - min_local_dist2));
-    float frame_metric =
-        frame_eval * ((max_frame_dist2 - glm::length2(trial.local)) /
-                      (max_frame_dist2 - min_frame_dist2));
-    float fitness = iso_metric + local_metric + frame_metric;
-    if (best_fitness <= fitness) {
-      best_fitness = fitness;
-      best_trial = trial;
-    }
-  }
-
-  // return best sample
-  glm::vec3 extension =
-      from + segment_length * glm::normalize(best_trial.global - from);
-  return extension;
-  // return best_trial.global;
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // return find_extension(from,frame_from,frame_to);
 }
 
 glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
