@@ -60,11 +60,6 @@ void cycle_camera(int dir) {
 }
 #define CAMERA cameras[curr_cam]
 
-int curr_mesh=0;
-bool add_mesh=false;
-float isoval;
-float isoval_step;
-
 std::string image_prefix = "./tree";
 
 // Toggles
@@ -137,7 +132,10 @@ int main(int argc, char *argv[]) {
     }
 
     // Tree detail
-    STOPWATCH("Adding Strands",Strands detail(tree, gr, texture_grid, opt_data););
+    STOPWATCH("Adding Strands",
+        Strands detail(tree, gr, texture_grid, opt_data);
+        detail.add_stage();
+        );
 
     // Creating Meshes
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
@@ -152,23 +150,12 @@ int main(int argc, char *argv[]) {
 
     STOPWATCH("Polygonizing Isosurface", 
         float surface_val = opt_data.at("mesh_iso");
-        int num_meshes = 1;
-        if (opt_data.contains("num_meshes")) num_meshes = opt_data.at("num_meshes"); 
-        isoval_step = surface_val/num_meshes;
-        std::vector<Mesh<Vertex>> mesh_list;
-        mesh_list.reserve(num_meshes);
-        for (int i = 0; i < num_meshes; i++){
-          isoval = (i+1)*isoval_step;
-          mesh_list.push_back(gr.get_occupied_geom(isoval, texture_grid));
-        }
-        if (num_meshes == 1) isoval_step = -0.5;
+        Mesh<Vertex> tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
     );
-    Mesh<Vertex> *tree_geom=&mesh_list[curr_mesh];
 
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
         STOPWATCH("Exporting Data", 
-                    //gr.export_data("data.txt");
-                    save_mesh(*tree_geom);
+                    save_mesh(tree_geom);
                 );
     }
 
@@ -193,18 +180,12 @@ int main(int argc, char *argv[]) {
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
-      /*
         if (next_stage){
-          detail.add_strands(10);
+          detail.add_stage();
           tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
           strands_geom=detail.get_mesh();
+          tstrands_geom=detail.get_mesh(0.f,1.f,Strands::Texture);
           next_stage=false;
-        }
-        */
-        if (add_mesh){
-          isoval+=isoval_step;
-          mesh_list.push_back(gr.get_occupied_geom(isoval, texture_grid));
-          add_mesh=false;
         }
         if (reset_strands){
             strands_geom = detail.get_mesh(strands_start,strands_end);
@@ -221,10 +202,7 @@ int main(int argc, char *argv[]) {
 
         // Draw the meshes here
         if (view_mesh) {
-            curr_mesh = curr_mesh%mesh_list.size();
-            mesh_list[curr_mesh].draw(shader, CAMERA, GL_TRIANGLES);
-            //texture_strands.draw(flat_shader, CAMERA, GL_LINES);
-
+            tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
         }
         if (view_volume) {
             tstrands_geom.draw(flat_shader, CAMERA, GL_LINES);
@@ -249,7 +227,7 @@ int main(int argc, char *argv[]) {
         }
         if (export_mesh){
             STOPWATCH("Exporting Data", 
-            save_mesh(*tree_geom);
+            save_mesh(tree_geom);
             export_mesh = false;
             );
         }
@@ -342,8 +320,10 @@ void save_image(){
     std::cout<<"Saved image: "<<file_name<<std::endl;
     images_taken++;
 }
+
+int meshes_exported = 0;
 void save_mesh(Mesh<Vertex> mesh){
-    std::string file_name = image_prefix + ".ply";
+    std::string file_name = image_prefix + std::to_string(meshes_exported) + ".ply";
     std::ofstream out(file_name);
     glm::mat4 pos_transform = glm::scale(glm::vec3(2,2,2));
     glm::mat3 norm_scale = glm::scale(glm::vec3(100,100,100));
@@ -383,6 +363,8 @@ void save_mesh(Mesh<Vertex> mesh){
         out<<"3 "<<v0<<" "<<v1<<" "<<v2<<"\n";
     }
     out.close();
+    std::cout<<"Exported Mesh: "<<file_name<<std::endl;
+    meshes_exported++;
 }
 
 #define PANSENS 0.38f
@@ -393,7 +375,7 @@ float speed_factor = 1.f;
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
      pressed5 = false, pressed6 = false, pressed7 = false,
      pressedperiod = false, pressedenter = false, pressedga = false,
-     pressedn = false, pressedt = false, pressedg = false;
+     pressedn = false, pressedt = false, pressedg = false, pressedbs = false;
 void processInput(GLFWwindow *window) {
     // Mouse input
     double mouse_current_x, mouse_current_y;
@@ -469,6 +451,12 @@ void processInput(GLFWwindow *window) {
         pressedenter = true;
     }
     if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_RELEASE && pressedenter) pressedenter = false;
+
+    if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_PRESS && !pressedbs){
+        export_mesh = true;
+        pressedbs = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_RELEASE && pressedbs) pressedbs = false;
 
     // Mesh view modes 
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !pressed1){ // Toggle
@@ -548,21 +536,6 @@ void processInput(GLFWwindow *window) {
         node_vis_f= std::min(node_vis_f+0.002f, 1.f);
         reset_strands = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_BACKSLASH) == GLFW_PRESS){
-        export_mesh = true;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && !pressedt){ // Toggle
-        curr_mesh++;
-        pressedt = true;
-    }
-    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE && pressedt) pressedt = false;
-
-    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !pressedg){ // Toggle
-        add_mesh = true;
-        pressedg = true;
-    }
-    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE && pressedg) pressedg = false;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
