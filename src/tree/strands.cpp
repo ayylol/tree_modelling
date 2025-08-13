@@ -217,7 +217,7 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
 }
 
 int Strands::add_stage(){
-  if (stages_left == 0) return 0;
+  if (stages_left == 0) return -1;
   if (stages_left == 1) {
     add_strands(1+num_strands-strands.size());
   } else {
