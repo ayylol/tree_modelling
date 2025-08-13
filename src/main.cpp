@@ -181,10 +181,11 @@ int main(int argc, char *argv[]) {
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
         if (next_stage){
-          detail.add_stage();
-          tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
-          strands_geom=detail.get_mesh();
-          tstrands_geom=detail.get_mesh(0.f,1.f,Strands::Texture);
+          if (detail.add_stage()>=0){
+            tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
+            strands_geom=detail.get_mesh();
+            tstrands_geom=detail.get_mesh(0.f,1.f,Strands::Texture);
+          }
           next_stage=false;
         }
         if (reset_strands){
