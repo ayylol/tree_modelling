@@ -1,6 +1,7 @@
 # Using Implicit Line Primitives to Create Tree Geometry
 
-![cover](ic2.png)
+![cover](tree.png)
+Cover generated using this program, and rendered in Blender.
 
 This program takes in a volume-less 3d tree skeleton, and a set of parameters
 and creates a voxel representation of the skeleton, with smoothly blended
