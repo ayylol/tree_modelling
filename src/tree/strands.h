@@ -153,7 +153,7 @@ private:
         All,
         NotSelected,
         AtLeastOnce,
-    } select_pool = AtLeastOnce;
+    } select_pool = All;
 
     std::vector<size_t> root_pool;
     std::vector<glm::vec3> root_vecs;

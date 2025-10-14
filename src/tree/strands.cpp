@@ -250,25 +250,28 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   const std::vector<glm::mat4> *shoot_path = &(shoot_frames[shoot_index]);
   const std::vector<glm::mat4> *root_path = nullptr;
   const std::vector<glm::mat4> *path = shoot_path;
-  // size_t closest_index =
-  // std::clamp((int)shoot_path->size()-start_node,0,(int)shoot_path->size()-50);
-  //  Find start index
-  size_t closest_index;
+
+  // Binary search for start index
+  // use int so it can go negative (will be clamped)
+  int i_closest_index;
   size_t a = 0, b = shoot_path->size() - 20;
   int root_nodes=0;
   while (b - a > 5) {
-    closest_index = a + (b - a) / 2;
-    if (grid.eval_pos(frame_position((*path)[closest_index])) <= 0.01f) {
-      a = closest_index;
+    i_closest_index = a + (b - a) / 2;
+    if (grid.eval_pos(frame_position((*path)[i_closest_index])) <= 0.01f) {
+      a = i_closest_index;
     } else {
-      b = closest_index;
+      b = i_closest_index;
     }
   }
-  if (closest_index > 20)
-    closest_index -= 20;
-  closest_index =
-      std::clamp(closest_index, (size_t)0, (size_t)shoot_path->size() - 20);
+  // How far away from the first free point is considered free?
+  const int bin_search_free_dist = 20;
+  if (i_closest_index > bin_search_free_dist)
+    i_closest_index -= bin_search_free_dist;
+  size_t closest_index = (size_t) std::clamp(i_closest_index, 
+      0, std::max(0, (int)shoot_path->size() - bin_search_free_dist));
   //
+  
   glm::mat4 last_closest = (*path)[closest_index];
   std::vector<glm::vec3> strand{frame_position(last_closest)};
 
@@ -679,6 +682,7 @@ std::pair<size_t,size_t> Strands::match_root_all(glm::vec3 position) {
   auto r = matches[(size_t)std::rand() % matches.size()];
   return r;
 }
+
 size_t Strands::match_root(glm::vec3 position, glm::mat4 frame) {
   if (root_pool.empty()) {
     if (select_pool == All) {
@@ -696,18 +700,13 @@ size_t Strands::match_root(glm::vec3 position, glm::mat4 frame) {
   } else if (select_method == WithAngle) {
     // CHECK  THIS
     std::vector<size_t> possible_matches = {};
-    // Change this
-    // glm::vec3 angle_vec =
-    // glm::vec3(frame_inverse(frame)*glm::vec4(position,1.f));
     glm::vec3 angle_vec = position - tree.get_root_pos();
-    // glm::vec3 angle_vec = position-frame_position(frame);
     angle_vec.y = 0.f;
     angle_vec = glm::normalize(angle_vec);
     double largest_cos = -1.f;
     assert("Root pool empty" && root_pool.size() != 0);
     for (size_t j = 0; j < root_pool.size(); j++) {
       double cos = glm::dot(angle_vec, root_vecs[root_pool[j]]);
-      // double cos = glm::angle(angle_vec, root_vecs[root_pool[j]]);
       if (cos == largest_cos) {
         possible_matches.push_back(j);
       } else if (cos > largest_cos) {
@@ -737,6 +736,7 @@ size_t Strands::match_root(glm::vec3 position, glm::mat4 frame) {
   }
   return match;
 }
+
 // Non-member helper functions
 glm::vec3 random_vector(glm::vec3 axis, float angle) {
   const glm::vec3 x_axis(1, 0, 0);
