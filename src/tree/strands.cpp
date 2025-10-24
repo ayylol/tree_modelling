@@ -322,9 +322,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
     float la_max = 20.0f;
-    float distance_to_travel = std::min(
-        lookahead_factor * (segment_length +
-                            glm::distance(frame_position(last_closest), start)),
+    float distance_to_travel = std::min(segment_length + 
+        lookahead_factor * glm::distance(frame_position(last_closest), start), 
         la_max);
 
     // Find target
