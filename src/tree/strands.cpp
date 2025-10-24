@@ -321,7 +321,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                        la_interp * strand_lookahead_max;
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
-    float la_max = 10.0f;
+    float la_max = 20.0f;
     float distance_to_travel = std::min(
         lookahead_factor * (segment_length +
                             glm::distance(frame_position(last_closest), start)),
@@ -669,7 +669,7 @@ std::pair<size_t,size_t> Strands::match_root_all(glm::vec3 position) {
     std::vector<glm::mat4> &path=root_frames[i];
     for (size_t j=0; j<path.size(); ++j){
       glm::vec3 root_p = frame_position(path[j]); root_p.y=0;
-      float d2 = glm::distance2(position,frame_position(path[j]));
+      float d2 = glm::distance2(position,root_p);
       if (d2<closest_d2){
         closest_d2=d2;
         matches.clear();
