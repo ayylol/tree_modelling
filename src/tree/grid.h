@@ -6,6 +6,7 @@
 #include <limits>
 #include <algorithm>
 #include <unordered_set>
+#include <omp.h>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -26,6 +27,7 @@ class Grid
 {
 public:
     Grid(const Skeleton& tree, float percent_overshoot, float scale_factor=1.f);
+    ~Grid();
 
     float get_scale() { return scale; }
     glm::vec3 get_center() { return center; }
@@ -40,7 +42,7 @@ public:
 
     // Implicit Filling
     void fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
-    void fill_line(size_t segment_index);
+    std::vector<glm::ivec3> fill_line(size_t segment_index);
     void fill_point(glm::vec3 p, Implicit& implicit);
 
     bool has_refs(glm::ivec3 index) const;
@@ -85,6 +87,7 @@ private:
         std::unordered_map<uint32_t, float> strands_checked;
     };
     std::vector<std::vector<std::vector<std::vector<size_t>>>> grid;
+    std::vector<std::vector<std::vector<omp_lock_t>>> lock_grid;
     std::vector<std::vector<std::vector<struct Eval>>> eval_grid;
     std::vector<glm::ivec3> occupied;
     std::vector<struct Segment> segments;
