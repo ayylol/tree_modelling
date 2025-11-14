@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include <glad/glad.h>
 
@@ -61,7 +62,7 @@ void cycle_camera(int dir) {
 }
 #define CAMERA cameras[curr_cam]
 
-std::string image_prefix = "./tree";
+std::string image_prefix = "tree";
 
 // Toggles
 bool view_mesh = true, 
@@ -109,8 +110,10 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl
 
     // Parse options
-    auto option_file = std::ifstream(argv[1]);
+    std::filesystem::path file(argv[1]);
+    auto option_file = std::ifstream(file);
     json opt_data = json::parse(option_file);
+    opt_data["path"]=file.remove_filename();
 
     // Creating tree
     STOPWATCH("Parsing Skeleton", Skeleton tree(opt_data););
@@ -129,7 +132,13 @@ int main(int argc, char *argv[]) {
     }
     // Set up output file
     if (opt_data.contains("image_path")) {
-        image_prefix = opt_data.at("image_path");
+        image_prefix = opt_data["image_path"];
+    }
+    image_prefix=std::string(opt_data["path"])+"output/"+image_prefix;
+    if (!std::filesystem::is_directory(std::filesystem::path(image_prefix).remove_filename())){
+      std::string mkdir_cmd = std::string("mkdir -p ")+
+        std::string(std::filesystem::path(image_prefix).remove_filename());
+      system(mkdir_cmd.c_str());
     }
 
     // Tree detail
@@ -300,7 +309,7 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 
 int images_taken = 0;
 void save_image(){
-    std::string file_name = image_prefix + std::to_string(images_taken) + ".png";
+    std::string file_name = image_prefix + "_" + std::to_string(images_taken) + ".png";
     // Make temporary ppm file
     std::string temp_file = "/tmp/tree_image.ppm";
     std::ofstream out(temp_file);
@@ -326,7 +335,7 @@ void save_image(){
 
 int meshes_exported = 0;
 void save_mesh(Mesh<Vertex> mesh){
-    std::string file_name = image_prefix + std::to_string(meshes_exported) + ".ply";
+    std::string file_name = image_prefix +"_"+ std::to_string(meshes_exported) + ".ply";
     std::ofstream out(file_name);
     glm::mat4 pos_transform = glm::scale(glm::vec3(2,2,2));
     glm::mat3 norm_scale = glm::scale(glm::vec3(100,100,100));

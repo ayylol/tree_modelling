@@ -1,11 +1,12 @@
 {
+"_interactive_mode":false,
 "cameras":[
     {"dist":2.068920612335205,
     "focus":[0.15332913398742676, 0.368491530418396, 0.01678326725959778],
     "phi":0.30000001192092896,
     "theta":4.041592121124268}
 ],
-"grid_scale":1.5,
+"grid_scale":1.0,
 "implicit":{
     "max_val":3.0,
     "range":0.02,
@@ -15,13 +16,14 @@
 "tree_file":"shoot.txt",
 "root_file":"root.txt",
 "strands":{
-    "num_abs": 1200,
+    "num_abs": 2200,
+    "intermediate_stages": 1,
     "max_val": 3.0,
-    "leaf_min_range":0.01,
-    "root_min_range": 0.01,
-    "base_max_range": 0.025,
-    "lookahead_min":1.5,
-    "lookahead_max":6.5,
+    "leaf_min_range":0.006,
+    "root_min_range": 0.006,
+    "base_max_range": 0.015,
+    "lookahead_min":1.0,
+    "lookahead_max":4.0,
     "la_interp_start":0.2,
     "la_interp_peak":0.9,
     "la_red_max":1.0,
@@ -43,15 +45,15 @@
     "segment_length":0.02,
     "target_iso":4.626,
     "root_angle_node": 0.5,
-    "bias_amount": 2.0,
+    "bias_amount": 0.7,
     "texture":{
         "max_val": 10.0,
-        "base_max_range": 0.026,
+        "base_max_range": 0.0154,
         "leaf_min_range":0.0000,
         "root_min_range": 0.0000,
         "chance_start":0.4,
         "chance_max":0.70
     }
 },
-"image_path":"template"
+"image_path":"dragonTree"
 }

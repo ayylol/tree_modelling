@@ -16,6 +16,7 @@
 "root_file":"root.txt",
 "strands":{
     "num_abs": 1200,
+    "intermediate_stages": 1,
     "max_val": 3.0,
     "leaf_min_range":0.01,
     "root_min_range": 0.01,
@@ -53,5 +54,5 @@
         "chance_max":0.70
     }
 },
-"image_path":"template"
+"image_path":"shortBlade"
 }
