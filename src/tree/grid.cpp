@@ -93,11 +93,11 @@ float Grid::eval_pos(vec3 pos) const {
     if (!has_refs(slot)){
         return 0.f;
     }
+    const auto& slot_refs = grid[slot.x][slot.y][slot.z];
     std::unordered_map<uint32_t, float> strand_vals;
-    auto slot_refs = grid[slot.x][slot.y][slot.z];
+    strand_vals.reserve(50);
     for (size_t i : slot_refs){
-        // TODO: Extract to function
-        struct Segment segment = segments[i]; 
+        const struct Segment& segment = segments[i];
         float v = segment.f.eval(pos, segment.start,segment.end);
         if (strand_vals.contains(segment.strand_id)){
             strand_vals[segment.strand_id] = 
@@ -105,7 +105,6 @@ float Grid::eval_pos(vec3 pos) const {
         }else{
             strand_vals[segment.strand_id] = v;
         }
-        //
     }
     float val = 0.f;
     for (auto v : strand_vals){
