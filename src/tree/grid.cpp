@@ -217,17 +217,6 @@ void Grid::add_slot(ivec3 slot, float val) {
     //grid[slot.x][slot.y][slot.z] += val;
 }
 
-void Grid::add_ref(glm::ivec3 slot, size_t segment) {
-    // NORMAL GRID
-    if (!is_in_grid(slot)) {
-        return;
-    }
-    if (!has_refs(slot)) {
-        occupied.push_back(slot);
-    }
-    grid[slot.x][slot.y][slot.z].push_back(segment);
-}
-
 void Grid::add_gradient(ivec3 slot, glm::vec3 val) {
 }
 
@@ -263,9 +252,12 @@ void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
     }
 }
 
-void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &implicit) {
-    struct Segment s = {.start = p1, .end = p2, .strand_id = strand_id, .f = implicit};
-    segments.push_back(s);
+void Grid::fill_line(size_t segment_index) {
+    MetaBalls implicit = segments[segment_index].f;
+    glm::vec3 p1 = segments[segment_index].start;
+    glm::vec3 p2 = segments[segment_index].end;
+    //struct Segment s = {.start = p1, .end = p2, .strand_id = strand_id, .f = implicit};
+    //segments.push_back(s);
     vec3 diff = p2 - p1;
     vec3 dir = glm::normalize(diff);
     vec3 variance = glm::abs(diff);
@@ -300,23 +292,19 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
         l2_start = -d2;
     for (int i = 0; i < voxels.size(); i++) {
         if (last_main_axis != voxels[i][main_axis]) { // Add all
-            /*
-            // TODO: Pushing to "occupied" vector messes this up
-            int amount_to_add = (l1_end-l1_start)*(l2_end-l2_start);
-            if (occupied.size()+amount_to_add > occupied.capacity()){
-                occupied.reserve(occupied.size()*2);
-                //occupied.reserve(occupied.size()+amount_to_add);
-            }
-            #pragma omp parallel for
-            */
             for (int i1 = l1_start; i1 <= l1_end; i1++) {
                 for (int i2 = l2_start; i2 <= l2_end; i2++) {
-                    ivec3 slot_to_fill = voxels[i];
-                    slot_to_fill[axis1] += i1;
-                    slot_to_fill[axis2] += i2;
-                    vec3 pos = grid_to_pos(slot_to_fill);
+                    ivec3 slot = voxels[i];
+                    slot[axis1] += i1;
+                    slot[axis2] += i2;
+                    vec3 pos = grid_to_pos(slot);
                     float val = implicit.eval(pos, p1, p2);
-                    add_ref(slot_to_fill, segments.size()-1);
+                    if (is_in_grid(slot)) {
+                      if (!has_refs(slot)) {
+                        occupied.push_back(slot);
+                      }
+                      grid[slot.x][slot.y][slot.z].push_back(segment_index);
+                    }
                 }
             }
             l1_end = d1;
@@ -345,47 +333,23 @@ void Grid::fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls &
     }
 }
 
-//FIXME: CHANGED THIS
-void Grid::fill_path(std::vector<glm::vec3> path, Implicit& implicit){
-    /*
-    fill_line(0, path[0], path[1], implicit);
-    for (int i = 1; i<path.size()-1; i++){
-        fill_line(0, path[i], path[i + 1], implicit);
-    }
-    */
-}
-// THIS ONE
 void Grid::fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point){
-    for (int i = 0; i<path.size()-1; i++){
-        float b;
-        if (i<=inflection_point){
-            b = std::lerp(shoot_b, max_b, (float)i/inflection_point);
-        }else{
-            b = std::lerp(max_b, root_b, (float)(i-inflection_point)/(path.size()-2-inflection_point));
-        }
-        MetaBalls implicit = MetaBalls(max_val, b);
-        fill_line(strand_id, path[i], path[i + 1], implicit);
+  size_t first_segment_index = segments.size();
+  // initialize segments
+  for (int i = 0; i<path.size()-1; i++){
+    float b;
+    if (i<=inflection_point){
+        b = std::lerp(shoot_b, max_b, (float)i/inflection_point);
+    }else{
+        b = std::lerp(max_b, root_b, (float)(i-inflection_point)/(path.size()-2-inflection_point));
     }
-}
-
-// For making initial implicit field
-// TODO: should start on tips then go down
-float Grid::fill_skeleton(const Skeleton::Node& node, float min_range){ 
-    float range = 0.f;
-    if (node.children.empty()){
-        range = min_range;
-    }
-    else{
-        for (auto child : node.children){
-            range = std::max(range,Grid::fill_skeleton(*child, min_range));
-        }
-    }
-    //std::cout<<range<<" "<<min_range<<std::endl;
-    if (node.parent != nullptr){  
-        MetaBalls imp(3.0,range);
-        fill_line(0, frame_position(node.frame),frame_position(node.parent->frame), imp);
-    }
-    return range+0.0001;
+    MetaBalls implicit = MetaBalls(max_val, b);
+    struct Segment s = {.start = path[i], .end = path[i+1], .strand_id = strand_id, .f = implicit};
+    segments.push_back(s);
+  }
+  for (int i = 0; i<path.size()-1; i++){
+    fill_line(first_segment_index+i);
+  }
 }
 
 vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {

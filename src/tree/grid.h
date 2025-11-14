@@ -34,17 +34,14 @@ public:
     void occupy_pos(glm::vec3 pos, float val);
     void occupy_slot(glm::ivec3 pos, float val);
     void add_slot(glm::ivec3 slot, float val);
-    void add_ref(glm::ivec3 slot, size_t segment);
     void add_gradient(glm::ivec3 slot, glm::vec3 val);
     void occupy_line(glm::vec3 start, glm::vec3 end, float val);
     void occupy_path(std::vector<glm::vec3> path, float val);
 
     // Implicit Filling
-    void fill_path(std::vector<glm::vec3> path, Implicit& implicit);
     void fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
-    void fill_line(uint32_t strand_id, glm::vec3 p1, glm::vec3 p2, MetaBalls& implicit);
+    void fill_line(size_t segment_index);
     void fill_point(glm::vec3 p, Implicit& implicit);
-    float fill_skeleton(const Skeleton::Node& node, float min_range);
 
     bool has_refs(glm::ivec3 index) const;
     float eval_pos(glm::vec3 pos) const;
