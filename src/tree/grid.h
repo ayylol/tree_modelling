@@ -33,17 +33,9 @@ public:
     glm::vec3 get_center() { return center; }
     glm::vec3 get_backbottomleft() { return back_bottom_left; }
 
-    void occupy_pos(glm::vec3 pos, float val);
-    void occupy_slot(glm::ivec3 pos, float val);
-    void add_slot(glm::ivec3 slot, float val);
-    void add_gradient(glm::ivec3 slot, glm::vec3 val);
-    void occupy_line(glm::vec3 start, glm::vec3 end, float val);
-    void occupy_path(std::vector<glm::vec3> path, float val);
-
     // Implicit Filling
     void fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
     std::vector<glm::ivec3> fill_line(size_t segment_index);
-    void fill_point(glm::vec3 p, Implicit& implicit);
 
     bool has_refs(glm::ivec3 index) const;
     float eval_pos(glm::vec3 pos) const;
@@ -58,12 +50,7 @@ public:
 
     // TODO: Remove these ////////////////////////
     float get_in_grid(glm::ivec3 index) const;
-    float get_in_pos(glm::vec3 pos) const;
-    glm::vec3 get_norm_grid(glm::ivec3 index) const;
-    glm::vec3 get_norm_pos(glm::vec3 pos) const;
     /////////////////////////////////////////////
-
-    bool line_occluded(glm::vec3 start, glm::vec3 end);
 
     std::vector<glm::ivec3> get_voxels_line(glm::vec3 start, glm::vec3 end) const;
 
