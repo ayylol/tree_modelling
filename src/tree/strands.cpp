@@ -635,13 +635,25 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from,
 glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
   // step towards closest until field is gets to reject value
   float a = 0.f, b = 1.f;
-  glm::vec3 new_head = head;
   float val = grid.eval_pos(head);
   if (val > iso)
     return head;
+  float slack = 0.25;
+  glm::vec3 new_head = head;
   for (int i = 0; i < 16 && std::abs(val - iso) > 0.1; ++i) {
     float p = (b + a) / 2.f;
     new_head = (1.f - p) * close + p * head;
+    // initial lazy check
+    val = grid.lazy_in_check(grid.pos_to_grid(new_head),iso*(1.+slack));
+    if (val>=iso+slack){
+      a = p;
+      continue;
+    }
+    else if (val<=iso-slack){
+      b = p;
+      continue;
+    }
+    // closer inspection
     val = grid.eval_pos(new_head);
     if (val > iso)
       a = p;
