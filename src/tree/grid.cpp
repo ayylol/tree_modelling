@@ -110,8 +110,9 @@ float Grid::eval_pos(vec3 pos) const {
     assert(val==val);
     return val;
 }
-float Grid::lazy_in_check(glm::ivec3 slot, float threshold){
+float Grid::lazy_in_check(glm::ivec3 slot, float threshold, bool threadsafe){
     if (!is_in_grid(slot)) return 0.f;
+    if (threadsafe) omp_set_lock(&lock_grid[slot.x][slot.y][slot.z]);
     vec3 pos = grid_to_pos(slot);
     struct Eval& eval_slot = eval_grid[slot.x][slot.y][slot.z];
     std::vector<size_t>& strands = grid[slot.x][slot.y][slot.z];
@@ -135,11 +136,11 @@ float Grid::lazy_in_check(glm::ivec3 slot, float threshold){
         }
         eval_slot.checked++;
     }
-    //std::cout <<strands.size()<<" "<<eval_slot.val<<std::endl;
+    if (threadsafe) omp_unset_lock(&lock_grid[slot.x][slot.y][slot.z]);
     return eval_slot.val;
 }
-float Grid::lazy_eval(glm::ivec3 slot){
-    return lazy_in_check(slot, FLT_MAX);
+float Grid::lazy_eval(glm::ivec3 slot, bool threadsafe){
+    return lazy_in_check(slot, FLT_MAX, threadsafe);
 }
 float Grid::get_texture_fac(glm::ivec3 slot){
     if (!is_in_grid(slot)) return 0.f;

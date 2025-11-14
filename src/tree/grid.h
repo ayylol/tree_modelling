@@ -39,8 +39,8 @@ public:
 
     bool has_refs(glm::ivec3 index) const;
     float eval_pos(glm::vec3 pos) const;
-    float lazy_in_check(glm::ivec3 slot, float threshold);
-    float lazy_eval(glm::ivec3 slot);
+    float lazy_in_check(glm::ivec3 slot, float threshold, bool threadsafe=false);
+    float lazy_eval(glm::ivec3 slot, bool threadsafe=false);
     glm::vec3 lazy_gradient(glm::ivec3 slot);
     glm::vec3 lazy_norm(glm::ivec3 slot);
     glm::vec3 eval_norm(glm::vec3 pos, float step_size=0.0005f) const;
