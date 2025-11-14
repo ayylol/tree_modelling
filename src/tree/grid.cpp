@@ -85,9 +85,6 @@ bool Grid::has_refs(ivec3 index) const {
     return !(grid[index.x][index.y][index.z].empty());
 }
 
-// TODO: remove this function
-float Grid::get_in_pos(vec3 pos) const { return get_in_grid(pos_to_grid(pos)); }
-
 float Grid::eval_pos(vec3 pos) const { 
     ivec3 slot = pos_to_grid(pos);
     if (!has_refs(slot)){
@@ -182,89 +179,6 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
     assert(z==z);
     //assert(!(x==0.0f&&x==y&&x==z)); //FIXME 
     return glm::vec3(x,y,z);
-}
-
-// FIXME: remove these 
-glm::vec3 Grid::get_norm_grid(glm::ivec3 index) const {
-    // Grid dependent normals
-    return vec3(0,0,0);
-}
-glm::vec3 Grid::get_norm_pos(glm::vec3 pos) const { 
-    return get_norm_grid(pos_to_grid(pos)); 
-}
-
-bool Grid::line_occluded(glm::vec3 start, glm::vec3 end) {
-    std::vector<glm::ivec3> voxels = get_voxels_line(start, end);
-    if (voxels.size() == 0)
-        return false;
-    for (auto voxel : voxels) {
-        if (get_in_grid(voxel) == 0)
-            return false;
-    }
-    return true;
-}
-
-void Grid::occupy_pos(vec3 pos, float val) {
-    ivec3 slot = pos_to_grid(pos);
-    occupy_slot(slot, val);
-}
-
-void Grid::occupy_slot(ivec3 slot, float val) {
-    if (!is_in_grid(slot)) {
-        return;
-    }
-    // NORMAL GRID
-    if (get_in_grid(slot) == 0) {
-        //FIXME: CHANGE MARKER
-        //grid[slot.x][slot.y][slot.z] = val;
-        occupied.push_back(slot);
-    }
-}
-void Grid::add_slot(ivec3 slot, float val) {
-    // NORMAL GRID
-    if (!is_in_grid(slot)) {
-        return;
-    }
-    if (get_in_grid(slot) == 0) {
-        occupied.push_back(slot);
-    }
-    //FIXME: CHANGE MARKER
-    //grid[slot.x][slot.y][slot.z] += val;
-}
-
-void Grid::add_gradient(ivec3 slot, glm::vec3 val) {
-}
-
-void Grid::occupy_line(vec3 start, vec3 end, float val) {
-    // fill voxel
-    vector<ivec3> voxel_list = get_voxels_line(start, end);
-    for (auto voxel : voxel_list) {
-        occupy_slot(voxel, val);
-    }
-}
-
-void Grid::occupy_path(std::vector<glm::vec3> path, float val) {
-    if (path.size() < 2)
-        return;
-    for (int i = 0; i < path.size() - 1; i++) {
-        occupy_line(path[i], path[i + 1], val);
-    }
-}
-void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
-    int n = std::ceil(implicit.cutoff / scale);
-    ivec3 slot = pos_to_grid(p);
-    for (int i0 = -n; i0 <= n; ++i0) {
-        for (int i1 = -n; i1 <= n; ++i1) {
-            for (int i2 = -n; i2 <= n; ++i2) {
-                ivec3 current_slot = slot + ivec3(i0, i1, i2);
-                vec3 current_pos = grid_to_pos(current_slot);
-                float val = implicit.eval(current_pos, p);
-                if (val != 0) {
-                    add_slot(current_slot, val);
-                }
-            }
-        }
-    }
 }
 
 std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
