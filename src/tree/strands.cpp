@@ -534,6 +534,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
   };
   std::vector<Trial> trials;
   trials.reserve(num_trials);
+  float slack=0.5;
 #pragma omp parallel for
   for (int i = 0; i < num_trials; i++) {
     glm::vec3 r_vec = random_vector(canonical_direction, glm::radians(max_angle));
@@ -544,7 +545,15 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     // no caching
     //float val = grid.eval_pos(trial_head);
     // caching
-    float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso, true);
+    //float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso, true);
+    // threshold approach
+    float lazy_val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso*(1.+slack), true);
+    if (lazy_val>=reject_iso*(1.+slack)) continue;
+    float val = lazy_val;
+    if (lazy_val>=reject_iso*(1.-slack)){
+      val = grid.eval_pos(trial_head);
+    }
+
     if (val <= reject_iso) {
       float distance;
       if (bias) {
