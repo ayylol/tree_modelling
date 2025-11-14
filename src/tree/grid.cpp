@@ -8,7 +8,6 @@
 #include <cmath>
 #include <glm/gtx/io.hpp>
 #include <iostream>
-#include <omp.h>
 
 // Commonly used names
 using glm::ivec3;
@@ -30,8 +29,27 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     eval_grid = vector<vector<vector<struct Eval>>>(dimensions.x, 
                 vector<vector<struct Eval>>(dimensions.y,
                 vector<struct Eval>(dimensions.z)));
+    lock_grid = vector<vector<vector<omp_lock_t>>>(dimensions.x, 
+                vector<vector<omp_lock_t>>(dimensions.y,
+                vector<omp_lock_t>(dimensions.z)));
+    for (auto r : lock_grid){
+      for (auto c : r){
+        for (auto lock : c){
+          omp_init_lock(&lock);
+        }
+      }
+    }
     //occupied.reserve(5000000);
     std::cout << "Grid dimensions: " << dimensions << std::endl;
+}
+Grid::~Grid() {
+    for (auto r : lock_grid){
+      for (auto c : r){
+        for (auto lock : c){
+          omp_destroy_lock(&lock);
+        }
+      }
+    }
 }
 
 ivec3 Grid::pos_to_grid(vec3 pos) const {
@@ -252,7 +270,8 @@ void Grid::fill_point(glm::vec3 p, Implicit &implicit) {
     }
 }
 
-void Grid::fill_line(size_t segment_index) {
+std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
+    std::vector<glm::ivec3> local_occupied;
     MetaBalls implicit = segments[segment_index].f;
     glm::vec3 p1 = segments[segment_index].start;
     glm::vec3 p2 = segments[segment_index].end;
@@ -301,7 +320,7 @@ void Grid::fill_line(size_t segment_index) {
                     float val = implicit.eval(pos, p1, p2);
                     if (is_in_grid(slot)) {
                       if (!has_refs(slot)) {
-                        occupied.push_back(slot);
+                        local_occupied.push_back(slot);
                       }
                       grid[slot.x][slot.y][slot.z].push_back(segment_index);
                     }
@@ -331,10 +350,12 @@ void Grid::fill_line(size_t segment_index) {
         last_axis1 = voxels[i][axis1];
         last_axis2 = voxels[i][axis2];
     }
+    return local_occupied;
 }
 
 void Grid::fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point){
   size_t first_segment_index = segments.size();
+  std::vector<std::vector<glm::ivec3>> local_occupied(path.size());
   // initialize segments
   for (int i = 0; i<path.size()-1; i++){
     float b;
@@ -348,7 +369,12 @@ void Grid::fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_
     segments.push_back(s);
   }
   for (int i = 0; i<path.size()-1; i++){
-    fill_line(first_segment_index+i);
+    local_occupied[i]=fill_line(first_segment_index+i);
+  }
+  for (auto list : local_occupied){
+    for (auto occupied_slot : list){
+      occupied.push_back(occupied_slot);
+    }
   }
 }
 
