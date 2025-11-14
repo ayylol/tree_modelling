@@ -31,7 +31,8 @@
 #include "util/geometry.h"
 
 
-#define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)
+//#define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)
+#define SKY_COLOR glm::vec4(0,0,0,1.0)
 
 using json = nlohmann::json;
 // Default screen dimensions
@@ -145,13 +146,14 @@ int main(int argc, char *argv[]) {
         Mesh tstrands_geom = detail.get_mesh(0.f,1.f,Strands::Texture);
         Mesh node_vis = detail.visualize_node(0,0);
     );
-    //STOPWATCH("Getting Normals", Mesh normals_geom = gr.get_normals_geom(surface_val););
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
 
     STOPWATCH("Polygonizing Isosurface", 
         float surface_val = opt_data.at("mesh_iso");
         Mesh<Vertex> tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
+        //Mesh<Vertex> tree_geom=gr.get_occupied_voxels(surface_val);
     );
+    //STOPWATCH("Getting Normals", Mesh<VertFlat> normals_geom = gr.get_normals_geom(surface_val););
 
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
         STOPWATCH("Exporting Data", 
@@ -210,8 +212,8 @@ int main(int argc, char *argv[]) {
             //volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         }
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
-        //if (view_normals) normals_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_normals) {
+          //normals_geom.draw(flat_shader, CAMERA, GL_LINES);
           node_vis.draw(flat_shader, CAMERA, GL_POINTS);
           node_vis.draw(flat_shader, CAMERA, GL_LINES);
         }

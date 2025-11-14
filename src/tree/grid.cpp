@@ -188,8 +188,6 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
 glm::vec3 Grid::get_norm_grid(glm::ivec3 index) const {
     // Grid dependent normals
     return vec3(0,0,0);
-    //return glm::normalize(glm::vec3((get_in_grid(index + ivec3(-1, 0, 0)) - get_in_grid(index + ivec3(1, 0, 0))), (get_in_grid(index + ivec3(0, -1, 0)) - get_in_grid(index + ivec3(0, 1, 0))), (get_in_grid(index + ivec3(0, 0, -1)) - get_in_grid(index + ivec3(0, 0, 1)))));
-    //return glm::normalize(gradient[index.x][index.y][index.z]);
 }
 glm::vec3 Grid::get_norm_pos(glm::vec3 pos) const { 
     return get_norm_grid(pos_to_grid(pos)); 
@@ -274,8 +272,6 @@ std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
     MetaBalls implicit = segments[segment_index].f;
     glm::vec3 p1 = segments[segment_index].start;
     glm::vec3 p2 = segments[segment_index].end;
-    //struct Segment s = {.start = p1, .end = p2, .strand_id = strand_id, .f = implicit};
-    //segments.push_back(s);
     vec3 diff = p2 - p1;
     vec3 dir = glm::normalize(diff);
     vec3 variance = glm::abs(diff);
@@ -315,7 +311,6 @@ std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
                     ivec3 slot = voxels[i];
                     slot[axis1] += i1;
                     slot[axis2] += i2;
-                    vec3 pos = grid_to_pos(slot);
                     if (is_in_grid(slot)) {
                       omp_set_lock(&lock_grid[slot.x][slot.y][slot.z]);
                       if (!has_refs(slot)) {
@@ -447,20 +442,20 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {
     return voxel_list;
 }
 
-Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold) const {
+Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold){
     const vec3 fullcol(1,0,0);
     const vec3 nocol(0,0,1);
     vector<VertFlat> vertices;
     vector<GLuint> indices;
     float max_val = 0.f;
     for (glm::ivec3 voxel : occupied) {
-        float val = get_in_grid(voxel);
+        float val = lazy_eval(voxel);
         if (val > max_val) {
             max_val = val;
         }
     }
     for (glm::ivec3 voxel : occupied) {
-        float val = get_in_grid(voxel);
+        float val = lazy_eval(voxel);
         if (val > threshold) {
             float intensity = val/max_val;
             vec3 col = (1-intensity)*nocol+intensity*fullcol;
@@ -475,20 +470,20 @@ Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold) const {
     return Mesh<VertFlat>(vertices, indices);
 }
 
-Mesh<VertFlat> Grid::get_normals_geom(float threshold) const {
+Mesh<VertFlat> Grid::get_normals_geom(float threshold) {
     vector<VertFlat> vertices;
     vector<GLuint> indices;
     float max_val = 0.f;
     for (glm::ivec3 voxel : occupied) {
-        if (get_in_grid(voxel) > threshold) {
+        if (lazy_in_check(voxel,threshold) > threshold) {
             bool visible = false;
             for (auto norm : face_norms) {
-                if (get_in_grid(voxel + norm) <= threshold) visible = true;
+                if (lazy_in_check(voxel + norm,threshold) <= threshold) visible = true;
             }
             // Completely occluded do not add vertices
             if (!visible) continue;
             vec3 norm_start = back_bottom_left + vec3(voxel) * scale + vec3(1, 1, 1) * (scale / 2);
-            vec3 norm_end = norm_start + get_norm_grid(voxel)*scale*2.0f;
+            vec3 norm_end = norm_start + glm::normalize(lazy_gradient(voxel))*scale*2.0f;
             vertices.push_back(VertFlat{norm_start, glm::vec3(0,1,0)});
             vertices.push_back(VertFlat{norm_end, glm::vec3(0,1,0)});
         }
@@ -499,7 +494,7 @@ Mesh<VertFlat> Grid::get_normals_geom(float threshold) const {
     return Mesh<VertFlat>(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
+Mesh<Vertex> Grid::get_occupied_voxels(float threshold){
     vector<Vertex> vertices;
     vector<GLuint> indices;
     std::vector<glm::vec3> cube_verts{
@@ -522,20 +517,19 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold) const {
     glm::vec3 col1 = glm::vec3(0.5,0,0.7);
     for (glm::ivec3 voxel : occupied) {
         // Grid space is occupied
-        if (get_in_grid(voxel) >= threshold) {
+        if (lazy_in_check(voxel,threshold) >= threshold) {
             // Get adjacent voxel contents
             vector<float> adj_content;
             bool visible = false;
             for (auto norm : face_norms) {
-                float content = get_in_grid(voxel + norm);
+                float content = lazy_in_check(voxel + norm,threshold);
                 adj_content.push_back(content);
                 if (content <= threshold) visible = true;
             }
             // Completely occluded do not add vertices
             if (!visible) continue;
 
-            glm::vec3 normal = get_norm_grid(voxel);
-            //glm::vec3 normal = glm::normalize(gradient[voxel.x][voxel.y][voxel.z]);
+            glm::vec3 normal = glm::normalize(lazy_gradient(voxel));
 
             // Loop through and generate vertices
             vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
@@ -695,16 +689,6 @@ Mesh<VertFlat> Grid::get_grid_geom() const {
         }
     }
     return Mesh(vertices, indices);
-}
-
-void Grid::export_data(const char *filename) {
-    std::cout.flush();
-    std::ofstream out(filename);
-    for (glm::ivec3 voxel : occupied) {
-        out << voxel.x << " " << voxel.y << " " << voxel.z << " "
-            << get_in_grid(voxel) << "\n";
-    }
-    out.close();
 }
 
 // Marching Cubes

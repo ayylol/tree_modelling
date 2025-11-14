@@ -47,7 +47,9 @@ vec4 fog(vec4 color){
     vec3 toCamera = camPos-crntPos;
     float camDist2 = dot(toCamera,toCamera);
     float distBias = 1-clamp(camDist2/120.f,0,1);
-    return color*distBias+(1-distBias)*vec4(0.529,0.808,0.922,1.0);
+    vec4 bg_col1 = vec4(0,0,0,1.0);
+    vec4 bg_col2 = vec4(0.529,0.808,0.922,1.0);
+    return color*distBias+(1-distBias)*bg_col1;
 }
 
 void main()
