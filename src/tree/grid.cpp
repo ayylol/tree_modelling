@@ -317,12 +317,13 @@ std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
                     slot[axis1] += i1;
                     slot[axis2] += i2;
                     vec3 pos = grid_to_pos(slot);
-                    float val = implicit.eval(pos, p1, p2);
                     if (is_in_grid(slot)) {
+                      omp_set_lock(&lock_grid[slot.x][slot.y][slot.z]);
                       if (!has_refs(slot)) {
                         local_occupied.push_back(slot);
                       }
                       grid[slot.x][slot.y][slot.z].push_back(segment_index);
+                      omp_unset_lock(&lock_grid[slot.x][slot.y][slot.z]);
                     }
                 }
             }
@@ -368,9 +369,12 @@ void Grid::fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_
     struct Segment s = {.start = path[i], .end = path[i+1], .strand_id = strand_id, .f = implicit};
     segments.push_back(s);
   }
+
+  #pragma omp parallel for
   for (int i = 0; i<path.size()-1; i++){
     local_occupied[i]=fill_line(first_segment_index+i);
   }
+
   for (auto list : local_occupied){
     for (auto occupied_slot : list){
       occupied.push_back(occupied_slot);
