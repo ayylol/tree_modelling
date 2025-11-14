@@ -12,16 +12,17 @@
     "type":"metaballs"
 },
 "mesh_iso":0.3,
-"tree_file":"./trees/tree4/shoot.txt",
-"root_file":"./trees/tree4/root.txt",
+"tree_file":"shoot.txt",
+"root_file":"root.txt",
 "strands":{
-    "num_abs": 1200,
+    "num_abs": 500,
+    "intermediate_stages":1,
     "max_val": 3.0,
     "leaf_min_range":0.01,
     "root_min_range": 0.01,
     "base_max_range": 0.025,
     "lookahead_min":1.5,
-    "lookahead_max":6.5,
+    "lookahead_max":1.5,
     "la_interp_start":0.2,
     "la_interp_peak":0.9,
     "la_red_max":1.0,
@@ -53,5 +54,5 @@
         "chance_max":0.70
     }
 },
-"image_path":"./images/tree4_"
+"image_path":"./images/tree7_"
 }

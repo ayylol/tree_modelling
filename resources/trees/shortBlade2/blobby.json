@@ -5,26 +5,28 @@
     "phi":0.30000001192092896,
     "theta":4.041592121124268}
 ],
-"grid_scale":1.5,
+"grid_scale":2.0,
 "implicit":{
     "max_val":3.0,
     "range":0.02,
     "type":"metaballs"
 },
 "mesh_iso":0.3,
-"tree_file":"./trees/tree2/shoot.txt",
-"root_file":"./trees/tree2/root.txt",
+"tree_file":"tree.txt",
+"root_file":"root.txt",
 "strands":{
-    "num_abs": 1200,
+    "num_abs": 3000,
+    "intermediate_stages":1,
     "max_val": 3.0,
     "leaf_min_range":0.01,
     "root_min_range": 0.01,
-    "base_max_range": 0.025,
-    "lookahead_min":1.5,
-    "lookahead_max":6.5,
-    "la_interp_start":0.2,
-    "la_interp_peak":0.9,
-    "la_red_max":1.0,
+    "base_max_range": 0.02,
+    "lookahead_min":1.0,
+    "lookahead_max":10.0,
+    "la_interp_start":0.4,
+    "la_interp_peak":0.7,
+    "_la_red_max":1.0,
+    "la_red_max":30.0,
     "la_red_min":1.0,
     "sm_iter": 20,
     "sm_min": 0.0001,
@@ -38,12 +40,12 @@
     "max_angle":160,
     "method":"canon_iso",
     "num_trials":500,
-    "reject_iso":8.0,
+    "reject_iso":15.0,
     "sectorality":true,
     "segment_length":0.02,
     "target_iso":4.626,
     "root_angle_node": 0.5,
-    "bias_amount": 2.0,
+    "bias_amount": 3.0,
     "texture":{
         "max_val": 10.0,
         "base_max_range": 0.026,
@@ -53,5 +55,5 @@
         "chance_max":0.70
     }
 },
-"image_path":"./images/tree2_"
+"image_path":"shortBlade2"
 }

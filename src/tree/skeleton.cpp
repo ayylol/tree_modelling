@@ -20,8 +20,8 @@ float Skeleton::get_average_length() const {return average_length;}
 
 
 Skeleton::Skeleton(json& options){
-    shoot_stats = parse(shoot_root, leafs, options.at("tree_file"));
-    root_stats = parse(root_root, root_tips, options.at("root_file"),shoot_root->frame,BACKWARDS);
+    shoot_stats = parse(shoot_root, leafs, std::string(options["path"])+std::string(options["tree_file"]));
+    root_stats = parse(root_root, root_tips, std::string(options["path"])+std::string(options["root_file"]),shoot_root->frame,BACKWARDS);
 
     root_zup = options.contains("root_zup") ? (bool)options.at("root_zup") : true;
     shoot_zup = options.contains("shoot_zup") ? (bool)options.at("shoot_zup") : true;
