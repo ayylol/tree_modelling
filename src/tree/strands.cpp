@@ -219,7 +219,7 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
 int Strands::add_stage(){
   if (stages_left == 0) return -1;
   if (stages_left == 1) {
-    add_strands(1+num_strands-strands.size());
+    add_strands(num_strands-strands.size());
   } else {
     add_strands(strands_per_stage);
   }
@@ -231,15 +231,15 @@ void Strands::add_strands(unsigned int amount) {
   std::iota(paths.begin(), paths.end(), 0);
   std::shuffle(paths.begin(), paths.end(), rng);
   for (size_t i = 0; i < amount; i++) {
-    if (i%5==0 || i == amount-1){
-      std::cout << "\rStrand: " << strands.size() << "/" << num_strands;
+    if ((i+1)%5==0 || i+1 == amount){
+      std::cout << "\rStrand: " << i+1 << "/" << amount;
       std::flush(std::cout);
     }
     strand_lookahead_max = lookahead_factor_min + laf_step*strands.size();
     tex_chance = tex_chance_step*(strands.size()-tex_chance_start);
     add_strand(paths[i % paths.size()], i);
   }
-  std::cout << std::endl;
+  std::cout << "\rTotal Strands: " << strands.size() << "/" << num_strands << std::endl;
   std::cout << std::endl;
   // std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
