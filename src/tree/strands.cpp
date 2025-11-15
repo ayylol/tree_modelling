@@ -231,8 +231,10 @@ void Strands::add_strands(unsigned int amount) {
   std::iota(paths.begin(), paths.end(), 0);
   std::shuffle(paths.begin(), paths.end(), rng);
   for (size_t i = 0; i < amount; i++) {
-    std::cout << "\rStrand: " << strands.size() << "/" << num_strands;
-    std::flush(std::cout);
+    if (i%5==0 || i == amount-1){
+      std::cout << "\rStrand: " << strands.size() << "/" << num_strands;
+      std::flush(std::cout);
+    }
     strand_lookahead_max = lookahead_factor_min + laf_step*strands.size();
     tex_chance = tex_chance_step*(strands.size()-tex_chance_start);
     add_strand(paths[i % paths.size()], i);
