@@ -31,6 +31,7 @@
     "sm_peak": 0.15,
     "sm_start": 0.8,
     "sm_end": 0.3,
+    "searchpoint_step":0.1,
     "frame_eval":8.0,
     "local_eval":4.0,
     "iso_eval":0.0,

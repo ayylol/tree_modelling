@@ -154,6 +154,7 @@ int main(int argc, char *argv[]) {
         Mesh strands_geom = detail.get_mesh();
         Mesh tstrands_geom = detail.get_mesh(0.f,1.f,Strands::Texture);
         Mesh node_vis = detail.visualize_node(0,0);
+        Mesh searchpoint_vis = detail.visualize_searchpoint(0);
     );
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
 
@@ -202,6 +203,7 @@ int main(int argc, char *argv[]) {
         if (reset_strands){
             strands_geom = detail.get_mesh(strands_start,strands_end);
             node_vis = detail.visualize_node(strands_end,node_vis_f);
+            searchpoint_vis = detail.visualize_searchpoint(strands_end);
             reset_strands = false;
         }
         #define SHOW_CAM_POS 0
@@ -225,6 +227,7 @@ int main(int argc, char *argv[]) {
           //normals_geom.draw(flat_shader, CAMERA, GL_LINES);
           node_vis.draw(flat_shader, CAMERA, GL_POINTS);
           node_vis.draw(flat_shader, CAMERA, GL_LINES);
+          searchpoint_vis.draw(flat_shader, CAMERA, GL_LINES);
         }
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) ground.draw(shader, CAMERA, GL_TRIANGLES);
