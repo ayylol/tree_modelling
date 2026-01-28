@@ -29,6 +29,7 @@ public:
     Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options);
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
+    Mesh<Vertex> visualize_searchpoint(float strand) const;
     void add_strands(unsigned int amount);
     int add_stage();
 private:
@@ -78,6 +79,9 @@ private:
     int num_strands;
     int stages_left;
     int strands_per_stage;
+    //
+    int longest_shoot_length=0;
+    //
     // Node observed
     float node_observed=0.0;
     size_t strand_observed=0;
@@ -111,6 +115,8 @@ private:
     float la_interp_peak=0.5;
     float la_red_max=10.f;
     float la_red_min=1.f;
+    //transition zone
+    float searchpoint_step = 0.1f;
     // Biasing
     float bias_amount = 1.0f;
     // Smoothing vars

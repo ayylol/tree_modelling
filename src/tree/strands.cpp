@@ -64,7 +64,9 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
       tree(tree) {
   // Set up root & shoot paths
   for (size_t i = 0; i < tree.leafs_size(); i++) {
-    shoot_frames.push_back(tree.get_strand(i, Skeleton::LEAF));
+    std::vector<glm::mat4> shoot_path = tree.get_strand(i, Skeleton::LEAF);
+    shoot_frames.push_back(shoot_path);
+    longest_shoot_length = std::max(longest_shoot_length, (int)shoot_frames.size());
   }
   for (size_t i = 0; i < tree.roots_size(); i++) {
     std::vector<glm::mat4> root_frame = tree.get_strand(i, Skeleton::ROOT);
@@ -107,6 +109,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   la_red_max = strand_options.at("la_red_max");
   la_red_min = strand_options.at("la_red_min");
   laf_step = (lookahead_factor_max-lookahead_factor_min)/(num_strands);
+  // Transition zone
+  searchpoint_step = strand_options.at("searchpoint_step");
   // Smooth
   sm_iter = strand_options.at("sm_iter");
   sm_min = strand_options.at("sm_min");
@@ -156,6 +160,28 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   //add_stage();
 }
 
+Mesh<Vertex> Strands::visualize_searchpoint(float strand) const {
+  glm::vec3 col1(0, 1, 0);
+  std::vector<Vertex> vertices;
+  std::vector<GLuint> indices;
+
+  strand = std::clamp(strand, 0.0f, 1.f);
+  size_t strand_i = strand * (strands.size() - 1);
+  for (std::vector<glm::vec3> info : node_info[strand_i]){
+    glm::vec3 p = info[0];
+    if (info.size() > 3){
+      p = info[1];
+    }
+    vertices.push_back(Vertex(p, col1));
+  }
+  size_t end_index = vertices.size();
+  for (int i = 0; i < end_index - 1; i++) {
+    indices.push_back(i);
+    indices.push_back(i + 1);
+  }
+
+  return Mesh(vertices, indices);
+}
 Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
   glm::vec3 col1(0, 1, 0);
   glm::vec3 col2(1, 0, 1);
@@ -323,10 +349,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                        la_interp * strand_lookahead_max;
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
-    float la_max = 20.0f;
-    float distance_to_travel = std::min(segment_length + 
-        lookahead_factor * glm::distance(frame_position(last_closest), start), 
-        la_max);
+    float distance_to_travel = segment_length +
+      lookahead_factor * glm::distance(frame_position(last_closest), start);
 
     // Find target
     TargetResult target = find_target(*path, closest_index, distance_to_travel);
@@ -348,8 +372,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
             transition_node = closest_index;
           }
         }
-        float alpha = (float)closest_index / shoot_path->size();
-        float reduction = (1 - alpha) * la_red_max + alpha * la_red_min;
+        float alpha = (float)(longest_shoot_length-closest_index) / longest_shoot_length;
+        float reduction = (1 - alpha) * la_red_min + alpha * la_red_max;
         target =
             find_target(*root_path, 0,
                         (distance_to_travel - target.travelled) / reduction);
@@ -407,35 +431,37 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
 
     // Binary search for final extension
     if (target_on_root) {
-      _interp += 0.1f;
+      _interp += searchpoint_step;
       _interp_bias += 0.1f; // Parameter
       _interp = std::min(_interp, 1.f);
       _interp_bias = std::min(_interp_bias, 1.f);
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, root_path->size() - 1);
-      float alpha =
-          std::min(root_closest.index / (root_path->size() * 0.5f), 1.f);
-      bsearch_iso = reject_iso * (1.f - alpha) + reject_iso * alpha;
-      // bsearch_iso=reject_iso*(1.f-alpha)+(reject_iso-10)*alpha;
     } else {
       _interp = 0.f;
       _interp_bias = 0.f;
-      bsearch_iso = reject_iso;
     }
     node_info.back().back().push_back(frame_position(next.frame));
     if (target_on_root && !on_root) {
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, target.index);
       float alpha = _interp;
+      // Using root closest
       glm::vec3 bin_point = frame_position(root_closest.frame) * alpha +
                             frame_position(next.frame) * (1.f - alpha);
+      /*
+      // Using target
+      glm::vec3 bin_point = frame_position(target.frame) * alpha +
+                            frame_position(next.frame) * (1.f - alpha);
+                            */
       strand[strand.size() - 1] =
-          move_extension(strand.back(), bin_point, bsearch_iso);
+          move_extension(strand.back(), bin_point, reject_iso);
       node_info.back().back().push_back(bin_point);
       node_info.back().back().push_back(frame_position(root_closest.frame));
+      //node_info.back().back().push_back(frame_position(target.frame));
     } else {
       strand[strand.size() - 1] = move_extension(
-          strand.back(), frame_position(next.frame), bsearch_iso);
+          strand.back(), frame_position(next.frame), reject_iso);
     }
     /// end of binary search
 
