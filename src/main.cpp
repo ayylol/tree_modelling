@@ -33,7 +33,8 @@
 
 
 //#define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)
-#define SKY_COLOR glm::vec4(0,0,0,1.0)
+//#define SKY_COLOR glm::vec4(0,0,0,1.0)
+#define SKY_COLOR glm::vec4(1,1,1,1.0)
 
 using json = nlohmann::json;
 // Default screen dimensions
