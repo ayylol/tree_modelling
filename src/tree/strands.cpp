@@ -222,13 +222,15 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
          i <= end * (strand_list.size() - 1); i++) {
       auto path = strand_list[i];
       float percent = ((float)i / strand_list.size() - start) / (end - start);
-      // glm::vec3 color = (1-percent)*blue+(percent)*red;
+      glm::vec3 color = (1-percent)*blue+(percent)*red;
       size_t start_index = vertices.size();
       int j = 0;
       for (auto position : path) {
+        /*
         glm::vec3 color = j < inflection_points[i].first    ? blue
                           : j < inflection_points[i].second ? red
                                                             : blue;
+                                                            */
         vertices.push_back(Vertex{position, color});
         j++;
       }
