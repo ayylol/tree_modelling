@@ -117,6 +117,7 @@ private:
     float la_red_min=1.f;
     //transition zone
     float searchpoint_step = 0.1f;
+    float bias_step = 0.1f;
     // Biasing
     float bias_amount = 1.0f;
     // Smoothing vars

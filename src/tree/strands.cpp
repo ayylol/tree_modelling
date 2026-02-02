@@ -111,6 +111,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   laf_step = (lookahead_factor_max-lookahead_factor_min)/(num_strands);
   // Transition zone
   searchpoint_step = strand_options.at("searchpoint_step");
+  bias_step = strand_options.at("bias_step");
   // Smooth
   sm_iter = strand_options.at("sm_iter");
   sm_min = strand_options.at("sm_min");
@@ -210,6 +211,8 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
   glm::vec3 red(1, 0, 0); // Placed Later
   glm::vec3 green(0, 1, 0);
   glm::vec3 blue(0, 0, 1); // Placed Earlier
+  glm::vec3 black(0, 0, 0); // Placed Earlier
+  glm::vec3 brown(.44, .23, .13); // Placed Earlier
   // float start = 0.;
   // float end = 1.0;
   auto &strand_list = type == Structure ? strands : texture_strands;
@@ -222,6 +225,7 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
          i <= end * (strand_list.size() - 1); i++) {
       auto path = strand_list[i];
       float percent = ((float)i / strand_list.size() - start) / (end - start);
+      //glm::vec3 color = (1-percent)*black+(percent)*brown;
       glm::vec3 color = (1-percent)*blue+(percent)*red;
       size_t start_index = vertices.size();
       int j = 0;
@@ -434,7 +438,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     // Binary search for final extension
     if (target_on_root) {
       _interp += searchpoint_step;
-      _interp_bias += 0.1f; // Parameter
+      _interp_bias += bias_step; 
       _interp = std::min(_interp, 1.f);
       _interp_bias = std::min(_interp_bias, 1.f);
       TargetResult root_closest =

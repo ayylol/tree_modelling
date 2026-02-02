@@ -47,6 +47,7 @@
     "target_iso":4.626,
     "root_angle_node": 0.5,
     "bias_amount": 0.7,
+    "bias_interp": 0.1,
     "texture":{
         "max_val": 10.0,
         "base_max_range": 0.0154,

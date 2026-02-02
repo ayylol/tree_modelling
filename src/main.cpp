@@ -294,6 +294,7 @@ GLFWwindow *openGLInit() {
 
     // OpenGL drawing settings
     glPointSize(8.f);
+    glLineWidth(2.f);
     //glPolygonMode( GL_BACK, GL_LINE );
     //glPolygonMode( GL_FRONT, GL_POINT );
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
