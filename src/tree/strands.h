@@ -30,6 +30,7 @@ public:
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
     Mesh<Vertex> visualize_searchpoint(float strand) const;
+    Mesh<Vertex> visualize_keypoints(float strand) const;
     void add_strands(unsigned int amount);
     int add_stage();
 private:
@@ -44,6 +45,16 @@ private:
     std::vector<std::pair<size_t,size_t>> inflection_points;
     std::vector<std::vector<glm::vec3>> texture_strands;
     std::vector<std::vector<std::vector<glm::vec3>>> node_info;
+
+    struct Keypoints {
+      glm::vec3 la_start;
+      glm::vec3 la_peak;
+      glm::vec3 base_node;
+      glm::vec3 transition_node;
+      glm::vec3 enter_root_node;
+    };
+    std::vector<Keypoints> keypoints;
+
     Grid &grid;
     Grid &texture_grid;
 
@@ -111,8 +122,8 @@ private:
     float lookahead_factor_min = 1.0f;
     float lookahead_factor_max = 2.0f;
     float laf_step;
-    float la_interp_start=0.3;
-    float la_interp_peak=0.5;
+    int la_interp_start=20;
+    int la_interp_peak=10;
     float la_red_max=10.f;
     float la_red_min=1.f;
     //transition zone
