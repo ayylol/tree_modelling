@@ -236,15 +236,13 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
       auto path = strand_list[i];
       float percent = ((float)i / strand_list.size() - start) / (end - start);
       //glm::vec3 color = (1-percent)*black+(percent)*brown;
-      glm::vec3 color = (1-percent)*blue+(percent)*red;
+      //glm::vec3 color = (1-percent)*blue+(percent)*red;
       size_t start_index = vertices.size();
       int j = 0;
       for (auto position : path) {
-        /*
         glm::vec3 color = j < inflection_points[i].first    ? blue
                           : j < inflection_points[i].second ? red
                                                             : blue;
-                                                            */
         vertices.push_back(Vertex{position, color});
         j++;
       }
@@ -300,6 +298,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   int i_closest_index;
   size_t a = 0, b = shoot_path->size() - 20;
   int root_nodes=0;
+  int transition_nodes=0;
   while (b - a > 5) {
     i_closest_index = a + (b - a) / 2;
     if (grid.eval_pos(frame_position((*path)[i_closest_index])) <= 0.01f) {
@@ -369,8 +368,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                        la_interp * strand_lookahead_max;
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
-    float distance_to_travel = segment_length +
-      lookahead_factor * glm::distance(frame_position(last_closest), start);
+    float max_d = 2.8f;
+    float distance_to_travel = std::min(segment_length +
+      lookahead_factor * glm::distance(frame_position(last_closest), start), max_d);
 
     // Find target
     TargetResult target = find_target(*path, closest_index, distance_to_travel);
@@ -431,11 +431,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                                     // closest and node
         next = shoot_closest;
       } else {
-        //rematch root
-        /*
-        root_path = &(root_frames[match_root(strand[strand.size() - 1],
-                                             (*path)[closest_index])]);
-                                             */
         next = root_closest;
         path = root_path;
         on_root = true;
@@ -466,16 +461,25 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, target.index);
       float alpha = _interp;
+      /*
       // Using root closest
       glm::vec3 bin_point = frame_position(root_closest.frame) * alpha +
                             frame_position(next.frame) * (1.f - alpha);
-      /*
+                            */
       // Using target
       glm::vec3 bin_point = frame_position(target.frame) * alpha +
                             frame_position(next.frame) * (1.f - alpha);
-                            */
       strand[strand.size() - 1] =
+        move_extension(strand.back(), bin_point, reject_iso);
+      // fallback
+      /*
+      if (grid.lazy_in_check(grid.pos_to_grid(bin_point),reject_iso)<=reject_iso/2){
+        glm::vec3 bin_point = frame_position(root_closest.frame) * alpha +
+                              frame_position(next.frame) * (1.f - alpha);
+        strand[strand.size() - 1] =
           move_extension(strand.back(), bin_point, reject_iso);
+      }
+      */
       node_info.back().back().push_back(bin_point);
       node_info.back().back().push_back(frame_position(root_closest.frame));
       //node_info.back().back().push_back(frame_position(target.frame));
@@ -484,21 +488,27 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
           strand.back(), frame_position(next.frame), reject_iso);
     }
     /// end of binary search
+    // Normalize extension
+    strand[strand.size()-1] = strand[strand.size()-2]+
+      glm::normalize(strand[strand.size()-1]-strand[strand.size() - 2])*segment_length;
 
     if (next.index >= path->size() - 1 && on_root) {
       done = true;
     }
-    if (on_root && root_nodes>20 && root_nodes%5==0){
+    if ((on_root && root_nodes%5==0) || (!on_root && target_on_root && transition_nodes%20==0)){
       auto p = match_root_all(strand.back());
       root_path = &(root_frames[p.first]);
-      path = root_path;
-      closest_index = std::max((size_t)0,p.second-1);
-      last_closest = (*path)[closest_index];
+      if (on_root){
+        path = root_path;
+        closest_index = std::max((size_t)0,p.second-1);
+        last_closest = (*path)[closest_index];
+      }
     }else{
       closest_index = next.index;
       last_closest = next.frame;
     }
     if (on_root) root_nodes++;
+    if (!on_root && target_on_root) transition_nodes++;
   }
   // Occupy strand path
   if (strand.size() <= 2)
