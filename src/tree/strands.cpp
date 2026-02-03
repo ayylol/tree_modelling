@@ -102,10 +102,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   // LA
   lookahead_factor_max = strand_options.at("lookahead_max");
   lookahead_factor_min = strand_options.at("lookahead_min");
-  la_interp_start =
-      std::clamp((float)strand_options.at("la_interp_start"), 0.f, 1.f);
-  la_interp_peak =
-      std::clamp((float)strand_options.at("la_interp_peak"), 0.f, 1.f);
+  la_interp_start = strand_options.at("la_interp_start");
+  la_interp_peak = strand_options.at("la_interp_peak");
   la_red_max = strand_options.at("la_red_max");
   la_red_min = strand_options.at("la_red_min");
   laf_step = (lookahead_factor_max-lookahead_factor_min)/(num_strands);
@@ -159,6 +157,18 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   }
   tex_chance_step = tex_max_chance / (num_strands - tex_chance_start);
   //add_stage();
+}
+
+Mesh<Vertex> Strands::visualize_keypoints(float strand) const {
+  strand = std::clamp(strand, 0.0f, 1.f);
+  size_t strand_i = strand * (strands.size() - 1);
+  std::vector<Vertex> vertices = {
+    Vertex{keypoints[strand_i].la_start, glm::vec3(0,0,1)},
+    Vertex{keypoints[strand_i].la_peak, glm::vec3(1,0,0)},
+    Vertex{keypoints[strand_i].base_node, glm::vec3(0,1,0)},
+  };
+  std::vector<GLuint> indices = {0,1,2};
+  return Mesh(vertices, indices);
 }
 
 Mesh<Vertex> Strands::visualize_searchpoint(float strand) const {
@@ -317,8 +327,12 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   // SETUP AUXILARY INFO
 
   // Set up lookahead value
-  const int la_start_node = la_interp_start * (shoot_path->size() - 1);
-  const int la_peak_node = la_interp_peak * (shoot_path->size() - 1);
+  const int la_start_node = std::clamp((int)(shoot_path->size() - 1) - la_interp_start, 0, (int)shoot_path->size() - 1);
+  const int la_peak_node = std::clamp((int)(shoot_path->size() - 1) - la_interp_peak , 0, (int)shoot_path->size() - 1);
+  keypoints.push_back(Keypoints());
+  keypoints.back().la_start=frame_position((*shoot_path)[la_start_node]);
+  keypoints.back().la_peak=frame_position((*shoot_path)[la_peak_node]);
+  keypoints.back().base_node=frame_position((*shoot_path)[shoot_path->size()-1]);
   //  Loop until on root, and target node is the end
   bool on_root = false;
   bool target_on_root = false;
