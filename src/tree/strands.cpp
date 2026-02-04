@@ -180,12 +180,8 @@ Mesh<Vertex> Strands::visualize_searchpoint(float strand) const {
 
   strand = std::clamp(strand, 0.0f, 1.f);
   size_t strand_i = strand * (strands.size() - 1);
-  for (std::vector<glm::vec3> info : node_info[strand_i]){
-    glm::vec3 p = info[0];
-    if (info.size() > 3){
-      p = info[1];
-    }
-    vertices.push_back(Vertex(p, col1));
+  for (NodeInfo info : node_info[strand_i]){
+    vertices.push_back(Vertex(info.target, col1));
   }
   size_t end_index = vertices.size();
   for (int i = 0; i < end_index - 1; i++) {
@@ -203,15 +199,16 @@ Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
   size_t strand_i = strand * (strands.size() - 1);
   size_t node_i = node * (strands[strand_i].size() - 1);
   std::vector<Vertex> vertices;
-  vertices.push_back(Vertex(strands[strand_i][node_i], col2));
-  for (auto node : node_info[strand_i][node_i]) {
-    vertices.push_back(Vertex(node, col2));
-  }
   std::vector<GLuint> indices;
-  if (node_info[strand_i][node_i].size() == 4) {
-    indices = {0, 2, 1, 3, 4};
-  } else {
-    indices = {0, 1, 2};
+  vertices.push_back(Vertex(strands[strand_i][node_i], col2));
+  vertices.push_back(Vertex(node_info[strand_i][node_i].target,col2));
+  vertices.push_back(Vertex(node_info[strand_i][node_i].closest,col2));
+  if (node_info[strand_i][node_i].transition){
+    vertices.push_back(Vertex(node_info[strand_i][node_i].searchpoint,col2));
+    vertices.push_back(Vertex(node_info[strand_i][node_i].closest2,col2));
+    indices = {0, 3, 1, 2, 4};
+  }else{
+    indices = {0, 2, 1};
   }
   return Mesh(vertices, indices);
 }
@@ -324,7 +321,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   inflection_points.push_back({0, 0});
   node_info.push_back({});
   node_info.back().push_back({});
-  node_info.back().back().push_back(frame_position(last_closest));
+  node_info.back().back().closest=frame_position(last_closest);
+  node_info.back().back().target=frame_position(last_closest);
   // SETUP AUXILARY INFO
 
   // Set up lookahead value
@@ -404,9 +402,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         // done = true;
       }
     }
-    // ADD TARGET to visualization
-    node_info.back().back().push_back(frame_position(target.frame));
-    // end of find target section
 
     // Add extension
     std::optional<glm::vec3> ext;
@@ -421,6 +416,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     }
     strand.push_back(ext.value());
     node_info.back().push_back({});
+    node_info.back().back().target=frame_position(target.frame);
 
     TargetResult next;
     if (!on_root && target_on_root) {
@@ -459,7 +455,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       _interp = 0.f;
       _interp_bias = 0.f;
     }
-    node_info.back().back().push_back(frame_position(next.frame));
+    node_info.back().back().closest=frame_position(next.frame);
     if (target_on_root && !on_root) {
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, target.index);
@@ -483,9 +479,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
           move_extension(strand.back(), bin_point, reject_iso);
       }
       */
-      node_info.back().back().push_back(bin_point);
-      node_info.back().back().push_back(frame_position(root_closest.frame));
-      //node_info.back().back().push_back(frame_position(target.frame));
+      node_info.back().back().searchpoint=bin_point;
+      node_info.back().back().closest2=frame_position(root_closest.frame);
+      node_info.back().back().transition=true;
     } else {
       strand[strand.size() - 1] = move_extension(
           strand.back(), frame_position(next.frame), reject_iso);
