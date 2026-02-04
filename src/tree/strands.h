@@ -44,7 +44,15 @@ private:
     std::vector<std::vector<glm::vec3>> strands;
     std::vector<std::pair<size_t,size_t>> inflection_points;
     std::vector<std::vector<glm::vec3>> texture_strands;
-    std::vector<std::vector<std::vector<glm::vec3>>> node_info;
+
+    struct NodeInfo{
+      glm::vec3 closest;
+      glm::vec3 target;
+      glm::vec3 closest2;
+      glm::vec3 searchpoint;
+      bool transition=false;
+    };
+    std::vector<std::vector<NodeInfo>> node_info;
 
     struct Keypoints {
       glm::vec3 la_start;
