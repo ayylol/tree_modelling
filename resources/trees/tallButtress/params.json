@@ -5,32 +5,30 @@
     "phi":0.30000001192092896,
     "theta":4.041592121124268}
 ],
-"grid_scale":2.0,
+"grid_scale":1.8,
 "implicit":{
     "max_val":3.0,
     "range":0.02,
     "type":"metaballs"
 },
-"mesh_iso":0.3,
+"mesh_iso":0.1,
 "tree_file":"shoot.txt",
 "root_file":"root.txt",
 "strands":{
-    "num_abs": 1200,
-    "_num_abs": 2400,
+    "num_abs": 3200,
     "intermediate_stages":1,
     "max_val": 3.0,
     "leaf_min_range":0.01,
     "root_min_range": 0.01,
-    "base_max_range": 0.025,
+    "base_max_range": 0.03,
     "lookahead_min":1.5,
-    "lookahead_max":20,
-    "la_interp_start":450,
-    "la_interp_peak":300,
-    "_la_interp_start":0.2,
-    "_la_interp_peak":0.9,
-    "la_red_max":1.0,
-    "la_red_min":1.0,
-    "searchpoint_step":0.1,
+    "lookahead_max":40.0,
+    "la_interp_start":480,
+    "la_interp_peak":380,
+    "max_lookahead_dist":100.0,
+    "reduction_at_length":1000.0,
+    "reduction_length":200,
+    "searchpoint_step":0.01,
     "sm_iter": 20,
     "sm_min": 0.0001,
     "sm_peak": 0.15,
@@ -61,4 +59,3 @@
 },
 "image_path":"tallButtress"
 }
-
