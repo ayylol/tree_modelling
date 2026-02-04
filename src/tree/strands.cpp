@@ -104,9 +104,11 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   lookahead_factor_min = strand_options.at("lookahead_min");
   la_interp_start = strand_options.at("la_interp_start");
   la_interp_peak = strand_options.at("la_interp_peak");
-  la_red_max = strand_options.at("la_red_max");
-  la_red_min = strand_options.at("la_red_min");
   laf_step = (lookahead_factor_max-lookahead_factor_min)/(num_strands);
+  max_lookahead_dist = strand_options.at("max_lookahead_dist");
+  // LA reduction
+  reduction_at_length = strand_options.at("reduction_at_length");
+  reduction_length = strand_options.at("reduction_length");
   // Transition zone
   searchpoint_step = strand_options.at("searchpoint_step");
   bias_step = strand_options.at("bias_step");
@@ -368,9 +370,8 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                        la_interp * strand_lookahead_max;
     // Start of this segment is head of last
     glm::vec3 start(strand[strand.size() - 1]);
-    float max_d = 2.8f;
     float distance_to_travel = std::min(segment_length +
-      lookahead_factor * glm::distance(frame_position(last_closest), start), max_d);
+      lookahead_factor * glm::distance(frame_position(last_closest), start), max_lookahead_dist);
 
     // Find target
     TargetResult target = find_target(*path, closest_index, distance_to_travel);
@@ -393,10 +394,12 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
           }
         }
         float alpha = (float)(longest_shoot_length-closest_index) / longest_shoot_length;
-        float reduction = (1 - alpha) * la_red_min + alpha * la_red_max;
+        target = find_target(*root_path, 0, (distance_to_travel - target.travelled), true);
+        /*
         target =
             find_target(*root_path, 0,
                         (distance_to_travel - target.travelled) / reduction);
+                        */
       } else {
         // done = true;
       }
@@ -547,21 +550,23 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
 }
 
 // Strand creation helper functions
+// TODO: LOOK AT REDUCE MORE CLOSELY
 Strands::TargetResult Strands::find_target(const std::vector<glm::mat4> &path,
                                            size_t start_index,
-                                           float travel_dist) {
+                                           float travel_dist, bool reduce) {
   TargetResult result = {start_index, path[start_index], 0.f};
   glm::vec3 target_point = frame_position(path[result.index]);
-  // glm::distance2(frame_position(path[start_index]),frame_position(result.frame))<=std::pow(segment_length,2)
   while (result.travelled < travel_dist && result.index != path.size() - 1) {
-    result.travelled += glm::distance(frame_position(path[result.index]),
-                                      frame_position(path[result.index + 1]));
+    float travelled = glm::distance(frame_position(path[result.index]), frame_position(path[result.index + 1]));
+    if (reduce) travelled = travelled * std::pow(2,(((float)result.index * std::log2(reduction_at_length))/(float)reduction_length));
+    result.travelled += travelled;
     result.index++;
     result.frame = path[result.index];
   }
   // Travelled further than allowed
-  if (result.index == path.size() - 1) {
+  if (reduce || result.index == path.size() - 1) {
     result.frame = path[result.index];
+    if (reduce) result.travelled = travel_dist;
   } else if (result.travelled > travel_dist && result.index != 0) {
     result.index--;
     glm::vec3 p1 = frame_position(path[result.index]);

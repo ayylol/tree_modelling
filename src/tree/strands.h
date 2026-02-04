@@ -75,7 +75,7 @@ private:
         float distance;
         float angle;
     };
-    TargetResult find_target(const std::vector<glm::mat4>& path, size_t start_index, float travel_dist);
+    TargetResult find_target(const std::vector<glm::mat4>& path, size_t start_index, float travel_dist, bool reduce = false);
     std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false);
     std::optional<glm::vec3> find_extension_fs(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_heading(glm::vec3 from, glm::mat4 frame);
@@ -124,8 +124,10 @@ private:
     float laf_step;
     int la_interp_start=20;
     int la_interp_peak=10;
-    float la_red_max=10.f;
-    float la_red_min=1.f;
+    float max_lookahead_dist = 100.f;
+    // REDUCTION
+    float reduction_at_length = 1000.f;
+    float reduction_length = 200.f;
     //transition zone
     float searchpoint_step = 0.1f;
     float bias_step = 0.1f;
