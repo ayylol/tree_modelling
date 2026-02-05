@@ -200,10 +200,10 @@ int main(int argc, char *argv[]) {
               if (detail.add_stage()>=0){
               strands_geom=detail.get_mesh();
               tstrands_geom=detail.get_mesh(0.f,1.f,Strands::Texture);
+              geom_generated=false;
               }
           );
           next_stage=false;
-          geom_generated=false;
         }
         if (gen_geom){
           if (!geom_generated){
