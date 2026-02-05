@@ -68,13 +68,15 @@ std::string image_prefix = "tree";
 // Toggles
 bool view_mesh = true, 
      view_volume = false, 
-     view_strands = false,
+     view_strands = true,
      view_normals = false,
      view_skeleton = false,
      view_ground = false,
      view_bound = false,
      interactive = true,
-     next_stage = false;
+     next_stage = false,
+     gen_geom = false,
+     geom_generated = false;
 
 bool export_mesh = false;
 
@@ -160,11 +162,10 @@ int main(int argc, char *argv[]) {
     );
     STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
 
-    STOPWATCH("Polygonizing Isosurface", 
-        float surface_val = opt_data.at("mesh_iso");
-        Mesh<Vertex> tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
-        //Mesh<Vertex> tree_geom=gr.get_occupied_voxels(surface_val);
-    );
+    float surface_val = opt_data.at("mesh_iso");
+    Mesh<Vertex> tree_geom = Mesh(std::vector<Vertex>(), std::vector<GLuint>());
+    //Mesh<Vertex> tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
+    //Mesh<Vertex> tree_geom=gr.get_occupied_voxels(surface_val);
     //STOPWATCH("Getting Normals", Mesh<VertFlat> normals_geom = gr.get_normals_geom(surface_val););
 
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
@@ -195,12 +196,23 @@ int main(int argc, char *argv[]) {
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
         if (next_stage){
-          if (detail.add_stage()>=0){
-            tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
-            strands_geom=detail.get_mesh();
-            tstrands_geom=detail.get_mesh(0.f,1.f,Strands::Texture);
-          }
+          STOPWATCH("Adding Strands",
+              if (detail.add_stage()>=0){
+              strands_geom=detail.get_mesh();
+              tstrands_geom=detail.get_mesh(0.f,1.f,Strands::Texture);
+              }
+          );
           next_stage=false;
+          geom_generated=false;
+        }
+        if (gen_geom){
+          if (!geom_generated){
+            STOPWATCH("Polygonizing Isosurface", 
+                tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
+            );
+          }
+          gen_geom=false;
+          geom_generated=true;
         }
         if (reset_strands){
             strands_geom = detail.get_mesh(strands_start,strands_end);
@@ -395,7 +407,8 @@ float speed_factor = 1.f;
 bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
      pressed5 = false, pressed6 = false, pressed7 = false,
      pressedperiod = false, pressedenter = false, pressedga = false,
-     pressedn = false, pressedt = false, pressedg = false, pressedbs = false;
+     pressedn = false, pressedt = false, pressedg = false, pressedbs = false,
+     pressedp = false;
 void processInput(GLFWwindow *window) {
     // Mouse input
     double mouse_current_x, mouse_current_y;
@@ -486,13 +499,13 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE && pressed1) pressed1 = false;
 
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && !pressed2){ // Toggle
-        view_volume = !view_volume;
+        view_strands = !view_strands;
         pressed2 = true;
     }
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE && pressed2) pressed2 = false;
 
     if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !pressed3){ // Toggle
-        view_strands = !view_strands;
+        view_volume = !view_volume;
         pressed3 = true;
     }
     if (glfwGetKey(window, GLFW_KEY_3) == GLFW_RELEASE && pressed3) pressed3 = false;
@@ -521,11 +534,20 @@ void processInput(GLFWwindow *window) {
     }
     if (glfwGetKey(window, GLFW_KEY_7) == GLFW_RELEASE && pressed7) pressed7 = false;
 
+    // Next iteration
     if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !pressedn){ // Toggle
         next_stage = true;
         pressedn = true;
     }
     if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE && pressedn) pressedn = false;
+
+    // generate geom
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pressedp){ // Toggle
+        gen_geom = true;
+        pressedp = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && pressedp) pressedp = false;
+
     // Strand Geom Keybinds
     // Affect Lower bounds
     if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){
