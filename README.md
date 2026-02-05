@@ -46,11 +46,14 @@ You can export the mesh or take screenshots.
 - \        -> export mesh
 - <Enter>  -> take screenshot (Requires imagemagick)
 
+The mesh can be generated after strands are placed:
+- p        -> generate mesh
+
 You Can also toggle the various display modes by using the number keys.
 
 - 1: The tree model
-- 2: The texture strands that add texture to the isosurface
-- 3: The strands that define the implicit line primitives
+- 2: The strands that define the implicit line primitives
+- 3: The texture strands that add texture to the isosurface
 - 4: Visualization for strand extension steps
 - 5: The input tree skeleton
 
