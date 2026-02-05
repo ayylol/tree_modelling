@@ -102,6 +102,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   // LA
   lookahead_factor_max = strand_options.at("lookahead_max");
   lookahead_factor_min = strand_options.at("lookahead_min");
+  if (lookahead_factor_max < lookahead_factor_min) lookahead_factor_max = lookahead_factor_min;
   la_interp_start = strand_options.at("la_interp_start");
   la_interp_peak = strand_options.at("la_interp_peak");
   laf_step = (lookahead_factor_max-lookahead_factor_min)/(num_strands);
