@@ -143,6 +143,14 @@ int main(int argc, char *argv[]) {
         std::string(std::filesystem::path(image_prefix).remove_filename());
       system(mkdir_cmd.c_str());
     }
+    // Toggle interactive mode
+    if (opt_data.contains("interactive_mode")) {
+        interactive = opt_data.at("interactive_mode");
+        cycle_camera(1);
+    }
+    bool done_screenshots = false;
+    int screenshots_in_cam = 0;
+
 
     // Tree detail
     STOPWATCH("Adding Strands",
@@ -164,9 +172,11 @@ int main(int argc, char *argv[]) {
 
     float surface_val = opt_data.at("mesh_iso");
     Mesh<Vertex> tree_geom = Mesh(std::vector<Vertex>(), std::vector<GLuint>());
-    //Mesh<Vertex> tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
-    //Mesh<Vertex> tree_geom=gr.get_occupied_voxels(surface_val);
-    //STOPWATCH("Getting Normals", Mesh<VertFlat> normals_geom = gr.get_normals_geom(surface_val););
+    if (!interactive){
+      STOPWATCH("Polygonizing Isosurface", 
+          tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
+      );
+    }
 
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
         STOPWATCH("Exporting Data", 
@@ -183,13 +193,6 @@ int main(int argc, char *argv[]) {
         Vertex{glm::vec3(-50, 0, -50), ground_color}};
     std::vector<GLuint> ground_indices{0, 1, 3, 0, 3, 2};
     Mesh ground(ground_verts, ground_indices);
-
-    // Toggle interactive mode
-    if (opt_data.contains("interactive_mode")) {
-        interactive = opt_data.at("interactive_mode");
-        cycle_camera(1);
-    }
-    bool done_screenshots = false;
 
 
     // Render loop
@@ -252,9 +255,21 @@ int main(int argc, char *argv[]) {
         glfwSwapBuffers(window);
         if (interactive) glfwPollEvents();
         else{
-            save_image();
-            cycle_camera(1);
             if (curr_cam == 0) done_screenshots = true;
+            else{
+              save_image();
+              if (screenshots_in_cam==2) screenshots_in_cam=0;
+              switch(screenshots_in_cam){
+                case 0:
+                  view_mesh=false;
+                  break;
+                case 1:
+                  view_mesh=true;
+                  cycle_camera(1);
+                  break;
+              }
+              screenshots_in_cam++;
+            }
         }
         if (export_mesh){
             STOPWATCH("Exporting Data", 
