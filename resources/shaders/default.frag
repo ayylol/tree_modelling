@@ -3,8 +3,8 @@ out vec4 FragColor;
 
 in vec3 Color;
 in vec3 Normal;
-in vec3 crntPos;
 
+in vec3 crntPos;
 uniform vec3 camPos;
 
 struct Light{
