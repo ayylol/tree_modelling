@@ -49,6 +49,8 @@ class Skeleton{
         std::vector<std::shared_ptr<Node>> root_tips;
 
     private:
+        Mesh<VertFlat> get_mesh_frames();
+        Mesh<VertFlat> get_mesh_lines();
         struct ParseInfo{
             std::pair<glm::vec3,glm::vec3> extent;
             glm::vec3 center_of_mass;

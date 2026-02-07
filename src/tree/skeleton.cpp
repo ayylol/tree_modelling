@@ -44,7 +44,10 @@ Skeleton::Skeleton(json& options){
 }
 
 Mesh<VertFlat> Skeleton::get_mesh(){
-  /*
+  //return get_mesh_frames();
+  return get_mesh_lines();
+}
+Mesh<VertFlat> Skeleton::get_mesh_frames(){
     // FRAMES
     // Initialize mesh verts and indices
     const float axis_scale=0.0045f;
@@ -118,7 +121,9 @@ Mesh<VertFlat> Skeleton::get_mesh(){
         }
     }
     return Mesh(vertices, indices); 
-    */
+}
+
+Mesh<VertFlat> Skeleton::get_mesh_lines(){
     // STICKS
     // Initialize mesh verts and indices
     std::vector<VertFlat> vertices;
@@ -140,7 +145,7 @@ Mesh<VertFlat> Skeleton::get_mesh(){
         // Add node to vertices (first time node is reached)
         if (explored==0){
             //vertices.push_back(VertFlat{frame_position(last_node.node->frame),random_color()});
-            vertices.push_back(VertFlat{frame_position(last_node.node->frame),glm::vec3(1,0,0)});
+            vertices.push_back(VertFlat{frame_position(last_node.node->frame),glm::vec3(0,0,0)});
             indices.push_back(last_node.parent_index);
             indices.push_back(last_node.index);
         }
