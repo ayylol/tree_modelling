@@ -195,6 +195,7 @@ int main(int argc, char *argv[]) {
     Mesh ground(ground_verts, ground_indices);
 
 
+    system("notify-send \"Done Building Tree\"");
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
@@ -324,7 +325,7 @@ GLFWwindow *openGLInit() {
 
     // OpenGL drawing settings
     glPointSize(8.f);
-    glLineWidth(2.f);
+    glLineWidth(1.4f);
     //glPolygonMode( GL_BACK, GL_LINE );
     //glPolygonMode( GL_FRONT, GL_POINT );
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
