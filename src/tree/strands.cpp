@@ -182,7 +182,7 @@ Mesh<Vertex> Strands::visualize_searchpoint(float strand) const {
   strand = std::clamp(strand, 0.0f, 1.f);
   size_t strand_i = strand * (strands.size() - 1);
   for (NodeInfo info : node_info[strand_i]){
-    vertices.push_back(Vertex(info.target, col1));
+    vertices.push_back(Vertex(info.searchpoint, col1));
   }
   size_t end_index = vertices.size();
   for (int i = 0; i < end_index - 1; i++) {
@@ -237,6 +237,7 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
       float percent = ((float)i / strand_list.size() - start) / (end - start);
       //glm::vec3 color = (1-percent)*black+(percent)*brown;
       glm::vec3 color = (1-percent)*blue+(percent)*red;
+      //glm::vec3 color = random_color();
       size_t start_index = vertices.size();
       int j = 0;
       for (auto position : path) {
@@ -325,6 +326,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   node_info.push_back({});
   node_info.back().push_back({});
   node_info.back().back().closest=frame_position(last_closest);
+  node_info.back().back().searchpoint=frame_position(last_closest);
   node_info.back().back().target=frame_position(last_closest);
   // SETUP AUXILARY INFO
 
@@ -459,6 +461,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       _interp_bias = 0.f;
     }
     node_info.back().back().closest=frame_position(next.frame);
+    node_info.back().back().searchpoint=frame_position(next.frame);
     if (target_on_root && !on_root) {
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, target.index);
