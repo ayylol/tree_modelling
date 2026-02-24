@@ -409,6 +409,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     }
 
     // Add extension
+    /*
     std::optional<glm::vec3> ext;
     if (target_on_root || on_root)
       ext = find_extension(strand.back(), last_closest, target.frame, true);
@@ -420,8 +421,14 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                                     false);
     }
     strand.push_back(ext.value());
+    */
+    //
+    strand.push_back(
+        find_extension_nosample(strand.back(), last_closest, target.frame).value());
+    //
     node_info.back().push_back({});
     node_info.back().back().target=frame_position(target.frame);
+    //
 
     TargetResult next;
     if (!on_root && target_on_root) {
@@ -505,7 +512,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       root_path = &(root_frames[p.first]);
       if (on_root){
         path = root_path;
-        closest_index = std::max((size_t)0,p.second-1);
+        closest_index = std::max((size_t)0,p.second);
         last_closest = (*path)[closest_index];
       }
     }else{
@@ -651,6 +658,14 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
   assert(!glm::any(glm::isnan(trials[best_trial].head)));
   return trials[best_trial].head;
 }
+std::optional<glm::vec3> Strands::find_extension_nosample(glm::vec3 from, 
+    glm::mat4 frame_from, glm::mat4 frame_to){
+  glm::vec3 target_point = frame_position(frame_to);
+  glm::vec3 canonical_direction = random_vector(glm::normalize(target_point - from), glm::radians(1.f));
+  glm::vec3 extension = from+segment_length*canonical_direction;
+  return extension;
+}
+
 
 std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from,
                                                           glm::mat4 frame_from,
@@ -698,11 +713,20 @@ std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from,
 }
 
 glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
-  // step towards closest until field is gets to reject value
+  // step towards closest until field gets to reject value
   float a = 0.f, b = 1.f;
   float val = grid.eval_pos(head);
-  if (val > iso)
-    return head;
+  if (val > iso){
+    // Step out of the isosurface
+    glm::vec3 push_dir = glm::normalize(head-close);
+    float move_len=segment_length;
+    while (val > iso){
+      head=head+move_len*push_dir;
+      //move_len=move_len;
+      val = grid.eval_pos(head);
+    }
+  }
+    //return head;
   float slack = 0.25;
   glm::vec3 new_head = head;
   for (int i = 0; i < 16 && std::abs(val - iso) > 0.1; ++i) {
@@ -732,8 +756,12 @@ Strands::TargetResult Strands::find_closest(glm::vec3 pos,
                                             const std::vector<glm::mat4> &path,
                                             int start_index, int end_index) {
   //  FIXME: CHECK THESE ASSERTIONS
+  start_index=std::clamp(start_index,0,(int)path.size()-1);
+  end_index=std::clamp(end_index,start_index,(int)path.size()-1);
+  /*
   assert(start_index >= 0 && start_index < path.size());
   assert(end_index >= start_index && start_index < path.size());
+  */
   size_t closest_index = start_index;
   float lowest_dist2 = glm::distance2(pos, frame_position(path[closest_index]));
 
@@ -765,6 +793,7 @@ std::pair<size_t,size_t> Strands::match_root_all(glm::vec3 position) {
       }
     }
   }
+  assert(matches.size()!=0);
   auto r = matches[(size_t)std::rand() % matches.size()];
   return r;
 }

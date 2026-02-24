@@ -92,6 +92,8 @@ private:
     std::optional<glm::vec3> find_extension_canonptfeval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_ptfcanoneval(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     std::optional<glm::vec3> find_extension_texture(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
+
+    std::optional<glm::vec3> find_extension_nosample(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to);
     //TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, size_t start_index, int overshoot);
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, int start_index, int end_index);
 
