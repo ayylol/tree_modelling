@@ -1,5 +1,4 @@
 # Using Implicit Line Primitives to Create Tree Geometry
-
 ![cover](images/tree.png)
 Tree generated using this program, and rendered in Blender.
 ![cover](images/grow.gif)
