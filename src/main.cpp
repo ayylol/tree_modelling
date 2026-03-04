@@ -363,7 +363,7 @@ void save_image(){
     out.close();
     delete [] pixels;
     // Make PNG
-    std::string convert_cmd =  "convert " + temp_file + " " + file_name;
+    std::string convert_cmd =  "magick " + temp_file + " " + file_name;
     system(convert_cmd.c_str());
     std::cout<<"Saved image: "<<file_name<<std::endl;
     images_taken++;
