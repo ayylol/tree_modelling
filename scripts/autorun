@@ -1,0 +1,17 @@
+#!/bin/sh
+
+if [ -z "$1" ]; then
+  echo "provide folder"
+  exit
+fi
+
+echo "Processing" $1
+for FILE in $1/*.json; do 
+    echo $FILE
+    ./tree_strands $FILE
+    mkdir "${FILE%.*}"_output
+    mv $1/output "${FILE%.*}"_output
+done
+
+SCRIPTS_DIR="$(dirname -- "${BASH_SOURCE[0]}")"
+$SCRIPTS_DIR/organize.py $1
