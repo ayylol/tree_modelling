@@ -398,28 +398,15 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
         }
         float alpha = (float)(longest_shoot_length-closest_index) / longest_shoot_length;
         target = find_target(*root_path, 0, (distance_to_travel - target.travelled), true);
-        /*
-        target =
-            find_target(*root_path, 0,
-                        (distance_to_travel - target.travelled) / reduction);
-                        */
       } else {
         // done = true;
       }
     }
 
     // Add extension
-    std::optional<glm::vec3> ext;
-    if (target_on_root || on_root)
-      ext = find_extension(strand.back(), last_closest, target.frame, true);
-    else
-      ext = find_extension(strand.back(), last_closest, target.frame);
-
-    if (!ext) {
-      ext = find_extension_canoniso(strand.back(), last_closest, target.frame,
-                                    false);
-    }
-    strand.push_back(ext.value());
+    glm::vec3 ext = find_extension(
+        strand.back(), last_closest, target.frame, target_on_root || on_root);
+    strand.push_back(ext);
     node_info.back().push_back({});
     node_info.back().back().target=frame_position(target.frame);
 
@@ -477,14 +464,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       strand[strand.size() - 1] =
         move_extension(strand.back(), bin_point, reject_iso);
       // fallback
-      /*
-      if (grid.lazy_in_check(grid.pos_to_grid(bin_point),reject_iso)<=reject_iso/2){
-        glm::vec3 bin_point = frame_position(root_closest.frame) * alpha +
-                              frame_position(next.frame) * (1.f - alpha);
-        strand[strand.size() - 1] =
-          move_extension(strand.back(), bin_point, reject_iso);
-      }
-      */
       node_info.back().back().searchpoint=bin_point;
       node_info.back().back().closest2=frame_position(root_closest.frame);
       node_info.back().back().transition=true;
@@ -583,10 +562,8 @@ Strands::TargetResult Strands::find_target(const std::vector<glm::mat4> &path,
   return result;
 }
 
-std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
-                                                 glm::mat4 frame_from,
-                                                 glm::mat4 frame_to,
-                                                 bool bias) {
+glm::vec3 Strands::find_extension(glm::vec3 from, glm::mat4 frame_from,
+                                 glm::mat4 frame_to, bool bias) {
   glm::vec3 target_point = frame_position(frame_to);
   glm::vec3 canonical_direction =
       glm::normalize(target_point - frame_position(frame_from));
@@ -607,10 +584,6 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     assert(!glm::any(glm::isnan(from)));
     assert(!glm::any(glm::isnan(r_vec)));
     assert(!glm::any(glm::isnan(trial_head)));
-    // no caching
-    //float val = grid.eval_pos(trial_head);
-    // caching
-    //float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso, true);
     // threshold approach
     float lazy_val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso*(1.+slack), true);
     if (lazy_val>=reject_iso*(1.+slack)) continue;
@@ -638,7 +611,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
   //
   // If no valid trials add strand up to this moment
   if (trials.empty())
-    return {};
+    return from+segment_length*canonical_direction;
   //  Evaluate trials
   int best_trial = 0;
   float best_fitness = FLT_MAX;
@@ -652,57 +625,20 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
   return trials[best_trial].head;
 }
 
-std::optional<glm::vec3> Strands::find_extension_canoniso(glm::vec3 from,
-                                                          glm::mat4 frame_from,
-                                                          glm::mat4 frame_to,
-                                                          bool bias,
-                                                          float bias_amount) {
-  glm::vec3 closest_pos = frame_position(frame_from);
-  glm::vec3 target_extension = frame_position(frame_to);
-  glm::vec3 extension =
-      from + segment_length * glm::normalize(frame_position(frame_to) -
-                                             frame_position(frame_from));
-  // Step until gradient is found
-  // Bias towards being on top of root
-  // NOTE: Experimental
-  if (bias) {
-    glm::vec3 offset_no_y = target_extension - extension;
-    offset_no_y.y = 0.f;
-    extension = extension + bias_amount * offset_no_y;
-  }
-  int num_steps = 0;
-  int max_steps = 50;
-  glm::vec3 step = 0.02f * (target_extension - extension);
-  // while (glm::all(glm::isnan(grid.eval_gradient(extension))) &&
-  // num_steps<=max_steps){
-  while (glm::all(glm::lessThan(glm::abs(grid.eval_gradient(extension)),
-                                glm::vec3(0.0001f))) &&
-         num_steps <= max_steps) {
-    extension += step;
-    num_steps++;
-  }
-  // Step along gradient
-  num_steps = 0;
-  max_steps = 100;
-  while (!glm::all(glm::isnan(grid.eval_gradient(extension))) &&
-         std::abs(grid.eval_pos(extension) - reject_iso) >= 0.1 &&
-         num_steps <= max_steps) {
-    glm::vec3 step = 0.001f * (grid.eval_pos(extension) - reject_iso) *
-                     grid.eval_gradient(extension);
-    extension += step;
-    // extension = from+segment_length*glm::normalize(extension-from);
-    num_steps++;
-  }
-  extension = from + segment_length * glm::normalize(extension - from);
-  return extension;
-}
-
 glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
   // step towards closest until field is gets to reject value
   float a = 0.f, b = 1.f;
   float val = grid.eval_pos(head);
-  if (val > iso)
-    return head;
+  if (val > iso) {
+    // Step out of the isosurface
+    glm::vec3 push_dir = glm::normalize(head-close);
+    float move_len=segment_length;
+    while (val > iso){
+      head=head+move_len*push_dir;
+      move_len=move_len*2;
+      val = grid.eval_pos(head);
+    }
+  }
   float slack = 0.25;
   glm::vec3 new_head = head;
   for (int i = 0; i < 16 && std::abs(val - iso) > 0.1; ++i) {
