@@ -71,7 +71,7 @@ private:
         size_t checked = 0;
         std::unordered_map<uint32_t, float> strands_checked;
     };
-    std::vector<std::vector<std::vector<std::vector<size_t>>>> grid;
+    std::vector<std::vector<std::vector<std::vector<size_t>>>> ref_grid;
     std::vector<std::vector<std::vector<omp_lock_t>>> lock_grid;
     std::vector<std::vector<std::vector<struct Eval>>> eval_grid;
     std::vector<glm::ivec3> occupied;

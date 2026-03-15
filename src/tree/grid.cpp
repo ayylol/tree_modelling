@@ -23,10 +23,10 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     center = 0.5f*(back_bottom_left+front_top_right);
     scale = tree.get_average_length() * scale_factor;
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
-    grid =  vector<vector<vector<vector<size_t>>>>(dimensions.x, 
-            vector<vector<vector<size_t>>>(dimensions.y,
-            vector<vector<size_t>>(dimensions.z)));
-    eval_grid = vector<vector<vector<struct Eval>>>(dimensions.x, 
+    ref_grid =  vector<vector<vector<vector<size_t>>>>(dimensions.x, 
+                vector<vector<vector<size_t>>>(dimensions.y,
+                vector<vector<size_t>>(dimensions.z)));
+    eval_grid = vector<vector<vector<struct Eval>>>(dimensions.x,
                 vector<vector<struct Eval>>(dimensions.y,
                 vector<struct Eval>(dimensions.z)));
     lock_grid = vector<vector<vector<omp_lock_t>>>(dimensions.x, 
@@ -82,7 +82,7 @@ bool Grid::has_refs(ivec3 index) const {
     if (!is_in_grid(index)) {
         return false;
     }
-    return !(grid[index.x][index.y][index.z].empty());
+    return !(ref_grid[index.x][index.y][index.z].empty());
 }
 
 float Grid::eval_pos(vec3 pos) const { 
@@ -90,7 +90,7 @@ float Grid::eval_pos(vec3 pos) const {
     if (!has_refs(slot)){
         return 0.f;
     }
-    const auto& slot_refs = grid[slot.x][slot.y][slot.z];
+    const auto& slot_refs = ref_grid[slot.x][slot.y][slot.z];
     std::unordered_map<uint32_t, float> strand_vals;
     strand_vals.reserve(50);
     for (size_t i : slot_refs){
@@ -115,7 +115,7 @@ float Grid::lazy_in_check(glm::ivec3 slot, float threshold, bool threadsafe){
     if (threadsafe) omp_set_lock(&lock_grid[slot.x][slot.y][slot.z]);
     vec3 pos = grid_to_pos(slot);
     struct Eval& eval_slot = eval_grid[slot.x][slot.y][slot.z];
-    std::vector<size_t>& strands = grid[slot.x][slot.y][slot.z];
+    std::vector<size_t>& strands = ref_grid[slot.x][slot.y][slot.z];
     int i;
     while ((i = eval_slot.checked) < strands.size() && eval_slot.val <= threshold){
         // Eval based on next strand 
@@ -146,7 +146,7 @@ float Grid::get_texture_fac(glm::ivec3 slot){
     if (!is_in_grid(slot)) return 0.f;
     const int min=2;
     const int max=6;
-    int num_strands = grid[slot.x][slot.y][slot.z].size();
+    int num_strands = ref_grid[slot.x][slot.y][slot.z].size();
     return std::clamp(
             (float)(num_strands-min)/(max-min)
             ,0.f,1.f);
@@ -231,7 +231,7 @@ std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
                       if (!has_refs(slot)) {
                         local_occupied.push_back(slot);
                       }
-                      grid[slot.x][slot.y][slot.z].push_back(segment_index);
+                      ref_grid[slot.x][slot.y][slot.z].push_back(segment_index);
                       omp_unset_lock(&lock_grid[slot.x][slot.y][slot.z]);
                     }
                 }

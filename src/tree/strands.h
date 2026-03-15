@@ -84,7 +84,8 @@ private:
         float angle;
     };
     TargetResult find_target(const std::vector<glm::mat4>& path, size_t start_index, float travel_dist, bool reduce = false);
-    glm::vec3 find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false);
+    std::optional<glm::vec3> find_extension(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false);
+    glm::vec3 find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from, glm::mat4 frame_to, bool bias=false, float bias_amount = 1.0f);
     TargetResult find_closest(glm::vec3 pos, const std::vector<glm::mat4>& path, int start_index, int end_index);
 
     int num_strands;

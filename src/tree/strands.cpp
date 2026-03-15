@@ -404,9 +404,12 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     }
 
     // Add extension
-    glm::vec3 ext = find_extension(
+    std::optional<glm::vec3> ext = find_extension(
         strand.back(), last_closest, target.frame, target_on_root || on_root);
-    strand.push_back(ext);
+    if (!ext) {
+      ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
+    }
+    strand.push_back(ext.value());
     node_info.back().push_back({});
     node_info.back().back().target=frame_position(target.frame);
 
@@ -562,8 +565,11 @@ Strands::TargetResult Strands::find_target(const std::vector<glm::mat4> &path,
   return result;
 }
 
-glm::vec3 Strands::find_extension(glm::vec3 from, glm::mat4 frame_from,
-                                 glm::mat4 frame_to, bool bias) {
+
+std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
+                                                 glm::mat4 frame_from,
+                                                 glm::mat4 frame_to,
+                                                 bool bias) {
   glm::vec3 target_point = frame_position(frame_to);
   glm::vec3 canonical_direction =
       glm::normalize(target_point - frame_position(frame_from));
@@ -611,7 +617,8 @@ glm::vec3 Strands::find_extension(glm::vec3 from, glm::mat4 frame_from,
   //
   // If no valid trials add strand up to this moment
   if (trials.empty())
-    return from+segment_length*canonical_direction;
+    return {};
+    //return from+segment_length*canonical_direction;
   //  Evaluate trials
   int best_trial = 0;
   float best_fitness = FLT_MAX;
@@ -625,11 +632,57 @@ glm::vec3 Strands::find_extension(glm::vec3 from, glm::mat4 frame_from,
   return trials[best_trial].head;
 }
 
+glm::vec3 Strands::find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from,
+                                                            glm::mat4 frame_to,
+                                                            bool bias,
+                                                            float bias_amount) {
+  glm::vec3 closest_pos = frame_position(frame_from);
+  glm::vec3 target_extension = frame_position(frame_to);
+  glm::vec3 extension =
+      from + segment_length * glm::normalize(frame_position(frame_to) -
+                                             frame_position(frame_from));
+  // Step until gradient is found
+  // Bias towards being on top of root
+  // NOTE: Experimental
+  if (bias) {
+    glm::vec3 offset_no_y = target_extension - extension;
+    offset_no_y.y = 0.f;
+    extension = extension + bias_amount * offset_no_y;
+  }
+  int num_steps = 0;
+  int max_steps = 50;
+  glm::vec3 step = 0.02f * (target_extension - extension);
+  // while (glm::all(glm::isnan(grid.eval_gradient(extension))) &&
+  // num_steps<=max_steps){
+  while (glm::all(glm::lessThan(glm::abs(grid.eval_gradient(extension)),
+                                glm::vec3(0.0001f))) &&
+         num_steps <= max_steps) {
+    extension += step;
+    num_steps++;
+  }
+  // Step along gradient
+  num_steps = 0;
+  max_steps = 100;
+  while (!glm::all(glm::isnan(grid.eval_gradient(extension))) &&
+         std::abs(grid.eval_pos(extension) - reject_iso) >= 0.1 &&
+         num_steps <= max_steps) {
+    glm::vec3 step = 0.001f * (grid.eval_pos(extension) - reject_iso) *
+                     grid.eval_gradient(extension);
+    extension += step;
+    // extension = from+segment_length*glm::normalize(extension-from);
+    num_steps++;
+  }
+  extension = from + segment_length * glm::normalize(extension - from);
+  return extension;
+}
+
 glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
   // step towards closest until field is gets to reject value
   float a = 0.f, b = 1.f;
   float val = grid.eval_pos(head);
   if (val > iso) {
+    return head;
+    /*
     // Step out of the isosurface
     glm::vec3 push_dir = glm::normalize(head-close);
     float move_len=segment_length;
@@ -638,6 +691,7 @@ glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
       move_len=move_len*2;
       val = grid.eval_pos(head);
     }
+    */
   }
   float slack = 0.25;
   glm::vec3 new_head = head;

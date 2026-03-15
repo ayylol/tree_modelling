@@ -11,9 +11,6 @@ public:
   virtual float eval(glm::vec3 p1, glm::vec3 p2) const = 0;
   // LineSegment
   virtual float eval(glm::vec3 p1, glm::vec3 a, glm::vec3 b) const = 0;
-  // Path
-  virtual float eval(glm::vec3 position, const std::vector<glm::vec3> &strand,
-                     std::size_t hint = 0) const = 0;
 };
 
 class DistanceField : public Implicit {
@@ -23,9 +20,6 @@ public:
   float eval(glm::vec3 p1, glm::vec3 p2) const;
   // LineSegment
   float eval(glm::vec3 p1, glm::vec3 a, glm::vec3 b) const;
-  // Path
-  float eval(glm::vec3 position, const std::vector<glm::vec3> &strand,
-             std::size_t hint = 0) const;
 
 private:
   virtual float potential(float distance) const = 0;
