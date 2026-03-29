@@ -26,7 +26,7 @@ public:
         Structure,
         Texture
     };
-    Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options);
+    Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options, bool add_textures = true, bool is_strangler = false);
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
     Mesh<Vertex> visualize_searchpoint(float strand) const;
@@ -175,6 +175,9 @@ private:
         NotSelected,
         AtLeastOnce,
     } select_pool = All;
+    // Strangler related vars
+    bool add_textures;
+    bool is_strangler;
 
     std::vector<size_t> root_pool;
     std::vector<glm::vec3> root_vecs;

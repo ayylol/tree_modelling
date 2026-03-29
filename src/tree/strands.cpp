@@ -57,11 +57,10 @@ glm::vec3 random_vector(glm::vec3 axis, float angle);
 glm::vec2 random_vec2();
 float lookahead_frame(float dist);
 
-Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
-                 nlohmann::json options)
+Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, 
+    nlohmann::json options, bool add_textures, bool is_strangler)
     : grid(grid), texture_grid(texture_grid),
-      // evalfunc(evalfunc),
-      tree(tree) {
+    add_textures(add_textures), is_strangler(is_strangler), tree(tree) {
   // Set up root & shoot paths
   for (size_t i = 0; i < tree.leafs_size(); i++) {
     std::vector<glm::mat4> shoot_path = tree.get_strand(i, Skeleton::LEAF);
@@ -280,11 +279,10 @@ void Strands::add_strands(unsigned int amount) {
     }
     strand_lookahead_max = lookahead_factor_min + laf_step*strands.size();
     tex_chance = tex_chance_step*(strands.size()-tex_chance_start);
-    add_strand(paths[i % paths.size()], i);
+    add_strand(paths[is_strangler ? 0 : i % paths.size()], i);
   }
   std::cout << "\rTotal Strands: " << strands.size() << "/" << num_strands << std::endl;
   std::cout << std::endl;
-  // std::cout << "Strands Termniated: "<< strands_terminated << std::endl;
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
@@ -407,6 +405,16 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     std::optional<glm::vec3> ext = find_extension(
         strand.back(), last_closest, target.frame, target_on_root || on_root);
     if (!ext) {
+      if (is_strangler){
+        int temp_num_trials = num_trials; // The fact this is a global var is gross 
+        num_trials = 300;
+        ext = find_extension(strand.back(), last_closest, target.frame, target_on_root || on_root);
+        num_trials=temp_num_trials;
+        if(!ext){
+          inflection = strand.size()/2;
+          done = true;
+        }
+      }
       ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
     }
     strand.push_back(ext.value());
@@ -501,8 +509,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   if (strand.size() <= 2)
     return;
   float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-  switch (type) {
-  case Structure:
+  if (type == Structure){
     // Smooth
     strand = smooth(strand, sm_iter, sm_peak, sm_min, inflection * sm_start,
                     inflection,
@@ -510,15 +517,16 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     strands.push_back(strand);
     assert(strand.size() == node_info.back().size());
     assert(strands.size() == node_info.size());
-    if (r < tex_chance) {
+    if (add_textures && r < tex_chance) {
       texture_strands.push_back(strand);
       texture_grid.fill_path(strands.size(), strand, tex_max_val, tex_max_range,
                              tex_shoot_range, tex_root_range, inflection);
     }
-    grid.fill_path(strands.size(), strand, max_val, base_max_range,
-                   leaf_min_range, root_min_range, inflection);
-    break;
-  case Texture:
+    Grid &grid_to_add = is_strangler ? texture_grid : grid;
+    grid_to_add.fill_path(strands.size(), strand, max_val, base_max_range,
+          leaf_min_range, root_min_range, inflection);
+  }
+  else if (type == Texture){
     // FIXME: CHANGE MARKER
     texture_strands.push_back(strand);
     // grid.fill_path(texture_strands.size(), strand, tex_max_val,
@@ -529,7 +537,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                            tex_max_range, tex_shoot_range, tex_root_range,
                            inflection);
     // texture_grid.fill_path(0,strand, 5.0, 0.008, 0.001, 0.0001, inflection);
-    break;
   }
 }
 
