@@ -87,8 +87,13 @@ float strands_start = 0.0f,
 
 int main(int argc, char *argv[]) {
     // Validating input
-    if (argc != 3) {
-        std::cerr << "input an options file, and a strangler options file" << std::endl;
+    bool is_strangler;
+    if (argc == 2) {
+      is_strangler = false;
+    }else if (argc == 3) {
+      is_strangler = true;
+    } else { // Error
+        std::cerr << "input an options file" << std::endl;
         return 1;
     }
 
@@ -118,7 +123,11 @@ int main(int argc, char *argv[]) {
     json opt_data = json::parse(option_file);
     opt_data["path"]=file.remove_filename();
 
-    std::filesystem::path strangler_file(argv[2]);
+    std::string strangler_file_path = argv[1];
+    if (is_strangler){
+      strangler_file_path = argv[2];
+    }
+    std::filesystem::path strangler_file(strangler_file_path);
     auto strangler_option_file = std::ifstream(strangler_file);
     json strangler_opt_data = json::parse(strangler_option_file);
     strangler_opt_data["path"]=strangler_file.remove_filename();
@@ -159,12 +168,14 @@ int main(int argc, char *argv[]) {
 
     // Tree detail
     STOPWATCH("Adding Strands",
-        Strands detail(tree, gr, texture_grid, opt_data, false);
+        Strands detail(tree, gr, texture_grid, opt_data, !is_strangler);
         detail.add_stage();
         );
     STOPWATCH("Adding Strands",
         Strands strangler(tree, gr, texture_grid, strangler_opt_data, false, true);
-        strangler.add_stage();
+        if (is_strangler){
+          strangler.add_stage();
+        }
         );
 
 
@@ -187,18 +198,22 @@ int main(int argc, char *argv[]) {
       STOPWATCH("Polygonizing Isosurface", 
           tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
       );
-      STOPWATCH("Polygonizing Isosurface", 
-          strangler_geom=texture_grid.get_occupied_geom(surface_val, texture_grid);
-      );
+      if(is_strangler){
+        STOPWATCH("Polygonizing Isosurface", 
+            strangler_geom=texture_grid.get_occupied_geom(surface_val, texture_grid);
+        );
+      }
     }
 
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
         STOPWATCH("Exporting Data", 
                     save_mesh(tree_geom);
                 );
-        STOPWATCH("Exporting Data", 
-                    save_mesh(strangler_geom);
-                );
+        if(is_strangler){
+          STOPWATCH("Exporting Data", 
+                      save_mesh(strangler_geom);
+                  );
+        }
     }
 
     // GROUND PLANE
@@ -231,9 +246,11 @@ int main(int argc, char *argv[]) {
             STOPWATCH("Polygonizing Isosurface", 
                 tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
             );
-            STOPWATCH("Polygonizing Isosurface", 
-                strangler_geom=texture_grid.get_occupied_geom(surface_val, texture_grid);
-            );
+            if (is_strangler){
+              STOPWATCH("Polygonizing Isosurface", 
+                  strangler_geom=texture_grid.get_occupied_geom(surface_val, texture_grid);
+              );
+            }
           }
           gen_geom=false;
           geom_generated=true;
@@ -256,7 +273,9 @@ int main(int argc, char *argv[]) {
         // Draw the meshes here
         if (view_mesh) {
             tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
-            strangler_geom.draw(shader, CAMERA, GL_TRIANGLES);
+            if(is_strangler){
+              strangler_geom.draw(shader, CAMERA, GL_TRIANGLES);
+            }
         }
         if (view_volume) {
             tstrands_geom.draw(flat_shader, CAMERA, GL_LINES);
@@ -296,7 +315,9 @@ int main(int argc, char *argv[]) {
         if (export_mesh){
             STOPWATCH("Exporting Data", 
             save_mesh(tree_geom);
-            save_mesh(strangler_geom);
+            if (is_strangler){
+              save_mesh(strangler_geom);
+            }
             export_mesh = false;
             );
         }
