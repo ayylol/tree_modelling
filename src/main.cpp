@@ -296,7 +296,6 @@ int main(int argc, char *argv[]) {
         glfwSwapBuffers(window);
         if (interactive) glfwPollEvents();
         else{
-            std::cout<<"SCREENSHOTS!!!!"<<std::endl;
             if (curr_cam == 0) done_screenshots = true;
             else{
               save_image();
