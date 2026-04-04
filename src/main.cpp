@@ -102,14 +102,6 @@ int main(int argc, char *argv[]) {
 
     srand(time(NULL));
 
-    // Ready window
-    GLFWwindow *window = openGLInit();
-
-    // Readying Shaders 
-    Shader flat_shader("resources/shaders/flat.vert", "resources/shaders/flat.frag");
-    Shader shader("resources/shaders/default.vert",
-            "resources/shaders/default.frag");
-
     Stopwatch sw; // Performance stopwatch
  
 #define STOPWATCH(ACTION, ...)                                                 \
@@ -131,7 +123,6 @@ int main(int argc, char *argv[]) {
     auto strangler_option_file = std::ifstream(strangler_file);
     json strangler_opt_data = json::parse(strangler_option_file);
     strangler_opt_data["path"]=strangler_file.remove_filename();
-
     // Creating tree
     STOPWATCH("Parsing Skeleton", Skeleton tree(opt_data););
 
@@ -147,6 +138,22 @@ int main(int argc, char *argv[]) {
             cameras.push_back(Camera(cam_data, width, height));
         }
     }
+    // Toggle interactive mode
+    if (opt_data.contains("interactive_mode")) {
+        interactive = opt_data.at("interactive_mode");
+        cycle_camera(1);
+    }
+    bool done_screenshots = false;
+    int screenshots_in_cam = 0;
+
+    // Ready window
+    GLFWwindow *window = openGLInit();
+
+    // Readying Shaders 
+    Shader flat_shader("resources/shaders/flat.vert", "resources/shaders/flat.frag");
+    Shader shader("resources/shaders/default.vert",
+            "resources/shaders/default.frag");
+
     // Set up output file
     if (opt_data.contains("image_path")) {
         image_prefix = opt_data["image_path"];
@@ -157,14 +164,6 @@ int main(int argc, char *argv[]) {
         std::string(std::filesystem::path(image_prefix).remove_filename());
       system(mkdir_cmd.c_str());
     }
-    // Toggle interactive mode
-    if (opt_data.contains("interactive_mode")) {
-        interactive = opt_data.at("interactive_mode");
-        cycle_camera(1);
-    }
-    bool done_screenshots = false;
-    int screenshots_in_cam = 0;
-
 
     // Tree detail
     STOPWATCH("Adding Strands",
@@ -228,6 +227,7 @@ int main(int argc, char *argv[]) {
 
 
     system("notify-send \"Done Building Tree\"");
+
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
@@ -296,6 +296,7 @@ int main(int argc, char *argv[]) {
         glfwSwapBuffers(window);
         if (interactive) glfwPollEvents();
         else{
+            std::cout<<"SCREENSHOTS!!!!"<<std::endl;
             if (curr_cam == 0) done_screenshots = true;
             else{
               save_image();
@@ -341,8 +342,8 @@ GLFWwindow *openGLInit() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Window Creation
-    GLFWwindow *window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT,
-            "tree strands (DEBUG)", NULL, NULL);
+    std::string name = "tree strands (" + std::string(interactive ? "DEBUG" : "AUTO") + ")";
+    GLFWwindow *window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, name.c_str(), NULL, NULL);
 
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
