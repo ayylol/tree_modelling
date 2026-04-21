@@ -17,12 +17,18 @@ for i in range(views):
     subprocess.call(["mkdir", "-p", rel_path("mesh/view"+str(i))])
     subprocess.call(["mkdir", "-p", rel_path("strands/view"+str(i))])
 
+subprocess.call(["mkdir", "-p", rel_path("ply")])
+
 for d in dirs:
     files = []
     dir = output(d)
     for (dirpath, dirnames, filenames) in os.walk(dir):
         files.extend(filenames)
         break
+    for f in files:
+        if f.endswith(".ply"):
+            subprocess.call(["mv", dir+"/"+f, rel_path("ply")])
+            files.remove(f)
     files.sort()
     for i in range(views):
         subprocess.call(
