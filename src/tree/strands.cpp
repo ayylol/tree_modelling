@@ -131,9 +131,11 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   local_spread = strand_options.at("local_spread");
   bias_amount = strand_options.at("bias_amount");
   // Implicit Vals
-  leaf_min_range = strand_options.at("leaf_min_range");
   base_max_range = strand_options.at("base_max_range");
+  leaf_min_range = strand_options.at("leaf_min_range");
   root_min_range = strand_options.at("root_min_range");
+  if (leaf_min_range < 0) leaf_min_range = base_max_range;
+  if (root_min_range < 0) root_min_range = base_max_range;
   // Initialize Root Angle Vectors
   root_angle_node =
       std::clamp((float)strand_options.at("root_angle_node"), 0.05f, 1.f);
