@@ -55,5 +55,6 @@ vec4 fog(vec4 color){
 
 void main()
 {
-  FragColor = fog(directionalLight());
+  //FragColor = fog(directionalLight());
+  FragColor = directionalLight();
 }
