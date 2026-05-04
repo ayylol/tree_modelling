@@ -404,13 +404,15 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     }
 
     // Add extension
+    float current_bias = !(target_on_root || on_root) ?
+      1.0 : (1 - _interp_bias) + bias_amount * _interp_bias;
     std::optional<glm::vec3> ext = find_extension(
-        strand.back(), last_closest, target.frame, target_on_root || on_root);
+        strand.back(), last_closest, target.frame, current_bias);
     if (!ext) {
       if (is_strangler){
         int temp_num_trials = num_trials; // The fact this is a global var is gross 
         num_trials = 300;
-        ext = find_extension(strand.back(), last_closest, target.frame, target_on_root || on_root);
+        ext = find_extension(strand.back(), last_closest, target.frame, current_bias);
         num_trials=temp_num_trials;
         if(!ext){
           inflection = strand.size()/2;
@@ -578,19 +580,17 @@ Strands::TargetResult Strands::find_target(const std::vector<glm::mat4> &path,
 std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
                                                  glm::mat4 frame_from,
                                                  glm::mat4 frame_to,
-                                                 bool bias) {
+                                                 float bias) {
   glm::vec3 target_point = frame_position(frame_to);
   glm::vec3 canonical_direction =
       glm::normalize(target_point - frame_position(frame_from));
+
   // Generate trials
   struct Trial {
     glm::vec3 head;
     float distance;
-    float angle;
-    float val;
   };
-  std::vector<Trial> trials;
-  trials.reserve(num_trials);
+  std::vector<Trial> trials(num_trials, {glm::vec3(), FLT_MAX});
   float slack=0.5;
 #pragma omp parallel for
   for (int i = 0; i < num_trials; i++) {
@@ -599,46 +599,26 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     assert(!glm::any(glm::isnan(from)));
     assert(!glm::any(glm::isnan(r_vec)));
     assert(!glm::any(glm::isnan(trial_head)));
-    // threshold approach
-    float lazy_val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso*(1.+slack), true);
-    if (lazy_val>=reject_iso*(1.+slack)) continue;
-    float val = lazy_val;
-    if (lazy_val>=reject_iso*(1.-slack)){
-      val = grid.eval_pos(trial_head);
-    }
 
-    if (val <= reject_iso) {
-      float distance;
-      if (bias) {
-        float current_bias = (1 - _interp_bias) + bias_amount * _interp_bias;
-        glm::vec3 biased_head = trial_head;
-        biased_head.y /= current_bias;
-        glm::vec3 biased_point = target_point;
-        biased_point.y /= current_bias;
-        distance = glm::distance(biased_head, biased_point);
-      } else {
-        distance = glm::distance(trial_head, target_point);
-      }
-      float angle = glm::angle(trial_head - from, canonical_direction);
-      trials.push_back({trial_head, distance, angle, val});
-    }
+    // threshold check
+    float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso*(1.+slack), true);
+    if (val>=reject_iso*(1.+slack)) continue;
+    if (val>=reject_iso*(1.-slack)) val = grid.eval_pos(trial_head);
+    if (val>=reject_iso) continue;
+
+    glm::vec3 biased_head = trial_head;
+    biased_head.y /= bias;
+    glm::vec3 biased_point = target_point;
+    biased_point.y /= bias;
+    float distance = glm::distance(biased_head, biased_point);
+    trials[i].head = trial_head;
+    trials[i].distance = distance;
   }
-  //
-  // If no valid trials add strand up to this moment
-  if (trials.empty())
-    return {};
-    //return from+segment_length*canonical_direction;
-  //  Evaluate trials
-  int best_trial = 0;
-  float best_fitness = FLT_MAX;
-  for (int i = 1; i < trials.size(); i++) {
-    if (trials[i].distance <= best_fitness) {
-      best_trial = i;
-      best_fitness = trials[i].distance;
-    }
-  }
-  assert(!glm::any(glm::isnan(trials[best_trial].head)));
-  return trials[best_trial].head;
+
+  auto res = std::max_element(trials.begin(), trials.end(),
+      [](const auto& a, const auto& b){return a.distance>b.distance;});
+  if (res->distance==FLT_MAX) return {};
+  return res->head;
 }
 
 glm::vec3 Strands::find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from,

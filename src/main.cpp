@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (opt_data.contains("save_mesh") && opt_data.at("save_mesh")){
+    if (opt_data.contains("save_mesh") && opt_data.at("save_mesh") && !interactive){
         STOPWATCH("Exporting Data", 
                     save_mesh(tree_geom);
                 );
