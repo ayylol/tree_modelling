@@ -77,6 +77,5 @@ KDTree::find_nn_t KDTree::find_nearest_(int node, glm::vec2 p, find_nn_t curr_be
   find_nn_t right_best = find_nearest_(tree[node].right, p, curr_best, new_lb, ub);
   if (curr_best.d2>right_best.d2){ curr_best=right_best; }
 
-
   return curr_best;
 }
