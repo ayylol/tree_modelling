@@ -16,6 +16,7 @@
 #include "tree/grid.h"
 #include "tree/implicit.h"
 #include "tree/skeleton.h"
+#include "tree/kdtree.h"
 #include <nlohmann/json.hpp>
 
 #include "util/geometry.h"
@@ -33,14 +34,17 @@ public:
     Mesh<Vertex> visualize_keypoints(float strand) const;
     void add_strands(unsigned int amount);
     int add_stage();
+
 private:
     void add_strand(size_t shoot_index, int age, StrandType type = Structure);
     size_t match_root(glm::vec3 pos, glm::mat4 frame);
     std::pair<size_t,size_t> match_root_all(glm::vec3 pos);
     //Implicit &evalfunc;
     const Skeleton& tree;
+    // Change to vec3
     std::vector<std::vector<glm::mat4>> shoot_frames;
     std::vector<std::vector<glm::mat4>> root_frames;
+    //
     std::vector<std::vector<glm::vec3>> strands;
     std::vector<std::pair<size_t,size_t>> inflection_points;
     std::vector<std::vector<glm::vec3>> texture_strands;
@@ -65,6 +69,9 @@ private:
 
     Grid &grid;
     Grid &texture_grid;
+    KDTree root_kdtree;
+    std::vector<std::vector<std::pair<int32_t, int32_t>>> root_2d_map;
+    std::vector<glm::vec2> root_2d;
 
     // Strand Creation Helper Functions
     std::vector<glm::vec3> smooth(

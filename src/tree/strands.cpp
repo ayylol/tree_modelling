@@ -8,9 +8,12 @@
 #include "strands.h"
 #include <algorithm>
 #include <cstdlib>
-#include <glm/gtx/io.hpp>
+#include "glm/gtx/io.hpp"
+#include "util/geometry.h"
+#include <memory>
 #include <omp.h>
 #include <ostream>
+#include <utility>
 
 std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3> &in,
                                        int times, float peak_influence,
@@ -76,6 +79,22 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
     }
     root_frames.push_back(root_frame);
   }
+  std::unordered_map<glm::vec2, int32_t> temp_root_map;
+  root_2d_map = std::vector<std::vector<std::pair<int32_t, int32_t>>>();
+  for (size_t i = 0; i < root_frames.size(); i++) {
+    const std::vector<glm::mat4> &root_frame = root_frames[i];
+    for (size_t j = 0; j < root_frame.size(); j++) {
+      glm::vec3 p3d = frame_position(root_frame[j]);
+      glm::vec2 p2d = glm::vec2(p3d.x,p3d.z);
+      if (!temp_root_map.contains(p2d)){
+        root_2d.push_back(p2d);
+        root_2d_map.push_back(std::vector<std::pair<int32_t, int32_t>>());
+        temp_root_map.insert({p2d,root_2d.size()-1});
+      }
+      root_2d_map[temp_root_map[p2d]].push_back(std::make_pair(i, j));
+    }
+  }
+  root_kdtree = KDTree(std::make_shared<std::vector<glm::vec2>>(root_2d));
   // Set strand options
   auto strand_options = options.at("strands");
   num_strands = tree.leafs_size();
@@ -600,10 +619,12 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     assert(!glm::any(glm::isnan(r_vec)));
     assert(!glm::any(glm::isnan(trial_head)));
 
-    // threshold check
     float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso*(1.+slack), true);
+    /*
+    // threshold check
     if (val>=reject_iso*(1.+slack)) continue;
     if (val>=reject_iso*(1.-slack)) val = grid.eval_pos(trial_head);
+    */
     if (val>=reject_iso) continue;
 
     glm::vec3 biased_head = trial_head;
@@ -727,24 +748,10 @@ Strands::TargetResult Strands::find_closest(glm::vec3 pos,
 }
 
 std::pair<size_t,size_t> Strands::match_root_all(glm::vec3 position) {
-  position.y=0;
-  float closest_d2=FLT_MAX;
-  std::vector<std::pair<size_t,size_t>> matches={{0,0}};
-  for (size_t i=0; i<root_frames.size(); ++i){
-    std::vector<glm::mat4> &path=root_frames[i];
-    for (size_t j=0; j<path.size(); ++j){
-      glm::vec3 root_p = frame_position(path[j]); root_p.y=0;
-      float d2 = glm::distance2(position,root_p);
-      if (d2<closest_d2){
-        closest_d2=d2;
-        matches.clear();
-        matches.push_back({i,j});
-      }else if (d2==closest_d2){
-        matches.push_back({i,j});
-      }
-    }
-  }
-  auto r = matches[(size_t)std::rand() % matches.size()];
+  glm::vec2 pos2 = glm::vec2(position.x,position.z);
+  int32_t best_node = root_kdtree.find_nearest(pos2);
+  std::vector<std::pair<int32_t, int32_t>> best_strands=root_2d_map[best_node];
+  auto r = best_strands[(size_t)std::rand() % best_strands.size()];
   return r;
 }
 
