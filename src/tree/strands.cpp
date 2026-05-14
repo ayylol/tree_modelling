@@ -5,6 +5,8 @@
 #include "glm/gtx/norm.hpp"
 #include "glm/gtx/vector_angle.hpp"
 #include "glm/vector_relational.hpp"
+#include "glm/gtx/fast_trigonometry.hpp"
+#include "glm/gtx/fast_square_root.hpp"
 #include "strands.h"
 #include <algorithm>
 #include <cstdlib>
@@ -55,10 +57,6 @@ std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3> &in,
 
 std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
-
-glm::vec3 random_vector(glm::vec3 axis, float angle);
-glm::vec2 random_vec2();
-float lookahead_frame(float dist);
 
 Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, 
     nlohmann::json options, bool add_textures, bool is_strangler)
@@ -117,6 +115,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
   segment_length = strand_options.at("segment_length");
   num_trials = strand_options.at("num_trials");
   max_angle = strand_options.at("max_angle");
+  x_rand=std::uniform_real_distribution<float> (glm::cos(glm::radians(max_angle)), 1);
+  a_rand=std::uniform_real_distribution<float>(-glm::pi<float>(),glm::pi<float>());
   // LA
   lookahead_factor_max = strand_options.at("lookahead_max");
   lookahead_factor_min = strand_options.at("lookahead_min");
@@ -321,6 +321,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   size_t a = 0, b = shoot_path->size() - 20;
   int root_nodes=0;
   int transition_nodes=0;
+  // 13_TODO: FIX THE BINARY SEARCH START POINT
+  ///////////////////////////////////////////////////////////////
+  /*
   while (b - a > 5) {
     i_closest_index = a + (b - a) / 2;
     if (grid.eval_pos(frame_position((*path)[i_closest_index])) <= 0.01f) {
@@ -329,6 +332,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       b = i_closest_index;
     }
   }
+  */
+  i_closest_index=a;
+  ///////////////////////////////////////////////////////////////
   // How far away from the first free point is considered free?
   const int bin_search_free_dist = 20;
   if (i_closest_index > bin_search_free_dist)
@@ -541,6 +547,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     assert(strand.size() == node_info.back().size());
     assert(strands.size() == node_info.size());
     if (add_textures && r < tex_chance) {
+      // 13_TODO: REMOVE TEXTURE GRID
       texture_strands.push_back(strand);
       texture_grid.fill_path(strands.size(), strand, tex_max_val, tex_max_range,
                              tex_shoot_range, tex_root_range, inflection);
@@ -611,20 +618,19 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
   };
   std::vector<Trial> trials(num_trials, {glm::vec3(), FLT_MAX});
   float slack=0.5;
+  const glm::vec3 x_axis(1.f,0,0);
+  if (-x_axis==canonical_direction) canonical_direction = glm::normalize(glm::vec3(-.096f,0.14f,0.f));
+  const glm::quat rotation=glm::angleAxis(glm::angle(canonical_direction, x_axis),
+                                      glm::normalize(glm::cross(x_axis, canonical_direction)));
 #pragma omp parallel for
   for (int i = 0; i < num_trials; i++) {
-    glm::vec3 r_vec = random_vector(canonical_direction, glm::radians(max_angle));
+    glm::vec3 r_vec = random_vector(rotation);
     glm::vec3 trial_head = from + segment_length * r_vec;
     assert(!glm::any(glm::isnan(from)));
     assert(!glm::any(glm::isnan(r_vec)));
     assert(!glm::any(glm::isnan(trial_head)));
 
-    float val = grid.lazy_in_check(grid.pos_to_grid(trial_head),reject_iso*(1.+slack), true);
-    /*
-    // threshold check
-    if (val>=reject_iso*(1.+slack)) continue;
-    if (val>=reject_iso*(1.-slack)) val = grid.eval_pos(trial_head);
-    */
+    float val = grid.eval_pos(trial_head);
     if (val>=reject_iso) continue;
 
     glm::vec3 biased_head = trial_head;
@@ -709,7 +715,8 @@ glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
     float p = (b + a) / 2.f;
     new_head = (1.f - p) * close + p * head;
     // initial lazy check
-    val = grid.lazy_in_check(grid.pos_to_grid(new_head),iso*(1.+slack));
+    // 13_TODO: THIS VEXES ME
+    val = grid.lazy_eval(grid.pos_to_grid(new_head));
     if (val>=iso+slack){
       a = p;
       continue;
@@ -809,41 +816,18 @@ size_t Strands::match_root(glm::vec3 position, glm::mat4 frame) {
   return match;
 }
 
-// Non-member helper functions
-glm::vec3 random_vector(glm::vec3 axis, float angle) {
-  const glm::vec3 x_axis(1, 0, 0);
-  glm::quat rotation = glm::angleAxis(glm::angle(axis, x_axis),
-                                      glm::normalize(glm::cross(x_axis, axis)));
+glm::vec3 Strands::random_vector(glm::quat rotation) {
   // CODE CITED
   // from https://community.khronos.org/t/random-vectors/41467/3 imported_jwatte
-  std::uniform_real_distribution<float> x_rand(glm::cos(angle), 1);
-  std::uniform_real_distribution<float> a_rand(-glm::pi<float>(),
-                                               glm::pi<float>());
   float x = x_rand(rng);
   float a = a_rand(rng);
-  float r = sqrtf(1 - x * x);
-  float y = glm::sin(a) * r;
-  float z = glm::cos(a) * r;
+  float r = glm::fastSqrt(1 - x * x);
+  float y = glm::fastSin(a) * r;
+  float z = glm::fastCos(a) * r;
   glm::vec3 v = rotation * glm::vec3(x, y, z);
   // Can be nan if axis is -x_axis
-  if (glm::any(glm::isnan(v))){
-    v = glm::vec3(x*axis.x, y, z);
-  }
-  assert(!glm::any(glm::isnan(v)));
+  if (glm::any(glm::isnan(v))){ v = glm::vec3(-x, y, z); }
+  //assert(!glm::any(glm::isnan(v)));
   return v;
   // CODE CITED
-}
-glm::vec2 random_vec2() {
-  std::uniform_real_distribution<float> r_rand(0.f, 1.f);
-  std::uniform_real_distribution<float> theta_rand(0.f, 2 * glm::pi<float>());
-  float r = std::sqrt(r_rand(rng));
-  float theta = theta_rand(rng);
-  float x = r * cos(theta);
-  float y = r * sin(theta);
-  return glm::vec2(x, y);
-}
-
-float lookahead_frame(float dist) {
-  float u = dist / 0.05f;
-  return (u + 1) * 2 * dist;
 }

@@ -22,34 +22,24 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     vec3 front_top_right = tree.get_bounds().second + (bounds_size * percent_overshoot);
     center = 0.5f*(back_bottom_left+front_top_right);
     scale = tree.get_average_length() * scale_factor;
+
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
-    ref_grid =  vector<vector<vector<vector<size_t>>>>(dimensions.x, 
-                vector<vector<vector<size_t>>>(dimensions.y,
-                vector<vector<size_t>>(dimensions.z)));
-    eval_grid = vector<vector<vector<struct Eval>>>(dimensions.x,
-                vector<vector<struct Eval>>(dimensions.y,
-                vector<struct Eval>(dimensions.z)));
-    lock_grid = vector<vector<vector<omp_lock_t>>>(dimensions.x, 
-                vector<vector<omp_lock_t>>(dimensions.y,
-                vector<omp_lock_t>(dimensions.z)));
-    for (auto r : lock_grid){
-      for (auto c : r){
-        for (auto lock : c){
-          omp_init_lock(&lock);
-        }
-      }
+    scalar_field = vector<float>(dimensions.x*dimensions.y*dimensions.z,0.f);
+    lock_grid = vector<omp_lock_t>(dimensions.x*dimensions.y*dimensions.z);
+
+    for (auto lock : lock_grid){
+      omp_init_lock(&lock);
     }
-    //occupied.reserve(5000000);
     std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 Grid::~Grid() {
-    for (auto r : lock_grid){
-      for (auto c : r){
-        for (auto lock : c){
-          omp_destroy_lock(&lock);
-        }
-      }
+    for (auto lock : lock_grid){
+      omp_destroy_lock(&lock);
     }
+}
+int32_t Grid::get_idx(glm::ivec3 v) const {
+  if (!is_in_grid(v)) return -1;
+  return v.x + dimensions.x*v.y + dimensions.x*dimensions.y*v.z;
 }
 
 ivec3 Grid::pos_to_grid(vec3 pos) const {
@@ -61,99 +51,23 @@ vec3 Grid::grid_to_pos(ivec3 voxel) const {
 }
 
 bool Grid::is_in_grid(ivec3 grid_cell) const {
-    return  grid_cell.x >= 0 && grid_cell.x < dimensions.x && grid_cell.y >= 0 &&
-            grid_cell.y < dimensions.y && grid_cell.z >= 0 &&
-            grid_cell.z < dimensions.z;
+  return  grid_cell.x >= 0 && grid_cell.x < dimensions.x && 
+          grid_cell.y >= 0 && grid_cell.y < dimensions.y && 
+          grid_cell.z >= 0 && grid_cell.z < dimensions.z;
 }
 
-// TODO: remove this function
-float Grid::get_in_grid(ivec3 index) const {
-    // REGULAR GRID
-    if (!is_in_grid(index)) {
-        return 0.f;
-    }
-    //FIXME: CHANGE MARKER
-    //return grid[index.x][index.y][index.z];
-    return 0.f;
-}
-
-bool Grid::has_refs(ivec3 index) const {
-    // REGULAR GRID
-    if (!is_in_grid(index)) {
-        return false;
-    }
-    return !(ref_grid[index.x][index.y][index.z].empty());
-}
-
+// 13_TODO: DO INTERPOLATION
 float Grid::eval_pos(vec3 pos) const { 
-    ivec3 slot = pos_to_grid(pos);
-    if (!has_refs(slot)){
-        return 0.f;
-    }
-    const auto& slot_refs = ref_grid[slot.x][slot.y][slot.z];
-    std::unordered_map<uint32_t, float> strand_vals;
-    strand_vals.reserve(50);
-    for (size_t i : slot_refs){
-        const struct Segment& segment = segments[i];
-        float v = segment.f.eval(pos, segment.start,segment.end);
-        if (strand_vals.contains(segment.strand_id)){
-            strand_vals[segment.strand_id] = 
-                std::max(strand_vals[segment.strand_id], v);
-        }else{
-            strand_vals[segment.strand_id] = v;
-        }
-    }
-    float val = 0.f;
-    for (auto v : strand_vals){
-        val += v.second;
-    }
-    assert(val==val);
-    return val;
+  return lazy_eval(pos);
 }
-float Grid::lazy_in_check(glm::ivec3 slot, float threshold, bool threadsafe){
-    if (!is_in_grid(slot)) return 0.f;
-    if (threadsafe) omp_set_lock(&lock_grid[slot.x][slot.y][slot.z]);
-    vec3 pos = grid_to_pos(slot);
-    struct Eval& eval_slot = eval_grid[slot.x][slot.y][slot.z];
-    std::vector<size_t>& strands = ref_grid[slot.x][slot.y][slot.z];
-    int i;
-    while ((i = eval_slot.checked) < strands.size() && eval_slot.val <= threshold){
-        // Eval based on next strand 
-        int strand_i = strands[i];
-        struct Segment segment = segments[strand_i]; 
-        float v = segment.f.eval(pos,segment.start,segment.end);
-        // Check strand val in dict 
-        if (eval_slot.strands_checked.contains(segment.strand_id)){
-            // If present and larger, replace value in dict and remove old val from lazy val 
-            float old = eval_slot.strands_checked[segment.strand_id];
-            eval_slot.val -= old;
-            eval_slot.val += std::max(old,v);
-            eval_slot.strands_checked[segment.strand_id]=std::max(old,v);
-        }else{
-            // If not present add to value and dict
-            eval_slot.val+=v;
-            eval_slot.strands_checked[segment.strand_id]=v;
-        }
-        eval_slot.checked++;
-    }
-    if (threadsafe) omp_unset_lock(&lock_grid[slot.x][slot.y][slot.z]);
-    return eval_slot.val;
-}
-float Grid::lazy_eval(glm::ivec3 slot, bool threadsafe){
-    return lazy_in_check(slot, FLT_MAX, threadsafe);
-}
-float Grid::get_texture_fac(glm::ivec3 slot){
-    if (!is_in_grid(slot)) return 0.f;
-    const int min=2;
-    const int max=6;
-    int num_strands = ref_grid[slot.x][slot.y][slot.z].size();
-    return std::clamp(
-            (float)(num_strands-min)/(max-min)
-            ,0.f,1.f);
+
+float Grid::lazy_eval(glm::ivec3 slot) const{
+  int32_t idx = get_idx(slot);
+  if (idx==-1) return 0.f;
+  return scalar_field[idx];
 }
 
 glm::vec3 Grid::lazy_gradient(ivec3 slot){ 
-    //float x = (eval_pos(slot - vec3(step_size, 0, 0)) - eval_pos(slot + vec3(step_size, 0, 0)));
     float x = (lazy_eval(slot - ivec3(1, 0, 0)) - lazy_eval(slot + ivec3(1, 0, 0)));
     float y = (lazy_eval(slot - ivec3(0, 1, 0)) - lazy_eval(slot + ivec3(0, 1, 0)));
     float z = (lazy_eval(slot - ivec3(0, 0, 1)) - lazy_eval(slot + ivec3(0, 0, 1)));
@@ -182,6 +96,7 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
     return glm::vec3(x,y,z);
 }
 
+// 13_TODO: REFACTOR HOW SEGMENT INDEX WORKS HERE
 std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
     std::vector<glm::ivec3> local_occupied;
     MetaBalls implicit = segments[segment_index].f;
@@ -226,13 +141,15 @@ std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
                     ivec3 slot = voxels[i];
                     slot[axis1] += i1;
                     slot[axis2] += i2;
-                    if (is_in_grid(slot)) {
-                      omp_set_lock(&lock_grid[slot.x][slot.y][slot.z]);
-                      if (!has_refs(slot)) {
+                    int32_t s_idx=get_idx(slot);
+                    if (s_idx!=-1) {
+                      omp_set_lock(&lock_grid[s_idx]);
+                      float res=implicit.eval(grid_to_pos(slot),p1,p2);
+                      if (res!=0.f && scalar_field[s_idx]==0.f) {
                         local_occupied.push_back(slot);
                       }
-                      ref_grid[slot.x][slot.y][slot.z].push_back(segment_index);
-                      omp_unset_lock(&lock_grid[slot.x][slot.y][slot.z]);
+                      scalar_field[s_idx]+=res;
+                      omp_unset_lock(&lock_grid[s_idx]);
                     }
                 }
             }
@@ -389,11 +306,12 @@ Mesh<VertFlat> Grid::get_normals_geom(float threshold) {
     vector<VertFlat> vertices;
     vector<GLuint> indices;
     float max_val = 0.f;
+    // 13_TODO: CHECK THIS
     for (glm::ivec3 voxel : occupied) {
-        if (lazy_in_check(voxel,threshold) > threshold) {
+        if (lazy_eval(voxel) > threshold) {
             bool visible = false;
             for (auto norm : face_norms) {
-                if (lazy_in_check(voxel + norm,threshold) <= threshold) visible = true;
+                if (lazy_eval(voxel + norm) <= threshold) visible = true;
             }
             // Completely occluded do not add vertices
             if (!visible) continue;
@@ -432,12 +350,12 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold){
     glm::vec3 col1 = glm::vec3(0.5,0,0.7);
     for (glm::ivec3 voxel : occupied) {
         // Grid space is occupied
-        if (lazy_in_check(voxel,threshold) >= threshold) {
+        if (lazy_eval(voxel) >= threshold) {
             // Get adjacent voxel contents
             vector<float> adj_content;
             bool visible = false;
             for (auto norm : face_norms) {
-                float content = lazy_in_check(voxel + norm,threshold);
+                float content = lazy_eval(voxel + norm);
                 adj_content.push_back(content);
                 if (content <= threshold) visible = true;
             }
@@ -478,7 +396,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
             if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
                 voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
                 voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
-            if (voxel != occupied_slot && (!is_in_grid(voxel)||lazy_in_check(voxel,threshold) >= threshold))continue;
+            if (voxel != occupied_slot && (!is_in_grid(voxel)||lazy_eval(voxel) >= threshold))continue;
 
             ivec3 slots[8]={
                 voxel+cell_order[0],
@@ -500,14 +418,14 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold,Grid& texture_space, std::p
                 grid_to_pos(slots[6]),
                 grid_to_pos(slots[7]),
             };
-            if (lazy_in_check(slots[0],threshold) >= threshold &&
-                lazy_in_check(slots[1],threshold) >= threshold &&
-                lazy_in_check(slots[2],threshold) >= threshold &&
-                lazy_in_check(slots[3],threshold) >= threshold &&
-                lazy_in_check(slots[4],threshold) >= threshold &&
-                lazy_in_check(slots[5],threshold) >= threshold &&
-                lazy_in_check(slots[6],threshold) >= threshold &&
-                lazy_in_check(slots[7],threshold) >= threshold) {
+            if (lazy_eval(slots[0]) >= threshold &&
+                lazy_eval(slots[1]) >= threshold &&
+                lazy_eval(slots[2]) >= threshold &&
+                lazy_eval(slots[3]) >= threshold &&
+                lazy_eval(slots[4]) >= threshold &&
+                lazy_eval(slots[5]) >= threshold &&
+                lazy_eval(slots[6]) >= threshold &&
+                lazy_eval(slots[7]) >= threshold) {
                     continue;
             }
             GridCell cell = {{

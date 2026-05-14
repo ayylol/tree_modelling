@@ -37,20 +37,12 @@ public:
     void fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
     std::vector<glm::ivec3> fill_line(size_t segment_index);
 
-    bool has_refs(glm::ivec3 index) const;
     float eval_pos(glm::vec3 pos) const;
-    float lazy_in_check(glm::ivec3 slot, float threshold, bool threadsafe=false);
-    float lazy_eval(glm::ivec3 slot, bool threadsafe=false);
+    float lazy_eval(glm::ivec3 slot) const;
     glm::vec3 lazy_gradient(glm::ivec3 slot);
     glm::vec3 lazy_norm(glm::ivec3 slot);
     glm::vec3 eval_norm(glm::vec3 pos, float step_size=0.0005f) const;
     glm::vec3 eval_gradient(glm::vec3 pos, float step_size=0.0005f) const;
-
-    float get_texture_fac(glm::ivec3 slot);
-
-    // TODO: Remove these ////////////////////////
-    float get_in_grid(glm::ivec3 index) const;
-    /////////////////////////////////////////////
 
     std::vector<glm::ivec3> get_voxels_line(glm::vec3 start, glm::vec3 end) const;
 
@@ -71,9 +63,11 @@ private:
         size_t checked = 0;
         std::unordered_map<uint32_t, float> strands_checked;
     };
-    std::vector<std::vector<std::vector<std::vector<size_t>>>> ref_grid;
-    std::vector<std::vector<std::vector<omp_lock_t>>> lock_grid;
-    std::vector<std::vector<std::vector<struct Eval>>> eval_grid;
+
+    int32_t get_idx(glm::ivec3 v) const;
+    std::vector<float> scalar_field;
+    std::vector<omp_lock_t> lock_grid;
+
     std::vector<glm::ivec3> occupied;
     std::vector<struct Segment> segments;
 

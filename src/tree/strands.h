@@ -189,5 +189,9 @@ private:
     std::vector<size_t> root_pool;
     std::vector<glm::vec3> root_vecs;
 
+    std::uniform_real_distribution<float> x_rand;
+    std::uniform_real_distribution<float> a_rand;
+    glm::vec3 random_vector(glm::quat rotation);
+
     int strands_terminated = 0;
 };

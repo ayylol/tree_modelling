@@ -55,5 +55,5 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE ${DEFINITIONS})
 # FOR DEBUGGING
 # target_compile_options(${PROJECT_NAME} PRIVATE -g -Wall -Wextra -pedantic) 
 # FOR PERFORMANCE
-target_compile_options(${PROJECT_NAME} PRIVATE -O3) 
+target_compile_options(${PROJECT_NAME} PRIVATE -O3 -g) 
 
