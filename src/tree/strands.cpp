@@ -321,9 +321,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   size_t a = 0, b = shoot_path->size() - 20;
   int root_nodes=0;
   int transition_nodes=0;
-  // 13_TODO: FIX THE BINARY SEARCH START POINT
-  ///////////////////////////////////////////////////////////////
-  /*
   while (b - a > 5) {
     i_closest_index = a + (b - a) / 2;
     if (grid.eval_pos(frame_position((*path)[i_closest_index])) <= 0.01f) {
@@ -332,9 +329,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       b = i_closest_index;
     }
   }
-  */
-  i_closest_index=a;
-  ///////////////////////////////////////////////////////////////
   // How far away from the first free point is considered free?
   const int bin_search_free_dist = 20;
   if (i_closest_index > bin_search_free_dist)
