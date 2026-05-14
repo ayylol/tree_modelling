@@ -97,7 +97,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int num_threads = 24;
+    // Seemed to be the fastest on Ryzen 5 5600
+    int num_threads = 10;
     omp_set_num_threads(num_threads);
 
     srand(time(NULL));
