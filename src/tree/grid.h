@@ -57,6 +57,7 @@ public:
     Mesh<Vertex> get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds= {glm::vec3(),glm::vec3()});
     Mesh<VertFlat> get_occupied_geom_points(float threshold);
     Mesh<VertFlat> get_normals_geom(float threshold);
+    void calc_data();
 private:
     struct Eval {
         float val   = 0.0;
@@ -95,6 +96,8 @@ private:
   using GridCell = std::array<Sample,8>;
   void polygonize(const GridCell &cell, float threshold, std::vector<Vertex> &verts, std::vector<GLuint> &indices) const;
   Vertex vertex_interp(float threshold, const Sample& a, const Sample& b) const; 
+
+  const int chunk_sz=8;
 
 };
 

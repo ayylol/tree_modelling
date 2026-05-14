@@ -16,6 +16,32 @@ using glm::vec3;
 using std::tuple;
 using std::vector;
 
+const float MB=1049000.f;
+void Grid::calc_data(){
+  int occupied_chunks=0;
+  glm::ivec3 chunk_d = (dimensions/chunk_sz)+glm::ivec3(1,1,1);
+  std::cout<<chunk_d<<std::endl;
+  for (int k=0; k<chunk_d.z;k++){ for (int j=0; j<chunk_d.y;j++){ for (int i=0; i<chunk_d.x;i++){
+    bool chunk_occupied=false;
+    for (int z=0; z<chunk_sz;z++){ for (int y=0; y<chunk_sz;y++){ for (int x=0; x<chunk_sz;x++){
+      float val=lazy_eval((glm::ivec3(i,j,k)*chunk_sz)+glm::ivec3(x,y,z));
+      if(val!=0.f){
+        chunk_occupied=true;
+        occupied_chunks++;
+        break;
+      }
+    } if (chunk_occupied) break; } if (chunk_occupied) break; }
+  } } }
+  float chunk_map_n=chunk_d.x*chunk_d.y*chunk_d.z;
+  float chunk_map_sz=chunk_map_n*sizeof(int32_t)/MB;
+  float mem_for_chunks=occupied_chunks*chunk_sz*chunk_sz*chunk_sz*sizeof(float)/MB;
+  std::cout<<"CHUNKED DATA"<<std::endl;
+  std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map_n<<" (" << (occupied_chunks/(float)chunk_map_n)*100.f << ")"<<std::endl;
+  std::cout<<"chunk map size: "<<chunk_map_sz<<"MB"<<std::endl;
+  std::cout<<"memory for "<<chunk_sz<<"^3 chunks: "<<mem_for_chunks<<"MB"<<std::endl;
+  std::cout<<"total mem: "<<mem_for_chunks+chunk_map_sz<<"MB"<<std::endl;
+}
+
 Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     vec3 bounds_size = tree.get_bounds().second - tree.get_bounds().first;
     back_bottom_left = tree.get_bounds().first - (bounds_size * percent_overshoot);
@@ -26,6 +52,11 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
     scalar_field = vector<float>(dimensions.x*dimensions.y*dimensions.z,0.f);
     lock_grid = vector<omp_lock_t>(dimensions.x*dimensions.y*dimensions.z);
+
+    std::cout<<"FLOAT: "<<sizeof(float)<<std::endl;
+    std::cout<<"scalar_field: "<<scalar_field.size()*sizeof(float)/MB<<"MB"<<std::endl;
+    std::cout<<chunk_sz<<" CHUNK: "<<chunk_sz*chunk_sz*chunk_sz*sizeof(float)<<std::endl;
+
 
     for (auto lock : lock_grid){
       omp_init_lock(&lock);

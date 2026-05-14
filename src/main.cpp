@@ -229,6 +229,7 @@ int main(int argc, char *argv[]) {
 
     system("notify-send \"Done Building Tree\"");
 
+    gr.calc_data();
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
