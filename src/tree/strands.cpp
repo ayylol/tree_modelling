@@ -708,18 +708,6 @@ glm::vec3 Strands::move_extension(glm::vec3 head, glm::vec3 close, float iso) {
   for (int i = 0; i < 16 && std::abs(val - iso) > 0.1; ++i) {
     float p = (b + a) / 2.f;
     new_head = (1.f - p) * close + p * head;
-    // initial lazy check
-    // 13_TODO: THIS VEXES ME
-    val = grid.lazy_eval(grid.pos_to_grid(new_head));
-    if (val>=iso+slack){
-      a = p;
-      continue;
-    }
-    else if (val<=iso-slack){
-      b = p;
-      continue;
-    }
-    // closer inspection
     val = grid.eval_pos(new_head);
     if (val > iso)
       a = p;
