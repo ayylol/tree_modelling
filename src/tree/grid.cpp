@@ -58,7 +58,7 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
 
 // 13_TODO: DO INTERPOLATION
 float Grid::eval_pos(vec3 pos) const { 
-  return lazy_eval(pos);
+  return lazy_eval(pos_to_grid(pos));
 }
 
 float Grid::lazy_eval(glm::ivec3 slot) const{
