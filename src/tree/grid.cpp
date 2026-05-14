@@ -56,9 +56,34 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
           grid_cell.z >= 0 && grid_cell.z < dimensions.z;
 }
 
-// 13_TODO: DO INTERPOLATION
 float Grid::eval_pos(vec3 pos) const { 
-  return lazy_eval(pos_to_grid(pos));
+  glm::ivec3 bbl_cell = pos_to_grid(pos);
+  const static ivec3 cell_order[8] = {
+    ivec3(0, 0, 0), ivec3(0, 0, 1), ivec3(0, 1, 0), ivec3(0, 1, 1),
+    ivec3(1, 0, 0), ivec3(1, 0, 1), ivec3(1, 1, 0), ivec3(1, 1, 1),
+  };
+  float vals[8];
+  for (int i=0; i<8; i++){
+    vals[i]=lazy_eval(bbl_cell+cell_order[i]);
+  }
+  glm::vec3 bbl_pos=grid_to_pos(bbl_cell+cell_order[0]);
+  glm::vec3 ftr_pos=grid_to_pos(bbl_cell+cell_order[7]);
+  // due to floating point inaccuracies, clamp the interp value to 0-1
+  glm::vec3 interp=glm::clamp(
+      (pos-bbl_pos)/(ftr_pos-bbl_pos),glm::vec3(0,0,0), glm::vec3(1,1,1));
+
+  // Interpolate on x, y then z
+  const float x0=(vals[4])*interp.x+(vals[0])*(1.f-interp.x);
+  const float x1=(vals[5])*interp.x+(vals[1])*(1.f-interp.x);
+  const float x2=(vals[6])*interp.x+(vals[2])*(1.f-interp.x);
+  const float x3=(vals[7])*interp.x+(vals[3])*(1.f-interp.x);
+
+  const float y0=x1*interp.y+x0*(1.f-interp.y);
+  const float y1=x3*interp.y+x2*(1.f-interp.y);
+
+  const float z0=y1*interp.z+y0*(1.f-interp.z);
+
+  return z0;
 }
 
 float Grid::lazy_eval(glm::ivec3 slot) const{
@@ -74,7 +99,6 @@ glm::vec3 Grid::lazy_gradient(ivec3 slot){
     assert(x==x);
     assert(y==y);
     assert(z==z);
-    //assert(!(x==0.0f&&x==y&&x==z)); //FIXME 
     return glm::vec3(x,y,z);
 }
 glm::vec3 Grid::lazy_norm(ivec3 slot){ 
@@ -92,7 +116,6 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
     assert(x==x);
     assert(y==y);
     assert(z==z);
-    //assert(!(x==0.0f&&x==y&&x==z)); //FIXME 
     return glm::vec3(x,y,z);
 }
 

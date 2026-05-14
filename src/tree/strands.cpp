@@ -321,6 +321,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   size_t a = 0, b = shoot_path->size() - 20;
   int root_nodes=0;
   int transition_nodes=0;
+  // TODO: make the growth amount a parameter
   while (b - a > 5) {
     i_closest_index = a + (b - a) / 2;
     if (grid.eval_pos(frame_position((*path)[i_closest_index])) <= 0.01f) {
