@@ -11,7 +11,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/type_ptr.hpp> 
 #include <glm/gtx/norm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
@@ -34,8 +34,13 @@ public:
     glm::vec3 get_backbottomleft() { return back_bottom_left; }
 
     // Implicit Filling
-    void fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
-    std::vector<glm::ivec3> fill_line(size_t segment_index);
+    //void fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
+    void fill_path(uint32_t strand_id, const std::vector<glm::vec3> &path, 
+        float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
+    void fill_line(int32_t segment_index, 
+        const std::vector<glm::vec3> &path, 
+        const std::vector<MetaBalls>& potential_funcs, 
+        std::vector<glm::ivec3> &occupied);
 
     float eval_pos(glm::vec3 pos) const;
     float lazy_eval(glm::ivec3 slot) const;
@@ -69,8 +74,16 @@ private:
     std::vector<float> scalar_field;
     std::vector<omp_lock_t> lock_grid;
 
+    const int chunk_sz=8;
+    /*
+    omp_lock_t chunk_map_lock;
+    int32_t next_chunk=0;
+    std::vector<int32_t> chunk_map;
+    std::vector<omp_lock_t> chunk_locks;
+    */
+    glm::ivec3 chunk_d;
+
     std::vector<glm::ivec3> occupied;
-    std::vector<struct Segment> segments;
 
     glm::ivec3 dimensions;
     float scale;
@@ -96,8 +109,6 @@ private:
   using GridCell = std::array<Sample,8>;
   void polygonize(const GridCell &cell, float threshold, std::vector<Vertex> &verts, std::vector<GLuint> &indices) const;
   Vertex vertex_interp(float threshold, const Sample& a, const Sample& b) const; 
-
-  const int chunk_sz=8;
 
 };
 

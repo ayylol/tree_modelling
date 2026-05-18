@@ -321,7 +321,6 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   size_t a = 0, b = shoot_path->size() - 20;
   int root_nodes=0;
   int transition_nodes=0;
-  // TODO: make the growth amount a parameter
   while (b - a > 5) {
     i_closest_index = a + (b - a) / 2;
     if (grid.eval_pos(frame_position((*path)[i_closest_index])) <= 0.01f) {
@@ -330,12 +329,14 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       b = i_closest_index;
     }
   }
+
+  // TODO: make the growth amount a parameter
   // How far away from the first free point is considered free?
-  const int bin_search_free_dist = 20;
-  if (i_closest_index > bin_search_free_dist)
-    i_closest_index -= bin_search_free_dist;
+  const int bin_search_free_dist = 1000;
+  if (i_closest_index > bin_search_free_dist) i_closest_index -= bin_search_free_dist;
   size_t closest_index = (size_t) std::clamp(i_closest_index, 
       0, std::max(0, (int)shoot_path->size() - bin_search_free_dist));
+
   //
   
   glm::mat4 last_closest = (*path)[closest_index];
@@ -544,24 +545,25 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     if (add_textures && r < tex_chance) {
       // 13_TODO: REMOVE TEXTURE GRID
       texture_strands.push_back(strand);
-      texture_grid.fill_path(strands.size(), strand, tex_max_val, tex_max_range,
-                             tex_shoot_range, tex_root_range, inflection);
+      texture_grid.fill_path(
+          strands.size(), 
+          strand, tex_max_val, 
+          tex_max_range, tex_shoot_range, tex_root_range, 
+          inflection);
     }
     Grid &grid_to_add = is_strangler ? texture_grid : grid;
-    grid_to_add.fill_path(strands.size(), strand, max_val, base_max_range,
-          leaf_min_range, root_min_range, inflection);
+    grid_to_add.fill_path(strands.size(), strand, max_val, 
+        base_max_range, leaf_min_range, root_min_range, 
+          inflection);
   }
+  // FIXME: CHANGE MARKER
   else if (type == Texture){
-    // FIXME: CHANGE MARKER
     texture_strands.push_back(strand);
-    // grid.fill_path(texture_strands.size(), strand, tex_max_val,
-    // tex_max_range, tex_shoot_range, tex_root_range, inflection);
-    // texture_grid.fill_path(texture_strands.size(), strand, tex_max_val,
-    // tex_max_range, tex_shoot_range, tex_root_range, inflection);
-    texture_grid.fill_path(texture_strands.size(), strand, tex_max_val,
-                           tex_max_range, tex_shoot_range, tex_root_range,
-                           inflection);
-    // texture_grid.fill_path(0,strand, 5.0, 0.008, 0.001, 0.0001, inflection);
+    texture_grid.fill_path(
+        strands.size(), 
+        strand, tex_max_val, 
+        tex_max_range, tex_shoot_range, tex_root_range, 
+        inflection);
   }
 }
 

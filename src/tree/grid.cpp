@@ -19,7 +19,7 @@ using std::vector;
 const float MB=1049000.f;
 void Grid::calc_data(){
   int occupied_chunks=0;
-  glm::ivec3 chunk_d = (dimensions/chunk_sz)+glm::ivec3(1,1,1);
+  //glm::ivec3 chunk_d = (dimensions/chunk_sz)+glm::ivec3(1,1,1);
   std::cout<<chunk_d<<std::endl;
   for (int k=0; k<chunk_d.z;k++){ for (int j=0; j<chunk_d.y;j++){ for (int i=0; i<chunk_d.x;i++){
     bool chunk_occupied=false;
@@ -35,6 +35,8 @@ void Grid::calc_data(){
   float chunk_map_n=chunk_d.x*chunk_d.y*chunk_d.z;
   float chunk_map_sz=chunk_map_n*sizeof(int32_t)/MB;
   float mem_for_chunks=occupied_chunks*chunk_sz*chunk_sz*chunk_sz*sizeof(float)/MB;
+  std::cout<<"scalar_field: "<<scalar_field.size()*sizeof(float)/MB<<"MB"<<std::endl;
+  std::cout<<chunk_sz<<" CHUNK: "<<chunk_sz*chunk_sz*chunk_sz*sizeof(float)<<std::endl;
   std::cout<<"CHUNKED DATA"<<std::endl;
   std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map_n<<" (" << (occupied_chunks/(float)chunk_map_n)*100.f << ")"<<std::endl;
   std::cout<<"chunk map size: "<<chunk_map_sz<<"MB"<<std::endl;
@@ -52,15 +54,13 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
     scalar_field = vector<float>(dimensions.x*dimensions.y*dimensions.z,0.f);
     lock_grid = vector<omp_lock_t>(dimensions.x*dimensions.y*dimensions.z);
-
-    std::cout<<"FLOAT: "<<sizeof(float)<<std::endl;
-    std::cout<<"scalar_field: "<<scalar_field.size()*sizeof(float)/MB<<"MB"<<std::endl;
-    std::cout<<chunk_sz<<" CHUNK: "<<chunk_sz*chunk_sz*chunk_sz*sizeof(float)<<std::endl;
-
-
     for (auto lock : lock_grid){
       omp_init_lock(&lock);
     }
+    /*
+    chunk_map = std::vector<int32_t>(chunk_d.x*chunk_d.y*chunk_d*z, -2);
+    */
+    chunk_d = (dimensions/chunk_sz)+glm::ivec3(1,1,1);
     std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 Grid::~Grid() {
@@ -151,11 +151,13 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
 }
 
 // 13_TODO: REFACTOR HOW SEGMENT INDEX WORKS HERE
-std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
-    std::vector<glm::ivec3> local_occupied;
-    MetaBalls implicit = segments[segment_index].f;
-    glm::vec3 p1 = segments[segment_index].start;
-    glm::vec3 p2 = segments[segment_index].end;
+void Grid::fill_line(int32_t segment_index, 
+    const std::vector<glm::vec3> &path, 
+    const std::vector<MetaBalls>& potential_funcs, 
+    std::vector<glm::ivec3> &local_occupied) {
+    MetaBalls implicit = potential_funcs[segment_index];
+    glm::vec3 p1 = path[segment_index];
+    glm::vec3 p2 = path[segment_index+1];
     vec3 diff = p2 - p1;
     vec3 dir = glm::normalize(diff);
     vec3 variance = glm::abs(diff);
@@ -196,9 +198,36 @@ std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
                     slot[axis1] += i1;
                     slot[axis2] += i2;
                     int32_t s_idx=get_idx(slot);
-                    if (s_idx!=-1) {
+                    if (s_idx != -1) {
+                      /*
+                      // CHUNK MAP MUST BE ATOMIC SO THAT WE NEVER GET AN IN-BETWEEN INDEX
+                      // DOUBLE-CHECKED LOCKING IDIOM
+                      if (s_idx == -2){ // CHUNK NOT ALLOCATED
+                        int32_t chunk_idx = get_chunk_idx(slot);
+                        // ACQUIRE CHUNK LOCK
+                        omp_set_lock(&chunk_locks[chunk_idx]);
+                          // CHECK AGAIN FOR CHUNK ID
+                        if (chunk_map[chunk_idx]==-1){
+                            // IF CHUNK IS STILL NOT DEFINED
+                            // GET ARRAY LOCK
+                            omp_set_lock(&chunk_map_lock); // 13_TODO: CHECK IF SINGLE COARSE LOCK IS MORE EFFICIENT
+                            // CREATE CHUNK
+                            allocate_chunk(chunk_idx);
+                            // RELEASE ARRAY LOCK
+                            omp_unset_lock(&chunk_map_lock);
+                        }
+                        // RELEASE CHUNK LOCK
+                        omp_unset_lock(&chunk_locks[chunk_idx]);
+                      }
+                      */
+                      glm::vec3 grid_pos=grid_to_pos(slot);
+                      float res=implicit.eval(grid_pos,p1,p2);
+                      float res_bef= segment_index <= 0 ? 0.f : 
+                        potential_funcs[segment_index-1].eval(grid_pos, path[segment_index-1], path[segment_index]);
+                      float res_aft= segment_index >= path.size()-2 ? 0.f : 
+                        potential_funcs[segment_index+1].eval(grid_pos, path[segment_index+1], path[segment_index+2]);
+                      if (res<res_bef || res<res_aft) continue;
                       omp_set_lock(&lock_grid[s_idx]);
-                      float res=implicit.eval(grid_to_pos(slot),p1,p2);
                       if (res!=0.f && scalar_field[s_idx]==0.f) {
                         local_occupied.push_back(slot);
                       }
@@ -231,28 +260,31 @@ std::vector<glm::ivec3> Grid::fill_line(size_t segment_index) {
         last_axis1 = voxels[i][axis1];
         last_axis2 = voxels[i][axis2];
     }
-    return local_occupied;
 }
 
-void Grid::fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point){
-  size_t first_segment_index = segments.size();
-  std::vector<std::vector<glm::ivec3>> local_occupied(path.size());
-  // initialize segments
+void Grid::fill_path(
+    uint32_t strand_id, const std::vector<glm::vec3> &path, 
+    float max_val, 
+    float max_b, float shoot_b, float root_b, 
+    size_t inflection_point){
+  std::vector<std::vector<glm::ivec3>> local_occupied(path.size()-1);
+  std::vector<MetaBalls> potential_funcs;
+  potential_funcs.reserve(path.size()-1);
+  // initialize potential functions
   for (int i = 0; i<path.size()-1; i++){
     float b;
+    float gap;
     if (i<=inflection_point){
         b = std::lerp(shoot_b, max_b, (float)i/inflection_point);
     }else{
         b = std::lerp(max_b, root_b, (float)(i-inflection_point)/(path.size()-2-inflection_point));
     }
-    MetaBalls implicit = MetaBalls(max_val, b);
-    struct Segment s = {.start = path[i], .end = path[i+1], .strand_id = strand_id, .f = implicit};
-    segments.push_back(s);
+    potential_funcs.push_back(MetaBalls(max_val, b));
   }
 
   #pragma omp parallel for
   for (int i = 0; i<path.size()-1; i++){
-    local_occupied[i]=fill_line(first_segment_index+i);
+    fill_line(i, path, potential_funcs, local_occupied[i]);
   }
 
   for (auto list : local_occupied){
