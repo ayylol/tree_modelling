@@ -332,7 +332,7 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
 
   // TODO: make the growth amount a parameter
   // How far away from the first free point is considered free?
-  const int bin_search_free_dist = 1000;
+  const int bin_search_free_dist = 20;
   if (i_closest_index > bin_search_free_dist) i_closest_index -= bin_search_free_dist;
   size_t closest_index = (size_t) std::clamp(i_closest_index, 
       0, std::max(0, (int)shoot_path->size() - bin_search_free_dist));

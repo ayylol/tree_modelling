@@ -74,13 +74,14 @@ private:
     std::vector<float> scalar_field;
     std::vector<omp_lock_t> lock_grid;
 
+    void allocate_chunk(int32_t chunk_idx);
+    int32_t get_chunk_idx(glm::ivec3 p) const;
+    int32_t get_chunk_loc(glm::ivec3 p) const;
     const int chunk_sz=8;
-    /*
     omp_lock_t chunk_map_lock;
-    int32_t next_chunk=0;
     std::vector<int32_t> chunk_map;
+    int32_t next_chunk=0;
     std::vector<omp_lock_t> chunk_locks;
-    */
     glm::ivec3 chunk_d;
 
     std::vector<glm::ivec3> occupied;

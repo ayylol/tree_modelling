@@ -18,6 +18,24 @@ using std::vector;
 
 const float MB=1049000.f;
 void Grid::calc_data(){
+  std::cout<<"ACTUAL STATS"<<std::endl;
+  int occupied_chunks=0;
+  for (auto i : chunk_map){
+    if (i>=0) occupied_chunks++;
+  }
+  std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map.size()<<" (" << (occupied_chunks/(float)chunk_map.size())*100.f << ")"<<std::endl;
+  float scalar_field_sz = scalar_field.size()*sizeof(float)/MB;
+  float lock_sz = lock_grid.size()*sizeof(omp_lock_t)/MB;
+  float chunk_map_sz = chunk_map.size()*sizeof(int32_t)/MB;
+  float occupied_sz = occupied.size()*sizeof(glm::ivec3)/MB;
+  std::cout<<"--------------------------------------------"<<std::endl;
+  std::cout<<"scalar_field: "<<scalar_field_sz<<"MB"<<std::endl;
+  std::cout<<"lock_sz "<<lock_sz<<"MB"<<std::endl;
+  std::cout<<"chunk_map "<<chunk_map_sz<<"MB"<<std::endl;
+  std::cout<<"occupied "<<occupied_sz<<"MB"<<std::endl;
+  std::cout<<"TOTAL: "<<scalar_field_sz+lock_sz+chunk_map_sz+occupied_sz<<"MB"<<std::endl;
+  std::cout<<"--------------------------------------------"<<std::endl;
+  /*
   int occupied_chunks=0;
   //glm::ivec3 chunk_d = (dimensions/chunk_sz)+glm::ivec3(1,1,1);
   std::cout<<chunk_d<<std::endl;
@@ -35,13 +53,13 @@ void Grid::calc_data(){
   float chunk_map_n=chunk_d.x*chunk_d.y*chunk_d.z;
   float chunk_map_sz=chunk_map_n*sizeof(int32_t)/MB;
   float mem_for_chunks=occupied_chunks*chunk_sz*chunk_sz*chunk_sz*sizeof(float)/MB;
-  std::cout<<"scalar_field: "<<scalar_field.size()*sizeof(float)/MB<<"MB"<<std::endl;
   std::cout<<chunk_sz<<" CHUNK: "<<chunk_sz*chunk_sz*chunk_sz*sizeof(float)<<std::endl;
   std::cout<<"CHUNKED DATA"<<std::endl;
   std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map_n<<" (" << (occupied_chunks/(float)chunk_map_n)*100.f << ")"<<std::endl;
   std::cout<<"chunk map size: "<<chunk_map_sz<<"MB"<<std::endl;
   std::cout<<"memory for "<<chunk_sz<<"^3 chunks: "<<mem_for_chunks<<"MB"<<std::endl;
   std::cout<<"total mem: "<<mem_for_chunks+chunk_map_sz<<"MB"<<std::endl;
+  */
 }
 
 Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
@@ -52,25 +70,50 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     scale = tree.get_average_length() * scale_factor;
 
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
-    scalar_field = vector<float>(dimensions.x*dimensions.y*dimensions.z,0.f);
-    lock_grid = vector<omp_lock_t>(dimensions.x*dimensions.y*dimensions.z);
-    for (auto lock : lock_grid){
-      omp_init_lock(&lock);
-    }
-    /*
-    chunk_map = std::vector<int32_t>(chunk_d.x*chunk_d.y*chunk_d*z, -2);
-    */
+    int32_t chunk_sz_3 = chunk_sz*chunk_sz*chunk_sz;
+    int32_t dim_sz=dimensions.x*dimensions.y*dimensions.z;
+    float compress_factor = 0.1;
+    int32_t compressed_sz = (1+(((int32_t)(dim_sz*compress_factor)-1)/chunk_sz_3))*chunk_sz_3;
+
+    scalar_field = vector<float>(compressed_sz,0.f);
+    lock_grid = vector<omp_lock_t>(compressed_sz);
+    for (auto lock : lock_grid){ omp_init_lock(&lock); }
+
     chunk_d = (dimensions/chunk_sz)+glm::ivec3(1,1,1);
+    chunk_map = std::vector<int32_t>(chunk_d.x*chunk_d.y*chunk_d.z, -2);
+    omp_init_lock(&chunk_map_lock);
+    //chunk_locks = std::vector<omp_lock_t>(chunk_d.x*chunk_d.y*chunk_d.z);
+    //for (auto lock : chunk_locks){ omp_init_lock(&lock); }
+
     std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 Grid::~Grid() {
+    omp_destroy_lock(&chunk_map_lock);
     for (auto lock : lock_grid){
       omp_destroy_lock(&lock);
     }
 }
+
+void Grid::allocate_chunk(int32_t chunk_idx){
+  assert(next_chunk<scalar_field.size()); // better assert?
+  chunk_map[chunk_idx]=next_chunk;
+  next_chunk+=chunk_sz*chunk_sz*chunk_sz;
+}
+// ASSUMES CHUNK EXIST!!!
+int32_t Grid::get_chunk_idx(glm::ivec3 p) const {
+  glm::ivec3 chunk = p/chunk_sz;
+  return chunk.x + chunk_d.x*chunk.y + chunk_d.x*chunk_d.y*chunk.z;
+}
+int32_t Grid::get_chunk_loc(glm::ivec3 p) const {
+  return chunk_map[get_chunk_idx(p)];
+}
 int32_t Grid::get_idx(glm::ivec3 v) const {
   if (!is_in_grid(v)) return -1;
-  return v.x + dimensions.x*v.y + dimensions.x*dimensions.y*v.z;
+  int32_t chunk_loc = get_chunk_loc(v);
+  if (chunk_loc<0){ return chunk_loc; }
+  glm::ivec3 v_in_chunk = v%chunk_sz;
+  return chunk_loc + 
+    v_in_chunk.x + chunk_sz*v_in_chunk.y + chunk_sz*chunk_sz*v_in_chunk.z;
 }
 
 ivec3 Grid::pos_to_grid(vec3 pos) const {
@@ -88,6 +131,7 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
 }
 
 float Grid::eval_pos(vec3 pos) const { 
+  //return lazy_eval(pos_to_grid(pos));
   glm::ivec3 bbl_cell = pos_to_grid(pos);
   const static ivec3 cell_order[8] = {
     ivec3(0, 0, 0), ivec3(0, 0, 1), ivec3(0, 1, 0), ivec3(0, 1, 1),
@@ -119,7 +163,7 @@ float Grid::eval_pos(vec3 pos) const {
 
 float Grid::lazy_eval(glm::ivec3 slot) const{
   int32_t idx = get_idx(slot);
-  if (idx==-1) return 0.f;
+  if (idx<0) return 0.f;
   return scalar_field[idx];
 }
 
@@ -199,27 +243,6 @@ void Grid::fill_line(int32_t segment_index,
                     slot[axis2] += i2;
                     int32_t s_idx=get_idx(slot);
                     if (s_idx != -1) {
-                      /*
-                      // CHUNK MAP MUST BE ATOMIC SO THAT WE NEVER GET AN IN-BETWEEN INDEX
-                      // DOUBLE-CHECKED LOCKING IDIOM
-                      if (s_idx == -2){ // CHUNK NOT ALLOCATED
-                        int32_t chunk_idx = get_chunk_idx(slot);
-                        // ACQUIRE CHUNK LOCK
-                        omp_set_lock(&chunk_locks[chunk_idx]);
-                          // CHECK AGAIN FOR CHUNK ID
-                        if (chunk_map[chunk_idx]==-1){
-                            // IF CHUNK IS STILL NOT DEFINED
-                            // GET ARRAY LOCK
-                            omp_set_lock(&chunk_map_lock); // 13_TODO: CHECK IF SINGLE COARSE LOCK IS MORE EFFICIENT
-                            // CREATE CHUNK
-                            allocate_chunk(chunk_idx);
-                            // RELEASE ARRAY LOCK
-                            omp_unset_lock(&chunk_map_lock);
-                        }
-                        // RELEASE CHUNK LOCK
-                        omp_unset_lock(&chunk_locks[chunk_idx]);
-                      }
-                      */
                       glm::vec3 grid_pos=grid_to_pos(slot);
                       float res=implicit.eval(grid_pos,p1,p2);
                       float res_bef= segment_index <= 0 ? 0.f : 
@@ -227,6 +250,22 @@ void Grid::fill_line(int32_t segment_index,
                       float res_aft= segment_index >= path.size()-2 ? 0.f : 
                         potential_funcs[segment_index+1].eval(grid_pos, path[segment_index+1], path[segment_index+2]);
                       if (res<res_bef || res<res_aft) continue;
+
+                      // CHUNK MAP MUST BE ATOMIC SO THAT WE NEVER GET AN IN-BETWEEN INDEX
+                      // DOUBLE-CHECKED LOCKING IDIOM
+                      if (s_idx == -2){ // CHUNK NOT ALLOCATED
+                        // If slow use lock per chunk, and coarse lock within if statement
+                        //int32_t chunk_idx = get_chunk_idx(slot);
+                        //omp_set_lock(&chunk_locks[chunk_idx]); 
+                        omp_set_lock(&chunk_map_lock); 
+                        if (get_chunk_loc(slot)==-2){
+                          allocate_chunk(get_chunk_idx(slot));
+                        }
+                        omp_unset_lock(&chunk_map_lock);
+                        //omp_unset_lock(&chunk_locks[chunk_idx]); 
+                        s_idx = get_idx(slot);
+                      }
+
                       omp_set_lock(&lock_grid[s_idx]);
                       if (res!=0.f && scalar_field[s_idx]==0.f) {
                         local_occupied.push_back(slot);
