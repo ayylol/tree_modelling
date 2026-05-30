@@ -23,12 +23,8 @@
 
 class Strands {
 public:
-    enum StrandType {
-        Structure,
-        Texture
-    };
-    Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, nlohmann::json options, bool add_textures = true, bool is_strangler = false);
-    Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, StrandType type = Structure) const;
+    Strands(const Skeleton &tree, Grid &grid, nlohmann::json options, bool add_textures = true, bool is_strangler = false);
+    Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, bool structure = true) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
     Mesh<Vertex> visualize_searchpoint(float strand) const;
     Mesh<Vertex> visualize_keypoints(float strand) const;
@@ -36,7 +32,7 @@ public:
     int add_stage();
 
 private:
-    void add_strand(size_t shoot_index, int age, StrandType type = Structure);
+    void add_strand(size_t shoot_index, int age);
     size_t match_root(glm::vec3 pos, glm::mat4 frame);
     std::pair<size_t,size_t> match_root_all(glm::vec3 pos);
     //Implicit &evalfunc;
@@ -68,7 +64,6 @@ private:
     std::vector<Keypoints> keypoints;
 
     Grid &grid;
-    Grid &texture_grid;
     KDTree root_kdtree;
     std::vector<std::vector<std::pair<int32_t, int32_t>>> root_2d_map;
     std::vector<glm::vec2> root_2d;

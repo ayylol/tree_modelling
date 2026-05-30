@@ -130,7 +130,6 @@ int main(int argc, char *argv[]) {
     // Grid
     STOPWATCH("Initializing Grid",
             Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
-            Grid texture_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
             );
     // Make camera according to grid
     cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
@@ -168,11 +167,11 @@ int main(int argc, char *argv[]) {
 
     // Tree detail
     STOPWATCH("Adding Strands",
-        Strands detail(tree, gr, texture_grid, opt_data, !is_strangler);
+        Strands detail(tree, gr, opt_data, !is_strangler);
         detail.add_stage();
         );
     STOPWATCH("Adding Strands",
-        Strands strangler(tree, gr, texture_grid, strangler_opt_data, false, true);
+        Strands strangler(tree, gr, strangler_opt_data, false, true);
         if (is_strangler){
           strangler.add_stage();
         }
@@ -184,7 +183,7 @@ int main(int argc, char *argv[]) {
     //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
     STOPWATCH("Getting Strand", 
         Mesh strands_geom = detail.get_mesh();
-        Mesh tstrands_geom = detail.get_mesh(0.f,1.f,Strands::Texture);
+        Mesh tstrands_geom = detail.get_mesh(0.f,1.f,false);
         Mesh node_vis = detail.visualize_node(0,0);
         Mesh searchpoint_vis = detail.visualize_searchpoint(0);
         Mesh keypoint_vis = detail.visualize_keypoints(0);
@@ -196,11 +195,11 @@ int main(int argc, char *argv[]) {
     Mesh<Vertex> strangler_geom = Mesh(std::vector<Vertex>(), std::vector<GLuint>());
     if (!interactive){
       STOPWATCH("Polygonizing Isosurface", 
-          tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
+          tree_geom=gr.get_occupied_geom(surface_val);
       );
       if(is_strangler){
         STOPWATCH("Polygonizing Isosurface", 
-            strangler_geom=texture_grid.get_occupied_geom(surface_val, texture_grid);
+            strangler_geom=gr.get_occupied_geom(surface_val, Grid::GridType::Texture);
         );
       }
     }
@@ -237,7 +236,7 @@ int main(int argc, char *argv[]) {
           STOPWATCH("Adding Strands",
               if (detail.add_stage()>=0){
               strands_geom=detail.get_mesh();
-              tstrands_geom=detail.get_mesh(0.f,1.f,Strands::Texture);
+              tstrands_geom=detail.get_mesh(0.f,1.f,false);
               geom_generated=false;
               }
           );
@@ -246,11 +245,11 @@ int main(int argc, char *argv[]) {
         if (gen_geom){
           if (!geom_generated){
             STOPWATCH("Polygonizing Isosurface", 
-                tree_geom=gr.get_occupied_geom(surface_val, texture_grid);
+                tree_geom=gr.get_occupied_geom(surface_val);
             );
             if (is_strangler){
               STOPWATCH("Polygonizing Isosurface", 
-                  strangler_geom=texture_grid.get_occupied_geom(surface_val, texture_grid);
+                  strangler_geom=gr.get_occupied_geom(surface_val, Grid::Texture);
               );
             }
           }

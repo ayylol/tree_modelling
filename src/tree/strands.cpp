@@ -58,10 +58,9 @@ std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3> &in,
 std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
 
-Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid, 
+Strands::Strands(const Skeleton &tree, Grid &grid, 
     nlohmann::json options, bool add_textures, bool is_strangler)
-    : grid(grid), texture_grid(texture_grid),
-    add_textures(add_textures), is_strangler(is_strangler), tree(tree) {
+    : grid(grid), add_textures(add_textures), is_strangler(is_strangler), tree(tree) {
   // Set up root & shoot paths
   for (size_t i = 0; i < tree.leafs_size(); i++) {
     std::vector<glm::mat4> shoot_path = tree.get_strand(i, Skeleton::LEAF);
@@ -75,7 +74,10 @@ Strands::Strands(const Skeleton &tree, Grid &grid, Grid &texture_grid,
       size_t j = root_frame.size() - 1 - i;
       std::swap(root_frame[i], root_frame[j]);
     }
-    root_frames.push_back(root_frame);
+    // Prune root paths
+    if (root_frame.size()>350){
+      root_frames.push_back(root_frame);
+    }
   }
   std::unordered_map<glm::vec2, int32_t> temp_root_map;
   root_2d_map = std::vector<std::vector<std::pair<int32_t, int32_t>>>();
@@ -233,7 +235,7 @@ Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
   }
   return Mesh(vertices, indices);
 }
-Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
+Mesh<Vertex> Strands::get_mesh(float start, float end, bool structure) const {
   start = std::max(0.0f, start);
   end = std::clamp(end, start, 1.f);
   std::vector<Vertex> vertices;
@@ -245,8 +247,8 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, StrandType type) const {
   glm::vec3 brown(.44, .23, .13); // Placed Earlier
   // float start = 0.;
   // float end = 1.0;
-  auto &strand_list = type == Structure ? strands : texture_strands;
-  if (type == Texture) {
+  auto &strand_list = structure ? strands : texture_strands;
+  if (!structure) {
     blue = glm::vec3(0, 1, 0);
     red = glm::vec3(0, 1, 0);
   }
@@ -307,7 +309,7 @@ void Strands::add_strands(unsigned int amount) {
 }
 
 // THE ALGORITHM THAT IMPLEMENTS STRAND VOXEL AUTOMATA
-void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
+void Strands::add_strand(size_t shoot_index, int age) {
   if (shoot_index >= shoot_frames.size())
     return;
   // Set up strand
@@ -363,19 +365,10 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
   bool target_on_root = false;
   bool done = false;
   size_t inflection = 0;
-  switch (type) {
-  case Structure:
-    method = CanonDir;
-    // method=LocalPosMatching;
-    break;
-  case Texture:
-    method = TextureExt;
-    // method=PTFIso;
-    // method=LocalPosMatching;
-    break;
-  }
   int transition_node = 0;
   int num_extensions;
+  // difference between root closest and target when in transition zone
+  float idx_diff=0.f; 
 
   while (!done) {
     if (on_root) {
@@ -453,6 +446,9 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
                        shoot_path->size() - 1);
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, root_path->size() - 1);
+      if (target.index>root_closest.index){
+        idx_diff=std::max(0.f,(float)(target.index - root_closest.index));
+      }
       if (shoot_closest.travelled <
           root_closest.travelled) { // note travelled here is dist2 between
                                     // closest and node
@@ -473,27 +469,18 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
 
     // Binary search for final extension
     if (target_on_root) {
-      _interp += searchpoint_step;
-      _interp_bias += bias_step; 
-      _interp = std::min(_interp, 1.f);
-      _interp_bias = std::min(_interp_bias, 1.f);
-      TargetResult root_closest =
-          find_closest(strand.back(), *root_path, 0, root_path->size() - 1);
+      _interp = std::min(_interp+searchpoint_step,1.f);
+      _interp_bias = std::min(_interp_bias+bias_step,1.f); 
     } else {
       _interp = 0.f;
       _interp_bias = 0.f;
     }
     node_info.back().back().closest=frame_position(next.frame);
     node_info.back().back().searchpoint=frame_position(next.frame);
-    if (target_on_root && !on_root) {
+    if (target_on_root && !on_root) { // transition zone
       TargetResult root_closest =
           find_closest(strand.back(), *root_path, 0, target.index);
       float alpha = _interp;
-      /*
-      // Using root closest
-      glm::vec3 bin_point = frame_position(root_closest.frame) * alpha +
-                            frame_position(next.frame) * (1.f - alpha);
-                            */
       // Using target
       glm::vec3 bin_point = frame_position(target.frame) * alpha +
                             frame_position(next.frame) * (1.f - alpha);
@@ -503,11 +490,22 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
       node_info.back().back().searchpoint=bin_point;
       node_info.back().back().closest2=frame_position(root_closest.frame);
       node_info.back().back().transition=true;
-    } else {
+    } else if (!on_root) { // shoot
       strand[strand.size() - 1] = move_extension(
           strand.back(), frame_position(next.frame), reject_iso);
+    } else { // root
+      int bin_point_idx=std::min(next.index+(int)(idx_diff), root_path->size()-1);
+      assert(bin_point_idx>=next.index && bin_point_idx <=root_path->size()-1);
+      glm::vec3 bin_point=frame_position((*root_path)[bin_point_idx]);
+      strand[strand.size() - 1] = move_extension(
+          strand.back(), bin_point, reject_iso);
+
+      node_info.back().back().searchpoint=bin_point;
+      idx_diff=idx_diff-0.75f;
+      if (idx_diff <= 0.f) idx_diff=0.f;
     }
-    /// end of binary search
+    // end of binary search
+    
     // Normalize extension
     strand[strand.size()-1] = strand[strand.size()-2]+
       glm::normalize(strand[strand.size()-1]-strand[strand.size() - 2])*segment_length;
@@ -530,41 +528,28 @@ void Strands::add_strand(size_t shoot_index, int age, StrandType type) {
     if (on_root) root_nodes++;
     if (!on_root && target_on_root) transition_nodes++;
   }
+
   // Occupy strand path
   if (strand.size() <= 2)
     return;
   float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-  if (type == Structure){
-    // Smooth
-    strand = smooth(strand, sm_iter, sm_peak, sm_min, inflection * sm_start,
-                    inflection,
-                    inflection + ((strand.size() - inflection - 1) * sm_end));
-    strands.push_back(strand);
-    assert(strand.size() == node_info.back().size());
-    assert(strands.size() == node_info.size());
-    if (add_textures && r < tex_chance) {
-      // 13_TODO: REMOVE TEXTURE GRID
-      texture_strands.push_back(strand);
-      texture_grid.fill_path(
-          strands.size(), 
-          strand, tex_max_val, 
-          tex_max_range, tex_shoot_range, tex_root_range, 
-          inflection);
-    }
-    Grid &grid_to_add = is_strangler ? texture_grid : grid;
-    grid_to_add.fill_path(strands.size(), strand, max_val, 
-        base_max_range, leaf_min_range, root_min_range, 
-          inflection);
-  }
-  // FIXME: CHANGE MARKER
-  else if (type == Texture){
+  strand = smooth(strand, sm_iter, sm_peak, sm_min, inflection * sm_start,
+                  inflection,
+                  inflection + ((strand.size() - inflection - 1) * sm_end));
+  strands.push_back(strand);
+  assert(strand.size() == node_info.back().size());
+  assert(strands.size() == node_info.size());
+  if (add_textures && r < tex_chance) {
     texture_strands.push_back(strand);
-    texture_grid.fill_path(
-        strands.size(), 
-        strand, tex_max_val, 
+    grid.fill_path( strands.size(), strand, tex_max_val, 
         tex_max_range, tex_shoot_range, tex_root_range, 
-        inflection);
+        inflection, Grid::GridType::Texture);
   }
+  enum Grid::GridType grid_to_add = is_strangler ? 
+    Grid::GridType::Texture:Grid::GridType::Structure;
+  grid.fill_path(strands.size(), strand, max_val, 
+      base_max_range, leaf_min_range, root_min_range, 
+        inflection, grid_to_add);
 }
 
 // Strand creation helper functions

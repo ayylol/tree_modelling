@@ -34,16 +34,20 @@ public:
     glm::vec3 get_backbottomleft() { return back_bottom_left; }
 
     // Implicit Filling
-    //void fill_path(uint32_t strand_id, std::vector<glm::vec3> path, float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
+    enum GridType {
+      Structure,
+      Texture
+    };
     void fill_path(uint32_t strand_id, const std::vector<glm::vec3> &path, 
-        float max_val, float max_b, float shoot_b, float root_b, size_t inflection_point);
+        float max_val, float max_b, float shoot_b, float root_b, 
+        size_t inflection_point, enum GridType gridType=GridType::Structure);
     void fill_line(int32_t segment_index, 
         const std::vector<glm::vec3> &path, 
         const std::vector<MetaBalls>& potential_funcs, 
-        std::vector<glm::ivec3> &occupied);
+        std::vector<glm::ivec3> &occupied, enum GridType);
 
-    float eval_pos(glm::vec3 pos) const;
-    float lazy_eval(glm::ivec3 slot) const;
+    float eval_pos(glm::vec3 pos, enum GridType gridType=GridType::Structure) const;
+    float lazy_eval(glm::ivec3 slot, enum GridType gridType=GridType::Structure) const;
     glm::vec3 lazy_gradient(glm::ivec3 slot);
     glm::vec3 lazy_norm(glm::ivec3 slot);
     glm::vec3 eval_norm(glm::vec3 pos, float step_size=0.0005f) const;
@@ -58,8 +62,9 @@ public:
     Mesh<VertFlat> get_grid_geom() const;
     Mesh<VertFlat> get_bound_geom() const;
     Mesh<Vertex> get_occupied_voxels(float threshold);
-    //Mesh<Vertex> get_occupied_geom(float threshold, Grid& texture_space) const;
-    Mesh<Vertex> get_occupied_geom(float threshold,Grid& texture_space, std::pair<glm::vec3,glm::vec3>vis_bounds= {glm::vec3(),glm::vec3()});
+    Mesh<Vertex> get_occupied_geom(float threshold, 
+        enum GridType gridType=GridType::Structure, 
+        std::pair<glm::vec3,glm::vec3>vis_bounds= {glm::vec3(),glm::vec3()});
     Mesh<VertFlat> get_occupied_geom_points(float threshold);
     Mesh<VertFlat> get_normals_geom(float threshold);
     void calc_data();
@@ -72,6 +77,7 @@ private:
 
     int32_t get_idx(glm::ivec3 v) const;
     std::vector<float> scalar_field;
+    std::vector<float> scalar_field2;
     std::vector<omp_lock_t> lock_grid;
 
     void allocate_chunk(int32_t chunk_idx);
@@ -81,7 +87,6 @@ private:
     omp_lock_t chunk_map_lock;
     std::vector<int32_t> chunk_map;
     int32_t next_chunk=0;
-    std::vector<omp_lock_t> chunk_locks;
     glm::ivec3 chunk_d;
 
     std::vector<glm::ivec3> occupied;
@@ -103,8 +108,8 @@ private:
     };
   struct Sample{
     glm::vec3 pos;
-    float val;
     glm::vec3 norm;
+    float val;
     float col_val;
   };
   using GridCell = std::array<Sample,8>;
