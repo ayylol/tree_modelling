@@ -1,4 +1,6 @@
 {
+"interactive_mode":true,
+"save_mesh":false,
 "cameras":[
     {"dist":2.068920612335205,
     "focus":[0.15332913398742676, 0.368491530418396, 0.01678326725959778],
@@ -6,11 +8,6 @@
     "theta":4.041592121124268}
 ],
 "grid_scale":1.5,
-"implicit":{
-    "max_val":3.0,
-    "range":0.02,
-    "type":"metaballs"
-},
 "mesh_iso":0.3,
 "tree_file":"shoot.txt",
 "root_file":"root.txt",
@@ -33,20 +30,16 @@
     "sm_start": 0.8,
     "sm_end": 0.3,
     "searchpoint_step":0.1,
-    "frame_eval":8.0,
-    "local_eval":4.0,
-    "iso_eval":0.0,
-    "local_spread":0.08,
     "max_angle":160,
-    "method":"canon_iso",
     "num_trials":500,
     "reject_iso":8.0,
-    "sectorality":true,
     "segment_length":0.02,
-    "target_iso":4.626,
     "root_angle_node": 0.5,
     "bias_amount": 2.0,
     "bias_step": 0.1,
+    "root_prune_size": 40,
+    "root_searchpoint_delta":3.0,
+    "start_offset":10,
     "texture":{
         "max_val": 10.0,
         "base_max_range": 0.026,

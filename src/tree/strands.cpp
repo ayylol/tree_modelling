@@ -61,6 +61,9 @@ std::default_random_engine
 Strands::Strands(const Skeleton &tree, Grid &grid, 
     nlohmann::json options, bool add_textures, bool is_strangler)
     : grid(grid), add_textures(add_textures), is_strangler(is_strangler), tree(tree) {
+
+  auto strand_options = options.at("strands");
+  int root_prune_size = strand_options.at("root_prune_size");
   // Set up root & shoot paths
   for (size_t i = 0; i < tree.leafs_size(); i++) {
     std::vector<glm::mat4> shoot_path = tree.get_strand(i, Skeleton::LEAF);
@@ -75,7 +78,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
       std::swap(root_frame[i], root_frame[j]);
     }
     // Prune root paths
-    if (root_frame.size()>350){
+    if (root_frame.size()>root_prune_size){
       root_frames.push_back(root_frame);
     }
   }
@@ -95,8 +98,6 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
     }
   }
   root_kdtree = KDTree(std::make_shared<std::vector<glm::vec2>>(root_2d));
-  // Set strand options
-  auto strand_options = options.at("strands");
   num_strands = tree.leafs_size();
   if (strand_options.contains("num_abs")) {
     num_strands = strand_options.at("num_abs");
@@ -110,9 +111,6 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
   }
   strands_per_stage = num_strands / stages_left;
 
-  if (strand_options.contains("sectorality")) {
-    select_method = strand_options.at("sectorality") ? WithAngle : AtRandom;
-  }
   max_val = strand_options.at("max_val");
   segment_length = strand_options.at("segment_length");
   num_trials = strand_options.at("num_trials");
@@ -133,6 +131,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
   // Transition zone
   searchpoint_step = strand_options.at("searchpoint_step");
   bias_step = strand_options.at("bias_step");
+  root_searchpoint_delta = strand_options.at("root_searchpoint_delta");
   // Smooth
   sm_iter = strand_options.at("sm_iter");
   sm_min = strand_options.at("sm_min");
@@ -141,15 +140,6 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
   sm_end = std::clamp((float)strand_options.at("sm_end"), 0.f, 1.f);
   //
   reject_iso = strand_options.at("reject_iso");
-  target_iso = strand_options.at("target_iso");
-  iso_eval = strand_options.at("iso_eval");
-  local_eval = strand_options.at("local_eval");
-  frame_eval = strand_options.at("frame_eval");
-  float total_eval_weight = iso_eval + local_eval + frame_eval;
-  iso_eval /= total_eval_weight;
-  local_eval /= total_eval_weight;
-  frame_eval /= total_eval_weight;
-  local_spread = strand_options.at("local_spread");
   bias_amount = strand_options.at("bias_amount");
   // Implicit Vals
   base_max_range = strand_options.at("base_max_range");
@@ -170,6 +160,7 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
     angle_vec = glm::normalize(angle_vec);
     root_vecs.push_back(angle_vec);
   }
+  start_offset = strand_options.at("start_offset");
   // Texture vars
   if (strand_options.contains("texture")) {
     auto tex_options = strand_options.at("texture");
@@ -181,7 +172,6 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
     tex_max_chance = tex_options.at("chance_max");
   }
   tex_chance_step = tex_max_chance / (num_strands - tex_chance_start);
-  //add_stage();
 }
 
 Mesh<Vertex> Strands::visualize_keypoints(float strand) const {
@@ -320,7 +310,7 @@ void Strands::add_strand(size_t shoot_index, int age) {
   // Binary search for start index
   // use int so it can go negative (will be clamped)
   int i_closest_index;
-  size_t a = 0, b = shoot_path->size() - 20;
+  int a = 0, b = shoot_path->size() - 20;
   int root_nodes=0;
   int transition_nodes=0;
   while (b - a > 5) {
@@ -332,13 +322,8 @@ void Strands::add_strand(size_t shoot_index, int age) {
     }
   }
 
-  // TODO: make the growth amount a parameter
-  // How far away from the first free point is considered free?
-  const int bin_search_free_dist = 20;
-  if (i_closest_index > bin_search_free_dist) i_closest_index -= bin_search_free_dist;
-  size_t closest_index = (size_t) std::clamp(i_closest_index, 
-      0, std::max(0, (int)shoot_path->size() - bin_search_free_dist));
-
+  size_t closest_index = std::clamp(
+      i_closest_index-start_offset, 0, (int)shoot_path->size());
   //
   
   glm::mat4 last_closest = (*path)[closest_index];
@@ -501,7 +486,7 @@ void Strands::add_strand(size_t shoot_index, int age) {
           strand.back(), bin_point, reject_iso);
 
       node_info.back().back().searchpoint=bin_point;
-      idx_diff=idx_diff-0.75f;
+      idx_diff=idx_diff-root_searchpoint_delta;
       if (idx_diff <= 0.f) idx_diff=0.f;
     }
     // end of binary search

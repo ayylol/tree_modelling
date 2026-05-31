@@ -1,17 +1,16 @@
 {
-"_interactive_mode":false,
+"tree_file":"shoot.txt",
+"root_file":"root.txt",
+"image_path":"dragonTree",
+
+"interactive_mode":true,
+"save_mesh":false,
 "cameras":[
   {"dist":2.5671567916870117,"focus":[0.020777523517608643,0.33320343494415283,-0.00437849760055542],"phi":-0.04999999329447746,"theta":3.141592502593994}
 ],
-"grid_scale":1.0,
-"implicit":{
-    "max_val":3.0,
-    "range":0.02,
-    "type":"metaballs"
-},
+
+"grid_scale":0.8,
 "mesh_iso":0.3,
-"tree_file":"shoot.txt",
-"root_file":"root.txt",
 "strands":{
     "num_abs": 2200,
     "intermediate_stages": 1,
@@ -32,20 +31,16 @@
     "sm_peak": 0.15,
     "sm_start": 0.8,
     "sm_end": 0.3,
-    "frame_eval":8.0,
-    "local_eval":4.0,
-    "iso_eval":0.0,
-    "local_spread":0.08,
-    "max_angle":160,
-    "method":"canon_iso",
-    "num_trials":500,
+    "max_angle":90,
+    "num_trials":100,
     "reject_iso":8.0,
-    "sectorality":true,
     "segment_length":0.02,
-    "target_iso":4.626,
     "root_angle_node": 0.5,
     "bias_amount": 0.7,
     "bias_step": 0.1,
+    "root_prune_size": 40,
+    "root_searchpoint_delta":3.0,
+    "start_offset":10,
     "texture":{
         "max_val": 10.0,
         "base_max_range": 0.0154,
@@ -54,6 +49,6 @@
         "chance_start":0.4,
         "chance_max":0.70
     }
-},
-"image_path":"dragonTree"
+}
+
 }

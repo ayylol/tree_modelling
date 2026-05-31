@@ -49,7 +49,7 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
     int32_t chunk_sz_3 = chunk_sz*chunk_sz*chunk_sz;
     int32_t dim_sz=dimensions.x*dimensions.y*dimensions.z;
-    float compress_factor = 0.1;
+    float compress_factor = 0.15;
     int32_t compressed_sz = (1+(((int32_t)(dim_sz*compress_factor)-1)/chunk_sz_3))*chunk_sz_3;
 
     scalar_field = vector<float>(compressed_sz,0.f);

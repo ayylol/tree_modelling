@@ -35,7 +35,6 @@ private:
     void add_strand(size_t shoot_index, int age);
     size_t match_root(glm::vec3 pos, glm::mat4 frame);
     std::pair<size_t,size_t> match_root_all(glm::vec3 pos);
-    //Implicit &evalfunc;
     const Skeleton& tree;
     // Change to vec3
     std::vector<std::vector<glm::mat4>> shoot_frames;
@@ -100,23 +99,12 @@ private:
     float node_observed=0.0;
     size_t strand_observed=0;
     // Strand Creation Vars
-    enum Method{
-        CanonDir,
-        LocalPosMatching,
-        HeadingDir,
-        CanonIso,
-        PTFIso,
-        CanonPTFEval,
-        PTFCanonEval,
-        TextureExt
-    } method = CanonDir;
     float segment_length;
     int num_trials;
     float max_angle;
-    float local_spread;
     float reject_iso;
     // Experimental
-    int start_node=50;
+    int start_offset=20;
     float bsearch_iso;
     float _interp;
     float _interp_bias;
@@ -134,6 +122,7 @@ private:
     //transition zone
     float searchpoint_step = 0.1f;
     float bias_step = 0.1f;
+    float root_searchpoint_delta = 1.0f;
     // Biasing
     float bias_amount = 1.0f;
     // Smoothing vars
@@ -158,11 +147,6 @@ private:
     float tex_root_range = 0.f;
     float tex_chance_step;
     /////////////////////////////
-    // Eval Weights
-    float iso_eval;
-    float target_iso;
-    float local_eval;
-    float frame_eval;
     // Root Matching Vars
     enum SelectMethod{
         AtRandom,
