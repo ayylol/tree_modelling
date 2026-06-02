@@ -23,6 +23,7 @@ glm::vec3 closest_on_line(glm::vec3 p, glm::vec3 a, glm::vec3 b);
 
 float distance(glm::vec3 p1, glm::vec3 p2);
 float distance(glm::vec3 p1, glm::vec3 a, glm::vec3 b);
+float distance2(glm::vec3 p1, glm::vec3 a, glm::vec3 b);
 float distance(glm::vec3 p, const std::vector<glm::vec3> &strand,
                std::size_t hint = 0);
 

@@ -23,8 +23,8 @@
 
 class Strands {
 public:
-    Strands(const Skeleton &tree, Grid &grid, nlohmann::json options, bool add_textures = true, bool is_strangler = false);
-    Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f, bool structure = true) const;
+    Strands(const Skeleton &tree, Grid &grid, nlohmann::json options);
+    Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
     Mesh<Vertex> visualize_searchpoint(float strand) const;
     Mesh<Vertex> visualize_keypoints(float strand) const;
@@ -137,16 +137,6 @@ private:
     float base_max_range;
     float root_min_range;
     float root_angle_node;
-    // Texture Strand Vars ///////
-    int tex_chance_start = 0;
-    float tex_max_chance = 1.0f;
-    float tex_chance = 0.0f;
-    float tex_max_val = 30.f;
-    float tex_max_range = 0.013f;
-    float tex_shoot_range = 0.001;
-    float tex_root_range = 0.f;
-    float tex_chance_step;
-    /////////////////////////////
     // Root Matching Vars
     enum SelectMethod{
         AtRandom,
@@ -161,9 +151,6 @@ private:
         NotSelected,
         AtLeastOnce,
     } select_pool = All;
-    // Strangler related vars
-    bool add_textures;
-    bool is_strangler;
 
     std::vector<size_t> root_pool;
     std::vector<glm::vec3> root_vecs;

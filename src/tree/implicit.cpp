@@ -5,24 +5,18 @@
 #include <glm/gtc/constants.hpp>
 #include <iostream>
 #include "util/geometry.h"
+#include "glm/gtx/fast_square_root.hpp"
 
 using std::pow;
 using std::sqrt;
 using std::log;
 using std::exp;
 
-float DistanceField::eval(glm::vec3 p1, glm::vec3 p2) const {
-  float d = distance(p1, p2);
-  if (d >= cutoff)
+float MetaBalls::eval(const glm::vec3 p1, const glm::vec3 l1, const glm::vec3 l2) const{
+  float d = distance2(p1, l1, l2);
+  if (d >= b*b)
     return 0.f;
-  return potential(d);
-}
-
-float DistanceField::eval(glm::vec3 p1, glm::vec3 a, glm::vec3 b) const {
-  float d = distance(p1, a, b);
-  if (d >= cutoff)
-    return 0.f;
-  return potential(d);
+  return potential(glm::fastSqrt(d));
 }
 
 float MetaBalls::potential(float distance) const {

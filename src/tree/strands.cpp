@@ -59,8 +59,8 @@ std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
 
 Strands::Strands(const Skeleton &tree, Grid &grid, 
-    nlohmann::json options, bool add_textures, bool is_strangler)
-    : grid(grid), add_textures(add_textures), is_strangler(is_strangler), tree(tree) {
+    nlohmann::json options)
+    : grid(grid), tree(tree) {
 
   auto strand_options = options.at("strands");
   int root_prune_size = strand_options.at("root_prune_size");
@@ -161,17 +161,6 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
     root_vecs.push_back(angle_vec);
   }
   start_offset = strand_options.at("start_offset");
-  // Texture vars
-  if (strand_options.contains("texture")) {
-    auto tex_options = strand_options.at("texture");
-    tex_max_val = tex_options.at("max_val");
-    tex_max_range = tex_options.at("base_max_range");
-    tex_shoot_range = tex_options.at("leaf_min_range");
-    tex_root_range = tex_options.at("root_min_range");
-    tex_chance_start = (float)tex_options.at("chance_start") * num_strands;
-    tex_max_chance = tex_options.at("chance_max");
-  }
-  tex_chance_step = tex_max_chance / (num_strands - tex_chance_start);
 }
 
 Mesh<Vertex> Strands::visualize_keypoints(float strand) const {
@@ -225,7 +214,7 @@ Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
   }
   return Mesh(vertices, indices);
 }
-Mesh<Vertex> Strands::get_mesh(float start, float end, bool structure) const {
+Mesh<Vertex> Strands::get_mesh(float start, float end) const {
   start = std::max(0.0f, start);
   end = std::clamp(end, start, 1.f);
   std::vector<Vertex> vertices;
@@ -237,16 +226,11 @@ Mesh<Vertex> Strands::get_mesh(float start, float end, bool structure) const {
   glm::vec3 brown(.44, .23, .13); // Placed Earlier
   // float start = 0.;
   // float end = 1.0;
-  auto &strand_list = structure ? strands : texture_strands;
-  if (!structure) {
-    blue = glm::vec3(0, 1, 0);
-    red = glm::vec3(0, 1, 0);
-  }
-  if (strand_list.size() != 0) {
-    for (int i = start * (strand_list.size() - 1);
-         i <= end * (strand_list.size() - 1); i++) {
-      auto path = strand_list[i];
-      float percent = ((float)i / strand_list.size() - start) / (end - start);
+  if (strands.size() != 0) {
+    for (int i = start * (strands.size() - 1);
+         i <= end * (strands.size() - 1); i++) {
+      auto path = strands[i];
+      float percent = ((float)i / strands.size() - start) / (end - start);
       //glm::vec3 color = (1-percent)*black+(percent)*brown;
       glm::vec3 color = (1-percent)*blue+(percent)*red;
       //glm::vec3 color = random_color();
@@ -291,8 +275,7 @@ void Strands::add_strands(unsigned int amount) {
       std::flush(std::cout);
     }
     strand_lookahead_max = lookahead_factor_min + laf_step*strands.size();
-    tex_chance = tex_chance_step*(strands.size()-tex_chance_start);
-    add_strand(paths[is_strangler ? 0 : i % paths.size()], i);
+    add_strand(paths[i % paths.size()], i);
   }
   std::cout << "\rTotal Strands: " << strands.size() << "/" << num_strands << std::endl;
   std::cout << std::endl;
@@ -408,16 +391,6 @@ void Strands::add_strand(size_t shoot_index, int age) {
     std::optional<glm::vec3> ext = find_extension(
         strand.back(), last_closest, target.frame, current_bias);
     if (!ext) {
-      if (is_strangler){
-        int temp_num_trials = num_trials; // The fact this is a global var is gross 
-        num_trials = 300;
-        ext = find_extension(strand.back(), last_closest, target.frame, current_bias);
-        num_trials=temp_num_trials;
-        if(!ext){
-          inflection = strand.size()/2;
-          done = true;
-        }
-      }
       ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
     }
     strand.push_back(ext.value());
@@ -524,17 +497,8 @@ void Strands::add_strand(size_t shoot_index, int age) {
   strands.push_back(strand);
   assert(strand.size() == node_info.back().size());
   assert(strands.size() == node_info.size());
-  if (add_textures && r < tex_chance) {
-    texture_strands.push_back(strand);
-    grid.fill_path( strands.size(), strand, tex_max_val, 
-        tex_max_range, tex_shoot_range, tex_root_range, 
-        inflection, Grid::GridType::Texture);
-  }
-  enum Grid::GridType grid_to_add = is_strangler ? 
-    Grid::GridType::Texture:Grid::GridType::Structure;
   grid.fill_path(strands.size(), strand, max_val, 
-      base_max_range, leaf_min_range, root_min_range, 
-        inflection, grid_to_add);
+      base_max_range, leaf_min_range, root_min_range, inflection);
 }
 
 // Strand creation helper functions

@@ -49,7 +49,7 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     dimensions = glm::ceil((front_top_right - back_bottom_left) / scale);
     int32_t chunk_sz_3 = chunk_sz*chunk_sz*chunk_sz;
     int32_t dim_sz=dimensions.x*dimensions.y*dimensions.z;
-    float compress_factor = 0.15;
+    float compress_factor = 0.1;
     int32_t compressed_sz = (1+(((int32_t)(dim_sz*compress_factor)-1)/chunk_sz_3))*chunk_sz_3;
 
     scalar_field = vector<float>(compressed_sz,0.f);
@@ -76,11 +76,11 @@ void Grid::allocate_chunk(int32_t chunk_idx){
   next_chunk+=chunk_sz*chunk_sz*chunk_sz;
 }
 // ASSUMES CHUNK EXIST!!!
-int32_t Grid::get_chunk_idx(glm::ivec3 p) const {
-  glm::ivec3 chunk = p/chunk_sz;
+int32_t Grid::get_chunk_idx(const glm::ivec3 p) const {
+  const glm::ivec3 chunk = p/chunk_sz;
   return chunk.x + chunk_d.x*chunk.y + chunk_d.x*chunk_d.y*chunk.z;
 }
-int32_t Grid::get_chunk_loc(glm::ivec3 p) const {
+int32_t Grid::get_chunk_loc(const glm::ivec3 p) const {
   return chunk_map[get_chunk_idx(p)];
 }
 int32_t Grid::get_idx(glm::ivec3 v) const {
@@ -106,7 +106,7 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
           grid_cell.z >= 0 && grid_cell.z < dimensions.z;
 }
 
-float Grid::eval_pos(glm::vec3 pos, enum GridType gridType) const {
+float Grid::eval_pos(glm::vec3 pos) const {
   //return lazy_eval(pos_to_grid(pos));
   glm::ivec3 bbl_cell = pos_to_grid(pos);
   const static ivec3 cell_order[8] = {
@@ -115,7 +115,7 @@ float Grid::eval_pos(glm::vec3 pos, enum GridType gridType) const {
   };
   float vals[8];
   for (int i=0; i<8; i++){
-    vals[i]=lazy_eval(bbl_cell+cell_order[i], gridType);
+    vals[i]=lazy_eval(bbl_cell+cell_order[i]);
   }
   glm::vec3 bbl_pos=grid_to_pos(bbl_cell+cell_order[0]);
   glm::vec3 ftr_pos=grid_to_pos(bbl_cell+cell_order[7]);
@@ -137,12 +137,10 @@ float Grid::eval_pos(glm::vec3 pos, enum GridType gridType) const {
   return z0;
 }
 
-float Grid::lazy_eval(glm::ivec3 slot, enum GridType gridType) const{
+float Grid::lazy_eval(glm::ivec3 slot) const{
   int32_t idx = get_idx(slot);
   if (idx<0) return 0.f;
-  const std::vector<float>& grid=
-    gridType==GridType::Structure?scalar_field:scalar_field2;
-  return grid[idx];
+  return scalar_field[idx];
 }
 
 glm::vec3 Grid::lazy_gradient(ivec3 slot){ 
@@ -175,16 +173,15 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
 void Grid::fill_line(int32_t segment_index, 
     const std::vector<glm::vec3> &path, 
     const std::vector<MetaBalls>& potential_funcs, 
-    std::vector<glm::ivec3> &local_occupied, enum GridType gridType) {
-    std::vector<float>& grid=gridType==GridType::Structure?scalar_field:scalar_field2;
+    std::vector<glm::ivec3> &local_occupied) {
     MetaBalls implicit = potential_funcs[segment_index];
     glm::vec3 p1 = path[segment_index];
     glm::vec3 p2 = path[segment_index+1];
     vec3 diff = p2 - p1;
     vec3 dir = glm::normalize(diff);
     vec3 variance = glm::abs(diff);
-    vec3 segment_start = p1 - dir * implicit.cutoff;
-    vec3 segment_end = p2 + dir * implicit.cutoff;
+    vec3 segment_start = p1 - dir * implicit.get_cutoff();
+    vec3 segment_end = p2 + dir * implicit.get_cutoff();
 
     int main_axis = 0;
     if (variance.y > variance.x && variance.y > variance.z) {
@@ -198,7 +195,7 @@ void Grid::fill_line(int32_t segment_index,
     axis1_dir[axis1] = 1.0;
     glm::vec3 axis2_dir = glm::vec3(0,0,0);
     axis2_dir[axis2] = 1.0;
-    int n = std::ceil((implicit.cutoff) / scale);
+    int n = std::ceil((implicit.get_cutoff()) / scale);
     int d1 = n,
         d2 = n;
 
@@ -240,10 +237,10 @@ void Grid::fill_line(int32_t segment_index,
                       }
 
                       omp_set_lock(&lock_grid[s_idx]);
-                      if (res!=0.f && grid[s_idx]==0.f) {
+                      if (res!=0.f && scalar_field[s_idx]==0.f) {
                         local_occupied.push_back(slot);
                       }
-                      grid[s_idx]+=res;
+                      scalar_field[s_idx]+=res;
                       omp_unset_lock(&lock_grid[s_idx]);
                     }
                 }
@@ -278,7 +275,7 @@ void Grid::fill_path(
     uint32_t strand_id, const std::vector<glm::vec3> &path, 
     float max_val, 
     float max_b, float shoot_b, float root_b, 
-    size_t inflection_point, enum GridType gridType){
+    size_t inflection_point){
   std::vector<std::vector<glm::ivec3>> local_occupied(path.size()-1);
   std::vector<MetaBalls> potential_funcs;
   potential_funcs.reserve(path.size()-1);
@@ -296,10 +293,9 @@ void Grid::fill_path(
 
   #pragma omp parallel for
   for (int i = 0; i<path.size()-1; i++){
-    fill_line(i, path, potential_funcs, local_occupied[i], gridType);
+    fill_line(i, path, potential_funcs, local_occupied[i]);
   }
 
-  if (gridType==GridType::Texture) return;
   for (auto list : local_occupied){
     for (auto occupied_slot : list){
       occupied.push_back(occupied_slot);
@@ -479,7 +475,7 @@ Mesh<Vertex> Grid::get_occupied_voxels(float threshold){
     return Mesh(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_occupied_geom(float threshold, enum GridType gridType, std::pair<glm::vec3,glm::vec3>vis_bounds) {
+Mesh<Vertex> Grid::get_occupied_geom(float threshold, std::pair<glm::vec3,glm::vec3>vis_bounds) {
     using namespace mc;
     if (vis_bounds.first==glm::vec3() && vis_bounds.second==glm::vec3()){
         vis_bounds.first = back_bottom_left;
@@ -497,45 +493,25 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold, enum GridType gridType, st
                 voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
             if (voxel != occupied_slot && (!is_in_grid(voxel)||lazy_eval(voxel) >= threshold))continue;
 
-            ivec3 slots[8]={
-                voxel+cell_order[0],
-                voxel+cell_order[1],
-                voxel+cell_order[2],
-                voxel+cell_order[3],
-                voxel+cell_order[4],
-                voxel+cell_order[5],
-                voxel+cell_order[6],
-                voxel+cell_order[7],
-            };
-            vec3 cell_pos[8]={
-                grid_to_pos(slots[0]),
-                grid_to_pos(slots[1]),
-                grid_to_pos(slots[2]),
-                grid_to_pos(slots[3]),
-                grid_to_pos(slots[4]),
-                grid_to_pos(slots[5]),
-                grid_to_pos(slots[6]),
-                grid_to_pos(slots[7]),
-            };
-            if (lazy_eval(slots[0]) >= threshold &&
-                lazy_eval(slots[1]) >= threshold &&
-                lazy_eval(slots[2]) >= threshold &&
-                lazy_eval(slots[3]) >= threshold &&
-                lazy_eval(slots[4]) >= threshold &&
-                lazy_eval(slots[5]) >= threshold &&
-                lazy_eval(slots[6]) >= threshold &&
-                lazy_eval(slots[7]) >= threshold) {
-                    continue;
+            ivec3 slots[8];
+            vec3 cell_pos[8];
+            for (int i=0; i<8; i++){
+                slots[i]=voxel+cell_order[i];
+                cell_pos[i]=grid_to_pos(slots[i]);
             }
+
+            if (std::all_of(slots, slots+8, [&](const ivec3 slot){
+                  return lazy_eval(slot) >= threshold;})) continue;
+
             GridCell cell = {{
-                { .pos=cell_pos[0],.norm=lazy_norm(slots[0]),.val=lazy_eval(slots[0]),.col_val=lazy_eval(slots[0], GridType::Texture) },
-                { .pos=cell_pos[1],.norm=lazy_norm(slots[1]),.val=lazy_eval(slots[1]),.col_val=lazy_eval(slots[1], GridType::Texture) },
-                { .pos=cell_pos[2],.norm=lazy_norm(slots[2]),.val=lazy_eval(slots[2]),.col_val=lazy_eval(slots[2], GridType::Texture) },
-                { .pos=cell_pos[3],.norm=lazy_norm(slots[3]),.val=lazy_eval(slots[3]),.col_val=lazy_eval(slots[3], GridType::Texture) },
-                { .pos=cell_pos[4],.norm=lazy_norm(slots[4]),.val=lazy_eval(slots[4]),.col_val=lazy_eval(slots[4], GridType::Texture) },
-                { .pos=cell_pos[5],.norm=lazy_norm(slots[5]),.val=lazy_eval(slots[5]),.col_val=lazy_eval(slots[5], GridType::Texture) },
-                { .pos=cell_pos[6],.norm=lazy_norm(slots[6]),.val=lazy_eval(slots[6]),.col_val=lazy_eval(slots[6], GridType::Texture) },
-                { .pos=cell_pos[7],.norm=lazy_norm(slots[7]),.val=lazy_eval(slots[7]),.col_val=lazy_eval(slots[7], GridType::Texture) },
+                { .pos=cell_pos[0],.norm=lazy_norm(slots[0]),.val=lazy_eval(slots[0])},
+                { .pos=cell_pos[1],.norm=lazy_norm(slots[1]),.val=lazy_eval(slots[1])},
+                { .pos=cell_pos[2],.norm=lazy_norm(slots[2]),.val=lazy_eval(slots[2])},
+                { .pos=cell_pos[3],.norm=lazy_norm(slots[3]),.val=lazy_eval(slots[3])},
+                { .pos=cell_pos[4],.norm=lazy_norm(slots[4]),.val=lazy_eval(slots[4])},
+                { .pos=cell_pos[5],.norm=lazy_norm(slots[5]),.val=lazy_eval(slots[5])},
+                { .pos=cell_pos[6],.norm=lazy_norm(slots[6]),.val=lazy_eval(slots[6])},
+                { .pos=cell_pos[7],.norm=lazy_norm(slots[7]),.val=lazy_eval(slots[7])},
             }};
             polygonize(cell, threshold, verts, indices);
         }}}
@@ -668,33 +644,23 @@ void Grid::polygonize(const GridCell& cell, float threshold, vector<Vertex>& ver
     }
 }
 Vertex Grid::vertex_interp(float threshold, const Grid::Sample& a, const Grid::Sample& b) const{
-    vec3 col1(0,0,0);
-    //vec3 col0(.4,.2,.2);
     vec3 col0(.25,.25,.25);
-    float min_col_val = 0.0f;
-    float max_col_val = 15.0f;
     Vertex v = {vec3(),vec3(),vec3()};
-    float col_factor;
     if (std::abs(threshold - a.val) < 0.00001) {
         v.position = a.pos;
-        col_factor = a.col_val;
     } 
     else if (std::abs(threshold - b.val) < 0.00001) {
         v.position = b.pos;
-        col_factor = b.col_val;
     } 
     else if (std::abs(threshold - b.val) < 0.00001) {
         v.position = a.pos;
-        col_factor = a.col_val;
     }
     else {
         float mu = (threshold - a.val) / (b.val - a.val);
         v.position = a.pos + mu*(b.pos-a.pos);
         v.normal = a.norm + mu*(b.norm-a.norm);
-        col_factor = a.col_val + mu*(b.col_val-a.col_val);
     }
-    col_factor = std::clamp((col_factor-min_col_val)/(max_col_val-min_col_val),0.f,1.0f);
-    v.color = (1.0f-col_factor)*col0+col_factor*col1;
+    v.color = col0;
     return v;
 }
 

@@ -33,8 +33,8 @@
 
 
 //#define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)
-//#define SKY_COLOR glm::vec4(0,0,0,1.0)
-#define SKY_COLOR glm::vec4(1,1,1,1.0)
+#define SKY_COLOR glm::vec4(0,0,0,1.0)
+//#define SKY_COLOR glm::vec4(1,1,1,1.0)
 
 using json = nlohmann::json;
 // Default screen dimensions
@@ -87,12 +87,7 @@ float strands_start = 0.0f,
 
 int main(int argc, char *argv[]) {
     // Validating input
-    bool is_strangler;
-    if (argc == 2) {
-      is_strangler = false;
-    }else if (argc == 3) {
-      is_strangler = true;
-    } else { // Error
+    if (argc != 2) { // Error
         std::cerr << "input an options file" << std::endl;
         return 1;
     }
@@ -116,14 +111,6 @@ int main(int argc, char *argv[]) {
     json opt_data = json::parse(option_file);
     opt_data["path"]=file.remove_filename();
 
-    std::string strangler_file_path = argv[1];
-    if (is_strangler){
-      strangler_file_path = argv[2];
-    }
-    std::filesystem::path strangler_file(strangler_file_path);
-    auto strangler_option_file = std::ifstream(strangler_file);
-    json strangler_opt_data = json::parse(strangler_option_file);
-    strangler_opt_data["path"]=strangler_file.remove_filename();
     // Creating tree
     STOPWATCH("Parsing Skeleton", Skeleton tree(opt_data););
 
@@ -167,23 +154,15 @@ int main(int argc, char *argv[]) {
 
     // Tree detail
     STOPWATCH("Adding Strands",
-        Strands detail(tree, gr, opt_data, !is_strangler);
+        Strands detail(tree, gr, opt_data);
         detail.add_stage();
         );
-    STOPWATCH("Adding Strands",
-        Strands strangler(tree, gr, strangler_opt_data, false, true);
-        if (is_strangler){
-          strangler.add_stage();
-        }
-        );
-
 
     // Creating Meshes
     STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
     //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
     STOPWATCH("Getting Strand", 
         Mesh strands_geom = detail.get_mesh();
-        Mesh tstrands_geom = detail.get_mesh(0.f,1.f,false);
         Mesh node_vis = detail.visualize_node(0,0);
         Mesh searchpoint_vis = detail.visualize_searchpoint(0);
         Mesh keypoint_vis = detail.visualize_keypoints(0);
@@ -192,27 +171,16 @@ int main(int argc, char *argv[]) {
 
     float surface_val = opt_data.at("mesh_iso");
     Mesh<Vertex> tree_geom = Mesh(std::vector<Vertex>(), std::vector<GLuint>());
-    Mesh<Vertex> strangler_geom = Mesh(std::vector<Vertex>(), std::vector<GLuint>());
     if (!interactive){
       STOPWATCH("Polygonizing Isosurface", 
           tree_geom=gr.get_occupied_geom(surface_val);
       );
-      if(is_strangler){
-        STOPWATCH("Polygonizing Isosurface", 
-            strangler_geom=gr.get_occupied_geom(surface_val, Grid::GridType::Texture);
-        );
-      }
     }
 
     if (opt_data.contains("save_mesh") && opt_data.at("save_mesh") && !interactive){
         STOPWATCH("Exporting Data", 
                     save_mesh(tree_geom);
                 );
-        if(is_strangler){
-          STOPWATCH("Exporting Data", 
-                      save_mesh(strangler_geom);
-                  );
-        }
     }
 
     // GROUND PLANE
@@ -236,7 +204,6 @@ int main(int argc, char *argv[]) {
           STOPWATCH("Adding Strands",
               if (detail.add_stage()>=0){
               strands_geom=detail.get_mesh();
-              tstrands_geom=detail.get_mesh(0.f,1.f,false);
               geom_generated=false;
               }
           );
@@ -247,11 +214,6 @@ int main(int argc, char *argv[]) {
             STOPWATCH("Polygonizing Isosurface", 
                 tree_geom=gr.get_occupied_geom(surface_val);
             );
-            if (is_strangler){
-              STOPWATCH("Polygonizing Isosurface", 
-                  strangler_geom=gr.get_occupied_geom(surface_val, Grid::Texture);
-              );
-            }
           }
           gen_geom=false;
           geom_generated=true;
@@ -274,12 +236,8 @@ int main(int argc, char *argv[]) {
         // Draw the meshes here
         if (view_mesh) {
             tree_geom.draw(shader, CAMERA, GL_TRIANGLES);
-            if(is_strangler){
-              strangler_geom.draw(shader, CAMERA, GL_TRIANGLES);
-            }
         }
         if (view_volume) {
-            tstrands_geom.draw(flat_shader, CAMERA, GL_LINES);
             //volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         }
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
@@ -316,9 +274,6 @@ int main(int argc, char *argv[]) {
         if (export_mesh){
             STOPWATCH("Exporting Data", 
             save_mesh(tree_geom);
-            if (is_strangler){
-              save_mesh(strangler_geom);
-            }
             export_mesh = false;
             );
         }

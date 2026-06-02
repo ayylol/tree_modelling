@@ -4,45 +4,18 @@
 
 #include <vector>
 
-class Implicit {
+class MetaBalls {
 public:
-  float cutoff = 0.f;
-  // Point
-  virtual float eval(glm::vec3 p1, glm::vec3 p2) const = 0;
+  //float cutoff = 0.f;
+  MetaBalls(float a, float b) : a(a), b(b){};
   // LineSegment
-  virtual float eval(glm::vec3 p1, glm::vec3 a, glm::vec3 b) const = 0;
-};
+  float eval(const glm::vec3 p1, const glm::vec3 l1, const glm::vec3 l2) const;
 
-class DistanceField : public Implicit {
-public:
-  DistanceField(float cutoff) { this->cutoff = cutoff; };
-  // Point
-  float eval(glm::vec3 p1, glm::vec3 p2) const;
-  // LineSegment
-  float eval(glm::vec3 p1, glm::vec3 a, glm::vec3 b) const;
-
-private:
-  virtual float potential(float distance) const = 0;
-};
-
-class MetaBalls : public DistanceField {
-public:
-  MetaBalls(float a, float b) : DistanceField(b), a(a), b(b){};
-  MetaBalls(nlohmann::json &options)
-      : MetaBalls(options.at("max_val"),
-                  options.at("range")){};
-
-  float get_a() const {return a;}
-  float get_b() const {return b;}
+  inline float get_a() const {return a;}
+  inline float get_b() const {return b;}
+  inline float get_cutoff() const {return b;}
 private:
   float a;
   float b;
   float potential(float distance) const;
-};
-
-struct Segment{
-    glm::vec3 start;    
-    glm::vec3 end;    
-    uint32_t strand_id;
-    MetaBalls f;
 };

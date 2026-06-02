@@ -87,7 +87,10 @@ glm::vec3 closest_on_line(glm::vec3 p, glm::vec3 a, glm::vec3 b) {
 
 float distance(glm::vec3 p1, glm::vec3 p2) { return glm::distance(p1, p2); }
 float distance(glm::vec3 p1, glm::vec3 a, glm::vec3 b) {
-  return glm::distance(p1, closest_on_line(p1, a, b));
+  return glm::sqrt(distance2(p1, a, b));
+};
+float distance2(glm::vec3 p1, glm::vec3 a, glm::vec3 b) {
+  return glm::distance2(p1, closest_on_line(p1, a, b));
 };
 
 float distance(glm::vec3 position, const std::vector<glm::vec3> &strand,
