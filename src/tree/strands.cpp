@@ -56,7 +56,11 @@ std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3> &in,
 }
 
 std::default_random_engine
+    rng(0);
+/*
+std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
+    */
 
 Strands::Strands(const Skeleton &tree, Grid &grid, 
     nlohmann::json options)

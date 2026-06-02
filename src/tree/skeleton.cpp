@@ -144,8 +144,8 @@ Mesh<VertFlat> Skeleton::get_mesh_lines(){
         unsigned int explored = last_node.children_explored;
         // Add node to vertices (first time node is reached)
         if (explored==0){
-            //vertices.push_back(VertFlat{frame_position(last_node.node->frame),random_color()});
-            vertices.push_back(VertFlat{frame_position(last_node.node->frame),glm::vec3(0,0,0)});
+            vertices.push_back(VertFlat{frame_position(last_node.node->frame),random_color()});
+            //vertices.push_back(VertFlat{frame_position(last_node.node->frame),glm::vec3(0,0,0)});
             indices.push_back(last_node.parent_index);
             indices.push_back(last_node.index);
         }

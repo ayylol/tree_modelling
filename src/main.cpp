@@ -96,7 +96,8 @@ int main(int argc, char *argv[]) {
     int num_threads = 10;
     omp_set_num_threads(num_threads);
 
-    srand(time(NULL));
+    //srand(time(NULL));
+    srand(0);
 
     Stopwatch sw; // Performance stopwatch
  
