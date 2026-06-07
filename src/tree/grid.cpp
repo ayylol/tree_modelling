@@ -419,7 +419,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) {
         polygonize(cell, threshold, verts, indices);
       }
     }
-    std::cout<<"VERTS: " <<verts.size()<<" INDICES: "<<indices.size()<<std::endl;
+    std::cout<<"VERTS: " <<verts.size()<<" TRIS: "<<indices.size()/3<<std::endl;
     return Mesh<Vertex>(verts,indices);
 }
 
