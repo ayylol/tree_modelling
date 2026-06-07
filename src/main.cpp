@@ -1,4 +1,3 @@
-#include <cmath>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -16,8 +15,6 @@
 #include <nlohmann/json.hpp>
 #include <omp.h>
 
-#include "rendering/EBO.h"
-#include "rendering/VAO.h"
 #include "rendering/VBO.h"
 #include "rendering/camera.h"
 #include "rendering/mesh.h"
@@ -26,10 +23,8 @@
 #include "tree/grid.h"
 #include "tree/skeleton.h"
 #include "tree/strands.h"
-#include "tree/implicit.h"
 
 #include "util/stopwatch.h"
-#include "util/geometry.h"
 
 
 //#define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)

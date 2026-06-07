@@ -25,17 +25,13 @@ void Grid::calc_data(){
   }
   std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map.size()<<" (" << (occupied_chunks/(float)chunk_map.size())*100.f << ")"<<std::endl;
   float scalar_field_sz = scalar_field.size()*sizeof(float)/MB;
-  float scalar_field2_sz = scalar_field2.size()*sizeof(float)/MB;
   float lock_sz = lock_grid.size()*sizeof(omp_lock_t)/MB;
   float chunk_map_sz = chunk_map.size()*sizeof(int32_t)/MB;
-  float occupied_sz = occupied.size()*sizeof(glm::ivec3)/MB;
   std::cout<<"--------------------------------------------"<<std::endl;
   std::cout<<"scalar_field: "<<scalar_field_sz<<"MB"<<std::endl;
-  std::cout<<"scalar_field: "<<scalar_field2_sz<<"MB"<<std::endl;
   std::cout<<"lock_sz "<<lock_sz<<"MB"<<std::endl;
   std::cout<<"chunk_map "<<chunk_map_sz<<"MB"<<std::endl;
-  std::cout<<"occupied "<<occupied_sz<<"MB"<<std::endl;
-  std::cout<<"TOTAL: "<<scalar_field_sz+scalar_field2_sz+lock_sz+chunk_map_sz+occupied_sz<<"MB"<<std::endl;
+  std::cout<<"TOTAL: "<<scalar_field_sz+lock_sz+chunk_map_sz<<"MB"<<std::endl;
   std::cout<<"--------------------------------------------"<<std::endl;
 }
 
@@ -53,7 +49,6 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     int32_t compressed_sz = (1+(((int32_t)(dim_sz*compress_factor)-1)/chunk_sz_3))*chunk_sz_3;
 
     scalar_field = vector<float>(compressed_sz,0.f);
-    scalar_field2 = vector<float>(compressed_sz,0.f);
     lock_grid = vector<omp_lock_t>(compressed_sz);
     for (auto lock : lock_grid){ omp_init_lock(&lock); }
 
@@ -82,6 +77,14 @@ int32_t Grid::get_chunk_idx(const glm::ivec3 p) const {
 }
 int32_t Grid::get_chunk_loc(const glm::ivec3 p) const {
   return chunk_map[get_chunk_idx(p)];
+}
+glm::ivec3 Grid::get_chunk_pos(const int32_t idx) const{
+  const ivec3 chunk(
+          (idx%(chunk_d.x*chunk_d.y))%chunk_d.x,
+          (idx%(chunk_d.x*chunk_d.y))/chunk_d.x,
+          idx/(chunk_d.x*chunk_d.y)
+        );
+  return chunk_sz*chunk;
 }
 int32_t Grid::get_idx(glm::ivec3 v) const {
   if (!is_in_grid(v)) return -1;
@@ -172,8 +175,7 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
 
 void Grid::fill_line(int32_t segment_index, 
     const std::vector<glm::vec3> &path, 
-    const std::vector<MetaBalls>& potential_funcs, 
-    std::vector<glm::ivec3> &local_occupied) {
+    const std::vector<MetaBalls>& potential_funcs) {
     MetaBalls implicit = potential_funcs[segment_index];
     glm::vec3 p1 = path[segment_index];
     glm::vec3 p2 = path[segment_index+1];
@@ -237,9 +239,6 @@ void Grid::fill_line(int32_t segment_index,
                       }
 
                       omp_set_lock(&lock_grid[s_idx]);
-                      if (res!=0.f && scalar_field[s_idx]==0.f) {
-                        local_occupied.push_back(slot);
-                      }
                       scalar_field[s_idx]+=res;
                       omp_unset_lock(&lock_grid[s_idx]);
                     }
@@ -276,7 +275,6 @@ void Grid::fill_path(
     float max_val, 
     float max_b, float shoot_b, float root_b, 
     size_t inflection_point){
-  std::vector<std::vector<glm::ivec3>> local_occupied(path.size()-1);
   std::vector<MetaBalls> potential_funcs;
   potential_funcs.reserve(path.size()-1);
   // initialize potential functions
@@ -293,13 +291,7 @@ void Grid::fill_path(
 
   #pragma omp parallel for
   for (int i = 0; i<path.size()-1; i++){
-    fill_line(i, path, potential_funcs, local_occupied[i]);
-  }
-
-  for (auto list : local_occupied){
-    for (auto occupied_slot : list){
-      occupied.push_back(occupied_slot);
-    }
+    fill_line(i, path, potential_funcs);
   }
 }
 
@@ -369,39 +361,11 @@ vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {
     return voxel_list;
 }
 
-Mesh<VertFlat> Grid::get_occupied_geom_points(float threshold){
-    const vec3 fullcol(1,0,0);
-    const vec3 nocol(0,0,1);
-    vector<VertFlat> vertices;
-    vector<GLuint> indices;
-    float max_val = 0.f;
-    for (glm::ivec3 voxel : occupied) {
-        float val = lazy_eval(voxel);
-        if (val > max_val) {
-            max_val = val;
-        }
-    }
-    for (glm::ivec3 voxel : occupied) {
-        float val = lazy_eval(voxel);
-        if (val > threshold) {
-            float intensity = val/max_val;
-            vec3 col = (1-intensity)*nocol+intensity*fullcol;
-            vec3 current_pos =
-            back_bottom_left + vec3(voxel) * scale + vec3(1, 1, 1) * (scale / 2);
-            vertices.push_back(VertFlat{current_pos, col});
-        }
-    }
-    for (size_t i = 0; i < vertices.size(); i++) {
-        indices.push_back(i);
-    }
-    return Mesh<VertFlat>(vertices, indices);
-}
-
 Mesh<VertFlat> Grid::get_normals_geom(float threshold) {
     vector<VertFlat> vertices;
     vector<GLuint> indices;
     float max_val = 0.f;
-    // 13_TODO: CHECK THIS
+    /*
     for (glm::ivec3 voxel : occupied) {
         if (lazy_eval(voxel) > threshold) {
             bool visible = false;
@@ -419,102 +383,49 @@ Mesh<VertFlat> Grid::get_normals_geom(float threshold) {
     for (size_t i = 0; i < vertices.size(); i++) {
         indices.push_back(i);
     }
+    */
     return Mesh<VertFlat>(vertices, indices);
 }
 
-Mesh<Vertex> Grid::get_occupied_voxels(float threshold){
-    vector<Vertex> vertices;
-    vector<GLuint> indices;
-    std::vector<glm::vec3> cube_verts{
-        {0, 0, 0},          {scale, 0, 0},
-        {0, scale, 0},      {scale, scale, 0},
-        {0, 0, scale},      {scale, 0, scale},
-        {0, scale, scale},  {scale, scale, scale},
-    };
-    std::vector<GLuint> cube_indices{
-        1, 3, 7, 1, 7, 5, // Right
-        0, 4, 6, 0, 6, 2, // Left
-        4, 5, 7, 4, 7, 6, // Top
-        0, 1, 3, 0, 3, 2, // Bottom
-        0, 1, 5, 0, 5, 4, // Front
-        2, 6, 7, 2, 7, 3  // Back
-    };
-
-    int current_index = 0;
-    glm::vec3 col0 = glm::vec3(1,1,1);
-    glm::vec3 col1 = glm::vec3(0.5,0,0.7);
-    for (glm::ivec3 voxel : occupied) {
-        // Grid space is occupied
-        if (lazy_eval(voxel) >= threshold) {
-            // Get adjacent voxel contents
-            vector<float> adj_content;
-            bool visible = false;
-            for (auto norm : face_norms) {
-                float content = lazy_eval(voxel + norm);
-                adj_content.push_back(content);
-                if (content <= threshold) visible = true;
-            }
-            // Completely occluded do not add vertices
-            if (!visible) continue;
-
-            glm::vec3 normal = glm::normalize(lazy_gradient(voxel));
-
-            // Loop through and generate vertices
-            vec3 current_pos = back_bottom_left + vec3(voxel) * scale;
-            vec3 cube_col = random_color();
-            for (int i_ = 0; i_ <= cube_verts.size(); i_++) {
-                vertices.push_back(Vertex{current_pos + cube_verts[i_], random_brown(), normal});
-            }
-            // Generate Indices
-            for (int i_ = 0; i_ < cube_indices.size(); i_++) {
-                indices.push_back(current_index + cube_indices[i_]);
-            }
-            current_index = vertices.size();
-        }
-    }
-    return Mesh(vertices, indices);
-}
-
-Mesh<Vertex> Grid::get_occupied_geom(float threshold, std::pair<glm::vec3,glm::vec3>vis_bounds) {
+Mesh<Vertex> Grid::get_occupied_geom(float threshold) {
     using namespace mc;
-    if (vis_bounds.first==glm::vec3() && vis_bounds.second==glm::vec3()){
-        vis_bounds.first = back_bottom_left;
-        vis_bounds.second = back_bottom_left + scale*glm::vec3(dimensions);
-    }
     vector<Vertex> verts;
     vector<GLuint> indices;
-    for (auto occupied_slot : occupied){
-        for (int z = -1; z <= 0; z++) { for (int y = -1; y <= 0; y++) { for (int x = -1; x <= 0; x++) {
-            ivec3 offset(x, y, z);
-            ivec3 voxel = occupied_slot + offset;
-            vec3 voxel_pos = back_bottom_left+scale*glm::vec3(voxel);
-            if (voxel_pos.x<vis_bounds.first.x||voxel_pos.x>vis_bounds.second.x||
-                voxel_pos.y<vis_bounds.first.y||voxel_pos.y>vis_bounds.second.y||
-                voxel_pos.z<vis_bounds.first.z||voxel_pos.z>vis_bounds.second.z) continue;
-            if (voxel != occupied_slot && (!is_in_grid(voxel)||lazy_eval(voxel) >= threshold))continue;
+    for (int32_t chunk_idx=0; chunk_idx<chunk_map.size(); chunk_idx++){
+      if (chunk_map[chunk_idx]<0) continue; // Chunk not initialized so we know its empty
+      ivec3 chunk_pos=get_chunk_pos(chunk_idx);
+      for(int idx=0;idx<chunk_sz*chunk_sz*chunk_sz; idx++){
+        ivec3 offset(
+            (idx%(chunk_sz*chunk_sz))%chunk_sz,
+            (idx%(chunk_sz*chunk_sz))/chunk_sz,
+            idx/(chunk_sz*chunk_sz));
+        ivec3 voxel=chunk_pos+offset;
 
-            ivec3 slots[8];
-            vec3 cell_pos[8];
-            for (int i=0; i<8; i++){
-                slots[i]=voxel+cell_order[i];
-                cell_pos[i]=grid_to_pos(slots[i]);
-            }
+        ivec3 slots[8];
+        vec3 cell_pos[8];
+        for (int i=0; i<8; i++){
+            slots[i]=voxel+cell_order[i];
+            cell_pos[i]=grid_to_pos(slots[i]);
+        }
 
-            if (std::all_of(slots, slots+8, [&](const ivec3 slot){
-                  return lazy_eval(slot) >= threshold;})) continue;
+        // If completely full or empty don't check
+        if (std::all_of(slots, slots+8, [&](const ivec3 slot){
+              return lazy_eval(slot) >= threshold;})) continue;
+        if (std::all_of(slots, slots+8, [&](const ivec3 slot){
+              return lazy_eval(slot) <= 0.f;})) continue;
 
-            GridCell cell = {{
-                { .pos=cell_pos[0],.norm=lazy_norm(slots[0]),.val=lazy_eval(slots[0])},
-                { .pos=cell_pos[1],.norm=lazy_norm(slots[1]),.val=lazy_eval(slots[1])},
-                { .pos=cell_pos[2],.norm=lazy_norm(slots[2]),.val=lazy_eval(slots[2])},
-                { .pos=cell_pos[3],.norm=lazy_norm(slots[3]),.val=lazy_eval(slots[3])},
-                { .pos=cell_pos[4],.norm=lazy_norm(slots[4]),.val=lazy_eval(slots[4])},
-                { .pos=cell_pos[5],.norm=lazy_norm(slots[5]),.val=lazy_eval(slots[5])},
-                { .pos=cell_pos[6],.norm=lazy_norm(slots[6]),.val=lazy_eval(slots[6])},
-                { .pos=cell_pos[7],.norm=lazy_norm(slots[7]),.val=lazy_eval(slots[7])},
-            }};
-            polygonize(cell, threshold, verts, indices);
-        }}}
+        GridCell cell = {{
+            { .pos=cell_pos[0],.norm=lazy_norm(slots[0]),.val=lazy_eval(slots[0])},
+            { .pos=cell_pos[1],.norm=lazy_norm(slots[1]),.val=lazy_eval(slots[1])},
+            { .pos=cell_pos[2],.norm=lazy_norm(slots[2]),.val=lazy_eval(slots[2])},
+            { .pos=cell_pos[3],.norm=lazy_norm(slots[3]),.val=lazy_eval(slots[3])},
+            { .pos=cell_pos[4],.norm=lazy_norm(slots[4]),.val=lazy_eval(slots[4])},
+            { .pos=cell_pos[5],.norm=lazy_norm(slots[5]),.val=lazy_eval(slots[5])},
+            { .pos=cell_pos[6],.norm=lazy_norm(slots[6]),.val=lazy_eval(slots[6])},
+            { .pos=cell_pos[7],.norm=lazy_norm(slots[7]),.val=lazy_eval(slots[7])},
+        }};
+        polygonize(cell, threshold, verts, indices);
+      }
     }
     std::cout<<"VERTS: " <<verts.size()<<" INDICES: "<<indices.size()<<std::endl;
     return Mesh<Vertex>(verts,indices);

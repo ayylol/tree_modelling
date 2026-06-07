@@ -39,8 +39,7 @@ public:
         size_t inflection_point);
     void fill_line(int32_t segment_index, 
         const std::vector<glm::vec3> &path, 
-        const std::vector<MetaBalls>& potential_funcs, 
-        std::vector<glm::ivec3> &occupied);
+        const std::vector<MetaBalls>& potential_funcs);
 
     float eval_pos(glm::vec3 pos) const;
     float lazy_eval(glm::ivec3 slot) const;
@@ -57,10 +56,7 @@ public:
 
     Mesh<VertFlat> get_grid_geom() const;
     Mesh<VertFlat> get_bound_geom() const;
-    Mesh<Vertex> get_occupied_voxels(float threshold);
-    Mesh<Vertex> get_occupied_geom(float threshold, 
-        std::pair<glm::vec3,glm::vec3>vis_bounds= {glm::vec3(),glm::vec3()});
-    Mesh<VertFlat> get_occupied_geom_points(float threshold);
+    Mesh<Vertex> get_occupied_geom(float threshold);
     Mesh<VertFlat> get_normals_geom(float threshold);
     void calc_data();
 private:
@@ -72,19 +68,20 @@ private:
 
     int32_t get_idx(glm::ivec3 v) const;
     std::vector<float> scalar_field;
-    std::vector<float> scalar_field2;
     std::vector<omp_lock_t> lock_grid;
 
     void allocate_chunk(int32_t chunk_idx);
+    // Returns Chunk's Index in chunk_map
     int32_t get_chunk_idx(const glm::ivec3 p) const;
+    // Returns Chunk's location in scalar field data vector
     int32_t get_chunk_loc(const glm::ivec3 p) const;
+    // Returns Chunk's back bottom left world position
+    glm::ivec3 get_chunk_pos(const int32_t idx) const;
     const int chunk_sz=8;
     omp_lock_t chunk_map_lock;
     std::vector<int32_t> chunk_map;
     int32_t next_chunk=0;
     glm::ivec3 chunk_d;
-
-    std::vector<glm::ivec3> occupied;
 
     glm::ivec3 dimensions;
     float scale;
