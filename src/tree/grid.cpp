@@ -25,13 +25,11 @@ void Grid::calc_data(){
   }
   std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map.size()<<" (" << (occupied_chunks/(float)chunk_map.size())*100.f << ")"<<std::endl;
   float scalar_field_sz = scalar_field.size()*sizeof(float)/MB;
-  float lock_sz = lock_grid.size()*sizeof(omp_lock_t)/MB;
   float chunk_map_sz = chunk_map.size()*sizeof(int32_t)/MB;
   std::cout<<"--------------------------------------------"<<std::endl;
   std::cout<<"scalar_field: "<<scalar_field_sz<<"MB"<<std::endl;
-  std::cout<<"lock_sz "<<lock_sz<<"MB"<<std::endl;
   std::cout<<"chunk_map "<<chunk_map_sz<<"MB"<<std::endl;
-  std::cout<<"TOTAL: "<<scalar_field_sz+lock_sz+chunk_map_sz<<"MB"<<std::endl;
+  std::cout<<"TOTAL: "<<scalar_field_sz+chunk_map_sz<<"MB"<<std::endl;
   std::cout<<"--------------------------------------------"<<std::endl;
 }
 
@@ -49,8 +47,6 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     int32_t compressed_sz = (1+(((int32_t)(dim_sz*compress_factor)-1)/chunk_sz_3))*chunk_sz_3;
 
     scalar_field = vector<float>(compressed_sz,0.f);
-    lock_grid = vector<omp_lock_t>(compressed_sz);
-    for (auto lock : lock_grid){ omp_init_lock(&lock); }
 
     chunk_d = (dimensions/chunk_sz)+glm::ivec3(1,1,1);
     chunk_map = std::vector<int32_t>(chunk_d.x*chunk_d.y*chunk_d.z, -2);
@@ -60,9 +56,6 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
 }
 Grid::~Grid() {
     omp_destroy_lock(&chunk_map_lock);
-    for (auto lock : lock_grid){
-      omp_destroy_lock(&lock);
-    }
 }
 
 void Grid::allocate_chunk(int32_t chunk_idx){
@@ -238,9 +231,8 @@ void Grid::fill_line(int32_t segment_index,
                         s_idx = get_idx(slot);
                       }
 
-                      omp_set_lock(&lock_grid[s_idx]);
+                      #pragma omp atomic update
                       scalar_field[s_idx]+=res;
-                      omp_unset_lock(&lock_grid[s_idx]);
                     }
                 }
             }

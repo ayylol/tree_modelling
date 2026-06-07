@@ -68,7 +68,6 @@ private:
 
     int32_t get_idx(glm::ivec3 v) const;
     std::vector<float> scalar_field;
-    std::vector<omp_lock_t> lock_grid;
 
     void allocate_chunk(int32_t chunk_idx);
     // Returns Chunk's Index in chunk_map
