@@ -9,7 +9,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/constants.hpp>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 const float max_phi = glm::half_pi<float>()-0.1f;
 
