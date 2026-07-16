@@ -1,0 +1,54 @@
+{
+"tree_file":"shoot.txt",
+"root_file":"root.txt",
+"image_path":"dragonTree",
+
+"interactive_mode":true,
+"save_mesh":false,
+"cameras":[
+  {"dist":2.5671567916870117,"focus":[0.020777523517608643,0.33320343494415283,-0.00437849760055542],"phi":-0.04999999329447746,"theta":3.141592502593994}
+],
+
+"grid_scale":0.6,
+"mesh_iso":1.4,
+"strands":{
+    "num_abs": 2200,
+    "intermediate_stages": 1,
+    "max_val": 3.0,
+    "leaf_min_range":0.006,
+    "root_min_range": 0.007,
+    "base_max_range": 0.025,
+    "lookahead_min":1.0,
+    "lookahead_max":3.5,
+    "la_interp_start":60,
+    "la_interp_peak":15,
+    "max_lookahead_dist":100.0,
+    "reduction_at_length":1.0,
+    "reduction_length":1,
+    "searchpoint_step":0.1,
+    "sm_iter": 20,
+    "sm_min": 0.0001,
+    "sm_peak": 0.15,
+    "sm_start": 0.8,
+    "sm_end": 0.3,
+    "max_angle":90,
+    "num_trials":100,
+    "reject_iso":18.0,
+    "segment_length":0.02,
+    "root_angle_node": 0.5,
+    "bias_amount": 1.0,
+    "bias_step": 0.1,
+    "root_prune_size": 40,
+    "root_searchpoint_delta":3.0,
+    "start_offset":10,
+    "texture":{
+        "max_val": 10.0,
+        "base_max_range": 0.0154,
+        "leaf_min_range":0.0000,
+        "root_min_range": 0.0000,
+        "chance_start":0.4,
+        "chance_max":0.70
+    }
+}
+
+}
