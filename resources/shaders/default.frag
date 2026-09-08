@@ -16,7 +16,7 @@ struct Light{
 
 vec4 directionalLight()
 {
-  struct Light lights[7] = struct Light[7](
+  const Light lights[7] = Light[7](
     Light(normalize(vec3(0,1.0,0.2)),0.8,0.2,2), 
     Light(normalize(vec3(0,-1.0,0.0)),0.6,0.0,2), 
     Light(normalize(vec3(0,1.0,-0.2)),0.7,0.1,2),
@@ -39,8 +39,7 @@ vec4 directionalLight()
     vec3 reflectionDirection = reflect(-lights[i].dir, normal);
     specular = specular + lights[i].spec_strength*pow(max(dot(viewDirection, reflectionDirection), 0.0f), lights[i].specular_pow);
   }
-
-	return vec4(Color * (diffuse + ambient + specular),1.f);
+  return vec4(Color * (diffuse + ambient + specular),1.f);
 }
 
 vec4 fog(vec4 color){
