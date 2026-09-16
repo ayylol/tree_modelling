@@ -95,6 +95,7 @@ private:
     //
     int longest_shoot_length=0;
     //
+    bool floating_strand_pruning = false;
     // Node observed
     float node_observed=0.0;
     size_t strand_observed=0;

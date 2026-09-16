@@ -165,6 +165,10 @@ Strands::Strands(const Skeleton &tree, Grid &grid,
     root_vecs.push_back(angle_vec);
   }
   start_offset = strand_options.at("start_offset");
+  // Floating strand pruning mode
+  if (strand_options.contains("floating_strand_pruning")) {
+    floating_strand_pruning = strand_options.at("floating_strand_pruning");
+  }
 }
 
 Mesh<Vertex> Strands::visualize_keypoints(float strand) const {
@@ -506,23 +510,18 @@ void Strands::add_strand(size_t shoot_index, int age) {
   assert(strands.size() == node_info.size());
 
   // Check if the strand is floating
-  bool is_floating = false;
-  if (age > 200) {
-    int middle_start = (int)(inflection*0.5f);
-    int middle_end = inflection + (int)((strand.size() - inflection) * 0.5f);
-    //std::cout<<"start: "<<middle_start<<" end: "<<middle_end<<" inflection: "<<inflection<<" size: "<<strand.size()<<std::endl;
-    int floating_node_count = 0;
-    for (int node=middle_start; node < middle_end; node++){
-      if (grid.eval_pos(strand[node])<=0.2f){
-        if(++floating_node_count>5){
-          //std::cout<<"REJECTING "<<age<<std::endl;
-          is_floating = true;
-          break;
+  if (floating_strand_pruning){
+    if (age > 200) {
+      int middle_start = (int)(inflection*0.5f);
+      int middle_end = inflection + (int)((strand.size() - inflection) * 0.5f);
+      int floating_node_count = 0;
+      for (int node=middle_start; node < middle_end; node++){
+        if (grid.eval_pos(strand[node]) <= 0.2f){
+          if(++floating_node_count>5){ return; }
         }
       }
     }
   }
-  if (is_floating) return;
 
   // Add the strand for real now
   grid.fill_path(strands.size(), strand, max_val, 
