@@ -64,14 +64,14 @@ void Grid::allocate_chunk(int32_t chunk_idx){
   next_chunk+=chunk_sz*chunk_sz*chunk_sz;
 }
 // ASSUMES CHUNK EXIST!!!
-int32_t Grid::get_chunk_idx(const glm::ivec3 p) const {
+int32_t Grid::get_chunk_map_idx_from_slot(const glm::ivec3 p) const {
   const glm::ivec3 chunk = p/chunk_sz;
   return chunk.x + chunk_d.x*chunk.y + chunk_d.x*chunk_d.y*chunk.z;
 }
-int32_t Grid::get_chunk_loc(const glm::ivec3 p) const {
-  return chunk_map[get_chunk_idx(p)];
+int32_t Grid::get_chunk_mem_idx_from_slot(const glm::ivec3 p) const {
+  return chunk_map[get_chunk_map_idx_from_slot(p)];
 }
-glm::ivec3 Grid::get_chunk_pos(const int32_t idx) const{
+glm::ivec3 Grid::get_chunk_world_pos(const int32_t idx) const{
   const ivec3 chunk(
           (idx%(chunk_d.x*chunk_d.y))%chunk_d.x,
           (idx%(chunk_d.x*chunk_d.y))/chunk_d.x,
@@ -81,7 +81,7 @@ glm::ivec3 Grid::get_chunk_pos(const int32_t idx) const{
 }
 int32_t Grid::get_idx(glm::ivec3 v) const {
   if (!is_in_grid(v)) return -1;
-  int32_t chunk_loc = get_chunk_loc(v);
+  int32_t chunk_loc = get_chunk_mem_idx_from_slot(v);
   if (chunk_loc<0){ return chunk_loc; }
   glm::ivec3 v_in_chunk = v%chunk_sz;
   return chunk_loc + 
@@ -165,11 +165,79 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
     assert(z==z);
     return glm::vec3(x,y,z);
 }
+//void Grid::fill_line_avx512(int32_t segment_index, 
+//    const std::vector<glm::vec3> &path, 
+//    const MetaBalls& implicit,
+//    const MetaBalls& implicit_before,
+//    const MetaBalls& implicit_after) {
+//  // TODO: MAKE THIS THING FIRST WITHOUT SIMD, THEN WITH.
+//    glm::vec3 p1 = path[segment_index];
+//    glm::vec3 p2 = path[segment_index+1];
+//    ivec3 aabb_low = pos_to_grid(vec3(
+//        std::min(p1.x,p2.x)-implicit.get_cutoff(),
+//        std::min(p1.y,p2.y)-implicit.get_cutoff(),
+//        std::min(p1.z,p2.z)-implicit.get_cutoff()));
+//    ivec3 aabb_high = pos_to_grid(vec3(
+//        std::max(p1.x,p2.x)+implicit.get_cutoff(),
+//        std::max(p1.y,p2.y)+implicit.get_cutoff(),
+//        std::max(p1.z,p2.z)+implicit.get_cutoff()));
+//    ivec3 first_chunk = slot_get_chunk(aabb_low);
+//    ivec3 last_chunk = slot_get_chunk(aabb_high);
+//    // Process each chunk affected
+//    for (int chunk_z=first_chunk.z; chunk_z<=last_chunk.z; chunk_z++){
+//      for (int chunk_y=first_chunk.y; chunk_y<=last_chunk.y; chunk_y++){
+//        for (int chunk_x=first_chunk.x; chunk_x<=last_chunk.x; chunk_x++){
+//          //ivec3 first_slot_in_chunk = get_chunk_bbl_slot(slot_get_chunk_map_idx());
+//        }
+//      }
+//    }
+//
+//    /*
+//    for (int z=aabb_low.z; z<aabb_high.z; z++){
+//      for (int y=aabb_low.y; y<aabb_high.y; y++){
+//        for (int x=aabb_low.x; x<aabb_high.x; x++){
+//          ivec3 slot = ivec3(x,y,z);
+//          int32_t s_idx=get_idx(slot);
+//          if (s_idx != -1) {
+//            glm::vec3 grid_pos=grid_to_pos(slot);
+//            if (s_idx == -2){ // CHUNK NOT ALLOCATED
+//              omp_set_lock(&chunk_map_lock); 
+//              // double check to avoid data race
+//              if (slot_get_chunk_map_idx(slot)==-2){ 
+//                allocate_chunk(slot_get_chunk_idx(slot));
+//              }
+//              omp_unset_lock(&chunk_map_lock);
+//              s_idx = get_idx(slot);
+//            }
+//
+//            //#pragma omp atomic update
+//            #pragma omp atomic write
+//            scalar_field[s_idx]=10.0f;
+//          }
+//        }
+//      }
+//    }
+//    */
+//  
+// 
+//  // Gather chunks that are affected by this implicit
+//  // TODO: how do I get the chunks that are affected by an implicit? something to do with support, but exactly how?
+//  // FIRST VISUALIZE THIS BIT TO SEE IF ITS LOOKING RIGHT!
+//  
+//  // Process each chunk affected
+//    // Calculate the contribution for each slot in chunk with SIMD
+//    // Check if chunk is allocated, if it is not and we have a non-zero contribution then allocate
+//    // if we have non-zero contributions add the contributions
+//    
+//    // TODO: is it faster to lock the chunk in general and add the contributions with a single simd store, or better to not lock it and 
+//    // add with atomics? NEEDS TO BE TESTED!
+//}
 
 void Grid::fill_line(int32_t segment_index, 
     const std::vector<glm::vec3> &path, 
-    const std::vector<MetaBalls>& potential_funcs) {
-    MetaBalls implicit = potential_funcs[segment_index];
+    const MetaBalls& implicit,
+    const MetaBalls& implicit_before,
+    const MetaBalls& implicit_after) {
     glm::vec3 p1 = path[segment_index];
     glm::vec3 p2 = path[segment_index+1];
     vec3 diff = p2 - p1;
@@ -216,16 +284,16 @@ void Grid::fill_line(int32_t segment_index,
                       glm::vec3 grid_pos=grid_to_pos(slot);
                       float res=implicit.eval(grid_pos,p1,p2);
                       float res_bef= segment_index <= 0 ? 0.f : 
-                        potential_funcs[segment_index-1].eval(grid_pos, path[segment_index-1], path[segment_index]);
+                        implicit_before.eval(grid_pos, path[segment_index-1], path[segment_index]);
                       float res_aft= segment_index >= path.size()-2 ? 0.f : 
-                        potential_funcs[segment_index+1].eval(grid_pos, path[segment_index+1], path[segment_index+2]);
+                        implicit_after.eval(grid_pos, path[segment_index+1], path[segment_index+2]);
                       if (res<res_bef || res<res_aft) continue;
 
                       if (s_idx == -2){ // CHUNK NOT ALLOCATED
                         omp_set_lock(&chunk_map_lock); 
                         // double check to avoid data race
-                        if (get_chunk_loc(slot)==-2){ 
-                          allocate_chunk(get_chunk_idx(slot));
+                        if (get_chunk_mem_idx_from_slot(slot)==-2){ 
+                          allocate_chunk(get_chunk_map_idx_from_slot(slot));
                         }
                         omp_unset_lock(&chunk_map_lock);
                         s_idx = get_idx(slot);
@@ -281,9 +349,14 @@ void Grid::fill_path(
     potential_funcs.push_back(MetaBalls(max_val, b));
   }
 
+  MetaBalls zero_potential_func(0,0);
   #pragma omp parallel for
   for (int i = 0; i<path.size()-1; i++){
-    fill_line(i, path, potential_funcs);
+    MetaBalls potential_before = zero_potential_func;
+    if (i!=0) potential_before = potential_funcs[i-1];
+    MetaBalls potential_after = zero_potential_func;
+    if (i!=potential_funcs.size()-1) potential_after = potential_funcs[i+1];
+    fill_line(i, path, potential_funcs[i], potential_before, potential_after);
   }
 }
 
@@ -385,7 +458,7 @@ Mesh<Vertex> Grid::get_occupied_geom(float threshold) {
     vector<GLuint> indices;
     for (int32_t chunk_idx=0; chunk_idx<chunk_map.size(); chunk_idx++){
       if (chunk_map[chunk_idx]<0) continue; // Chunk not initialized so we know its empty
-      ivec3 chunk_pos=get_chunk_pos(chunk_idx);
+      ivec3 chunk_pos=get_chunk_world_pos(chunk_idx);
       for(int idx=0;idx<chunk_sz*chunk_sz*chunk_sz; idx++){
         ivec3 offset(
             (idx%(chunk_sz*chunk_sz))%chunk_sz,

@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include "glm/gtx/io.hpp"
 #include "util/geometry.h"
+#include "util/stopwatch.h"
 #include <memory>
 #include <omp.h>
 #include <ostream>
@@ -346,6 +347,9 @@ void Strands::add_strand(size_t shoot_index, int age) {
   // difference between root closest and target when in transition zone
   float idx_diff=0.f; 
 
+  //std::cout<<std::endl;
+  //Stopwatch sw;
+  //sw.start();
   while (!done) {
     if (on_root) {
       num_extensions--;
@@ -494,6 +498,7 @@ void Strands::add_strand(size_t shoot_index, int age) {
     if (on_root) root_nodes++;
     if (!on_root && target_on_root) transition_nodes++;
   }
+  //sw.stop();
 
   // Occupy strand path
   // TODO: This certainly makes the asserts checking node_info size break!!!
