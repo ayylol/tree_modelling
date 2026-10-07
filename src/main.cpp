@@ -28,13 +28,13 @@
 
 
 //#define SKY_COLOR glm::vec4(0.529,0.808,0.922,1.0)
-#define SKY_COLOR glm::vec4(0,0,0,1.0)
-//#define SKY_COLOR glm::vec4(1,1,1,1.0)
+//#define SKY_COLOR glm::vec4(0,0,0,1.0)
+#define SKY_COLOR glm::vec4(1,1,1,1.0)
 
 using json = nlohmann::json;
 // Default screen dimensions
-const unsigned int DEFAULT_WIDTH = 800;
-const unsigned int DEFAULT_HEIGHT = 600;
+const unsigned int DEFAULT_WIDTH = 800*2;
+const unsigned int DEFAULT_HEIGHT = 800*2;
 // Current screen dimensions
 unsigned int width = DEFAULT_WIDTH;
 unsigned int height = DEFAULT_HEIGHT;
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Seemed to be the fastest on Ryzen 5 5600
-    int num_threads = 10;
+    int num_threads = 12;
     omp_set_num_threads(num_threads);
 
     //srand(time(NULL));
@@ -167,6 +167,9 @@ int main(int argc, char *argv[]) {
 
     float surface_val = opt_data.at("mesh_iso");
     Mesh<Vertex> tree_geom = Mesh(std::vector<Vertex>(), std::vector<GLuint>());
+    STOPWATCH("Polygonizing Isosurface", 
+        tree_geom=gr.get_occupied_geom(surface_val);
+    );
     if (!interactive){
       STOPWATCH("Polygonizing Isosurface", 
           tree_geom=gr.get_occupied_geom(surface_val);
@@ -320,7 +323,8 @@ GLFWwindow *openGLInit() {
 
     // OpenGL drawing settings
     glPointSize(8.f);
-    glLineWidth(1.4f);
+    //glLineWidth(1.4f);
+    glLineWidth(1.0f);
     //glPolygonMode( GL_BACK, GL_LINE );
     //glPolygonMode( GL_FRONT, GL_POINT );
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );

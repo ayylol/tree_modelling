@@ -37,6 +37,11 @@ public:
     void fill_path(uint32_t strand_id, const std::vector<glm::vec3> &path, 
         float max_val, float max_b, float shoot_b, float root_b, 
         size_t inflection_point);
+    void fill_line_avx512(int32_t segment_index, 
+        const std::vector<glm::vec3> &path, 
+        const MetaBalls& implicit,
+        const MetaBalls& implicit_before,
+        const MetaBalls& implicit_after);
     void fill_line(int32_t segment_index, 
         const std::vector<glm::vec3> &path, 
         const MetaBalls& implicit,
@@ -74,12 +79,19 @@ private:
 
     // Take the chunk map index and allocate that chunk in the scalar field.
     void allocate_chunk(int32_t chunk_idx);
+
+    //// Given a chunk, returns the chunk map index of the chunk containing it.
+    //int32_t get_chunk_map_idx_from_chunk(const glm::ivec3 chunk) const;
+    //// Given a chunk, returns the first index of its chunk in the scalar field vector.
+    //int32_t get_chunk_mem_idx_from_chunk(const glm::ivec3 chunk) const;
+
     // Given a slot, returns the chunk map index of the chunk containing it.
     int32_t get_chunk_map_idx_from_slot(const glm::ivec3 p) const;
     // Given a slot, returns the first index of its chunk in the scalar field vector.
     int32_t get_chunk_mem_idx_from_slot(const glm::ivec3 p) const;
+
     // Given a chunk map index, returns the world position of the first slot (back bottom left) of that chunk
-    glm::ivec3 get_chunk_world_pos(const int32_t idx) const;
+    glm::ivec3 get_chunk_grid_pos(const int32_t idx) const;
     const int chunk_sz=8;
     omp_lock_t chunk_map_lock;
     std::vector<int32_t> chunk_map;

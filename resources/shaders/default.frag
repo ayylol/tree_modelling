@@ -42,6 +42,7 @@ vec4 directionalLight()
   return vec4(Color * (diffuse + ambient + specular),1.f);
 }
 
+// NOTE: To change fog color change the bg_col variable in the return statement.
 vec4 fog(vec4 color){
     vec3 toCamera = camPos-crntPos;
     float camDist2 = dot(toCamera,toCamera);
@@ -49,11 +50,11 @@ vec4 fog(vec4 color){
     vec4 bg_col1 = vec4(0,0,0,1.0);
     vec4 bg_col2 = vec4(0.529,0.808,0.922,1.0);
     vec4 bg_col3 = vec4(1,1,1,1.0);
-    return color*distBias+(1-distBias)*bg_col1;
+    return color*distBias+(1-distBias)*bg_col3;
 }
 
 void main()
 {
-  //FragColor = fog(directionalLight());
-  FragColor = directionalLight();
+  FragColor = fog(directionalLight());
+  //FragColor = directionalLight();
 }

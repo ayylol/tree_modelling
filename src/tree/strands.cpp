@@ -275,6 +275,7 @@ int Strands::add_stage(){
 }
 
 void Strands::add_strands(unsigned int amount) {
+  //Stopwatch sw;
   std::vector<size_t> paths(shoot_frames.size());
   std::iota(paths.begin(), paths.end(), 0);
   std::shuffle(paths.begin(), paths.end(), rng);
@@ -284,7 +285,9 @@ void Strands::add_strands(unsigned int amount) {
       std::flush(std::cout);
     }
     strand_lookahead_max = lookahead_factor_min + laf_step*strands.size();
+    //sw.start();
     add_strand(paths[i % paths.size()], i);
+    //sw.stop();
   }
   std::cout << "\rTotal Strands: " << strands.size() << "/" << num_strands << std::endl;
   std::cout << std::endl;
@@ -347,8 +350,8 @@ void Strands::add_strand(size_t shoot_index, int age) {
   // difference between root closest and target when in transition zone
   float idx_diff=0.f; 
 
-  //std::cout<<std::endl;
   //Stopwatch sw;
+  //std::cout<<"=========================="<<std::endl;
   //sw.start();
   while (!done) {
     if (on_root) {
@@ -400,8 +403,10 @@ void Strands::add_strand(size_t shoot_index, int age) {
     // Add extension
     float current_bias = !(target_on_root || on_root) ?
       1.0 : (1 - _interp_bias) + bias_amount * _interp_bias;
+    //sw.start();
     std::optional<glm::vec3> ext = find_extension(
         strand.back(), last_closest, target.frame, current_bias);
+    //sw.stop();
     if (!ext) {
       ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
     }
@@ -527,10 +532,13 @@ void Strands::add_strand(size_t shoot_index, int age) {
       }
     }
   }
-
+  //std::cout<<strand.size()<<std::endl;
+  //sw.stop();
+  //sw.start();
   // Add the strand for real now
   grid.fill_path(strands.size(), strand, max_val, 
       base_max_range, leaf_min_range, root_min_range, inflection);
+  //sw.stop();
 }
 
 // Strand creation helper functions
