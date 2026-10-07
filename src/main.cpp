@@ -337,7 +337,7 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
     width = w;
     height = h;
     glViewport(0, 0, width, height);
-    for (auto cam : cameras){
+    for (auto &cam : cameras){
         cam.set_aspect_ratio(width, height);
     }
 }
