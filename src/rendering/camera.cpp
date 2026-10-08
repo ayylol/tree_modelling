@@ -55,8 +55,8 @@ glm::mat4 Camera::get_matrix() const {
   glm::vec3 camera_loc = get_position();
 
   glm::mat4 view = glm::lookAt(camera_loc, focus, glm::vec3(0.f, 1.f, 0.f));
-  glm::mat4 proj =
-      glm::perspective(glm::radians(50.0f), aspect_ratio, 0.01f, 100.0f);
+  glm::mat4 proj = glm::perspective(glm::radians(50.0f), aspect_ratio, 0.01f, 100.0f);
+  //glm::mat4 proj = glm::perspective(glm::radians(50.0f), aspect_ratio, 0.55f, 2.0f);
 
   return proj * view;
 }

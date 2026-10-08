@@ -1,0 +1,42 @@
+{
+"cameras":[
+  {"dist":0.49699991941452026,"focus":[0.21577823162078857,0.7381116151809692,0.2115052044391632],"phi":0.026747100055217743,"theta":-1.4636064767837524},
+  {"dist":0.593999981880188,"focus":[0.10013052821159363,0.7120815515518188,0.11750936508178711],"phi":0.0964970588684082,"theta":-3.6704626083374023}
+],
+"grid_scale":1.75,
+"mesh_iso":1.0,
+"tree_file":"shoot.txt",
+"root_file":"root.txt",
+"strands":{
+    "num_abs": 1200,
+    "intermediate_stages": 1,
+    "max_val": 3.0,
+    "leaf_min_range":0.01,
+    "root_min_range": 0.01,
+    "base_max_range": 0.03,
+    "lookahead_min":1.5,
+    "lookahead_max":6.5,
+    "la_interp_start":180,
+    "la_interp_peak":50,
+    "max_lookahead_dist":100.0,
+    "reduction_at_length":200.0,
+    "reduction_length":120,
+    "searchpoint_step":0.1,
+    "sm_iter": 20,
+    "sm_min": 0.0001,
+    "sm_peak": 0.15,
+    "sm_start": 0.8,
+    "sm_end": 0.3,
+    "max_angle":160,
+    "num_trials":500,
+    "reject_iso":12.0,
+    "segment_length":0.02,
+    "root_angle_node": 0.5,
+    "bias_amount": 2.0,
+    "bias_step": 0.5,
+    "root_prune_size": 200,
+    "root_searchpoint_delta":3.0,
+    "start_offset":25
+},
+"image_path":"shortBlade"
+}
