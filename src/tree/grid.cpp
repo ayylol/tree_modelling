@@ -21,9 +21,8 @@ void Grid::calc_data(){
   std::cout<<"ACTUAL STATS"<<std::endl;
   int occupied_chunks=0;
   for (auto i : chunk_map){
-    if (i>=0) occupied_chunks++;
+    if (i!=0) occupied_chunks++;
   }
-  // FIXME: OCCUPIED CHUNKS CALCULATION IS BORKED!
   std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map.size()<<" (" << (occupied_chunks/(float)chunk_map.size())*100.f << ")"<<std::endl;
   float scalar_field_sz = scalar_field.size()*sizeof(float)/MB;
   float chunk_map_sz = chunk_map.size()*sizeof(int32_t)/MB;
