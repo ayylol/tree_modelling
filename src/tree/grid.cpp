@@ -23,6 +23,7 @@ void Grid::calc_data(){
   for (auto i : chunk_map){
     if (i>=0) occupied_chunks++;
   }
+  // FIXME: OCCUPIED CHUNKS CALCULATION IS BORKED!
   std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map.size()<<" (" << (occupied_chunks/(float)chunk_map.size())*100.f << ")"<<std::endl;
   float scalar_field_sz = scalar_field.size()*sizeof(float)/MB;
   float chunk_map_sz = chunk_map.size()*sizeof(int32_t)/MB;
@@ -52,6 +53,12 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     chunk_map = std::vector<int32_t>(chunk_d.x*chunk_d.y*chunk_d.z, 0);
     omp_init_lock(&chunk_map_lock);
 
+    int32_t max_chunks_in_mem = (scalar_field.size()-1)/chunk_sz_3;
+    free_chunk_mem = std::vector<int32_t>(max_chunks_in_mem, 0);
+    for (int i = 0; i<max_chunks_in_mem; i+=1){
+      free_chunk_mem[i] = 1+(max_chunks_in_mem-1-i)*chunk_sz_3; 
+    }
+
     std::cout << "Grid dimensions: " << dimensions << std::endl;
 }
 Grid::~Grid() {
@@ -59,9 +66,9 @@ Grid::~Grid() {
 }
 
 void Grid::allocate_chunk(int32_t chunk_idx){
-  assert(next_chunk_mem<scalar_field.size()); // better assert?
-  chunk_map[chunk_idx]=next_chunk_mem;
-  next_chunk_mem+=chunk_sz*chunk_sz*chunk_sz;
+  assert(!free_chunk_mem.empty());
+  chunk_map[chunk_idx]=free_chunk_mem.back();
+  free_chunk_mem.pop_back();
 }
 int32_t Grid::get_chunk_map_idx_from_slot(const glm::ivec3 p) const {
   const glm::ivec3 chunk = p/chunk_sz;
@@ -362,7 +369,7 @@ void Grid::fill_path(
     fill_line_avx512(i, path, potential_funcs[i], potential_before, potential_after);
     //fill_line(i, path, potential_funcs[i], potential_before, potential_after);
   }
-  // 0th slot should always be empty
+  // 0th slot should always be emptg
   assert(scalar_field[0]==0.f);
 }
 

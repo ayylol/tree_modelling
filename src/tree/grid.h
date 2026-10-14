@@ -95,7 +95,7 @@ private:
     const int chunk_sz=8;
     omp_lock_t chunk_map_lock;
     std::vector<int32_t> chunk_map;
-    int32_t next_chunk_mem=1;
+    std::vector<int32_t> free_chunk_mem;
     glm::ivec3 chunk_d;
 
     glm::ivec3 dimensions;
