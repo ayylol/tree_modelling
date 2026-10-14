@@ -46,10 +46,10 @@ Grid::Grid(const Skeleton &tree, float percent_overshoot, float scale_factor) {
     float compress_factor = 0.1;
     int32_t compressed_sz = (1+(((int32_t)(dim_sz*compress_factor)-1)/chunk_sz_3))*chunk_sz_3;
 
-    scalar_field = vector<float>(compressed_sz,0.f);
+    scalar_field = vector<float>(1+compressed_sz,0.f);
 
     chunk_d = (dimensions/chunk_sz)+glm::ivec3(1,1,1);
-    chunk_map = std::vector<int32_t>(chunk_d.x*chunk_d.y*chunk_d.z, -2);
+    chunk_map = std::vector<int32_t>(chunk_d.x*chunk_d.y*chunk_d.z, 0);
     omp_init_lock(&chunk_map_lock);
 
     std::cout << "Grid dimensions: " << dimensions << std::endl;
@@ -59,9 +59,9 @@ Grid::~Grid() {
 }
 
 void Grid::allocate_chunk(int32_t chunk_idx){
-  assert(next_chunk<scalar_field.size()); // better assert?
-  chunk_map[chunk_idx]=next_chunk;
-  next_chunk+=chunk_sz*chunk_sz*chunk_sz;
+  assert(next_chunk_mem<scalar_field.size()); // better assert?
+  chunk_map[chunk_idx]=next_chunk_mem;
+  next_chunk_mem+=chunk_sz*chunk_sz*chunk_sz;
 }
 int32_t Grid::get_chunk_map_idx_from_slot(const glm::ivec3 p) const {
   const glm::ivec3 chunk = p/chunk_sz;
@@ -82,7 +82,7 @@ glm::ivec3 Grid::get_chunk_grid_pos(const int32_t idx) const{
 int32_t Grid::get_idx(glm::ivec3 v) const {
   if (!is_in_grid(v)) return -1;
   int32_t chunk_loc = get_chunk_mem_idx_from_slot(v);
-  if (chunk_loc<0){ return chunk_loc; }
+  if (chunk_loc<=0){ return chunk_loc; }
   glm::ivec3 v_in_chunk = v%chunk_sz;
   return chunk_loc + 
     v_in_chunk.x + chunk_sz*v_in_chunk.y + chunk_sz*chunk_sz*v_in_chunk.z;
@@ -207,16 +207,16 @@ void Grid::fill_line_avx512(int32_t segment_index,
                 implicit_after.eval(grid_pos, path[segment_index+1], path[segment_index+2]);
               if (res<res_bef || res<res_aft) continue;
 
-              if (s_idx == -2){ // CHUNK NOT ALLOCATED
+              if (s_idx == 0){ // CHUNK NOT ALLOCATED
                 omp_set_lock(&chunk_map_lock); 
                 // double check to avoid data race
-                if (get_chunk_mem_idx_from_slot(slot)==-2){ 
+                if (get_chunk_mem_idx_from_slot(slot)==0){
                   allocate_chunk(get_chunk_map_idx_from_slot(slot));
                 }
                 omp_unset_lock(&chunk_map_lock);
                 s_idx = get_idx(slot);
               }
-              assert(s_idx>=0);
+              assert(s_idx>0);
               #pragma omp atomic update
               scalar_field[s_idx]+=res;
             } else {
@@ -362,6 +362,8 @@ void Grid::fill_path(
     fill_line_avx512(i, path, potential_funcs[i], potential_before, potential_after);
     //fill_line(i, path, potential_funcs[i], potential_before, potential_after);
   }
+  // 0th slot should always be empty
+  assert(scalar_field[0]==0.f);
 }
 
 vector<ivec3> Grid::get_voxels_line(vec3 start, vec3 end) const {
