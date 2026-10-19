@@ -63,10 +63,11 @@ std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
     */
 
-Strands::Strands(const Skeleton &tree, Grid &grid, 
-    nlohmann::json options)
-    : grid(grid), tree(tree) {
-
+Strands::Strands(const Skeleton &tree, Grid &grid_in, Grid &obstacle_grid_in, nlohmann::json options) :
+  grid(grid_in), 
+  obstacle_grid(obstacle_grid_in), 
+  tree(tree) 
+{
   auto strand_options = options.at("strands");
   int root_prune_size = strand_options.at("root_prune_size");
   // Set up root & shoot paths
@@ -593,7 +594,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
   if (-x_axis==canonical_direction) canonical_direction = glm::normalize(glm::vec3(-.096f,0.14f,0.f));
   const glm::quat rotation=glm::angleAxis(glm::angle(canonical_direction, x_axis),
                                       glm::normalize(glm::cross(x_axis, canonical_direction)));
-#pragma omp parallel for
+//#pragma omp parallel for
   for (int i = 0; i < num_trials; i++) {
     glm::vec3 r_vec = random_vector(rotation);
     glm::vec3 trial_head = from + segment_length * r_vec;
@@ -601,7 +602,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     assert(!glm::any(glm::isnan(r_vec)));
     assert(!glm::any(glm::isnan(trial_head)));
 
-    float val = grid.eval_pos(trial_head);
+    float val = std::max(grid.eval_pos(trial_head), obstacle_grid.eval_pos(trial_head));
     if (val>=reject_iso) continue;
 
     glm::vec3 biased_head = trial_head;

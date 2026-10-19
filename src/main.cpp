@@ -112,10 +112,15 @@ int main(int argc, char *argv[]) {
 
     // Grid
     STOPWATCH("Initializing Grid",
-            Grid gr = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+            Grid grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+            );
+    //// Obstacle Grid
+    STOPWATCH("Initializing Obstacle Grid",
+            Grid obstacle_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
+            obstacle_grid.fill_sphere(glm::vec3(0,0.18,0.13), 1000.f, 0.065f);
             );
     // Make camera according to grid
-    cameras.push_back(Camera(gr.get_center(), 2.5f*(gr.get_center()-gr.get_backbottomleft()).z, width, height));
+    cameras.push_back(Camera(grid.get_center(), 2.5f*(grid.get_center()-grid.get_backbottomleft()).z, width, height));
     if (opt_data.contains("cameras")){
         for (auto cam_data : opt_data.at("cameras")){
             cameras.push_back(Camera(cam_data, width, height));
@@ -150,7 +155,7 @@ int main(int argc, char *argv[]) {
 
     // Tree detail
     STOPWATCH("Adding Strands",
-        Strands detail(tree, gr, opt_data);
+        Strands detail(tree, grid, obstacle_grid, opt_data);
         detail.add_stage();
         );
 
@@ -163,16 +168,16 @@ int main(int argc, char *argv[]) {
         Mesh searchpoint_vis = detail.visualize_searchpoint(0);
         Mesh keypoint_vis = detail.visualize_keypoints(0);
     );
-    STOPWATCH("Getting Bounds", Mesh bound_geom = gr.get_bound_geom(););
+    STOPWATCH("Getting Bounds", Mesh bound_geom = grid.get_bound_geom(););
 
     float surface_val = opt_data.at("mesh_iso");
     Mesh<Vertex> tree_geom = Mesh(std::vector<Vertex>(), std::vector<GLuint>());
     STOPWATCH("Polygonizing Isosurface", 
-        tree_geom=gr.get_occupied_geom(surface_val);
+        tree_geom=grid.get_occupied_geom(surface_val);
     );
     if (!interactive){
       STOPWATCH("Polygonizing Isosurface", 
-          tree_geom=gr.get_occupied_geom(surface_val);
+          tree_geom=grid.get_occupied_geom(surface_val);
       );
     }
 
@@ -191,11 +196,12 @@ int main(int argc, char *argv[]) {
         Vertex{glm::vec3(-50, 0, -50), ground_color}};
     std::vector<GLuint> ground_indices{0, 1, 3, 0, 3, 2};
     Mesh ground(ground_verts, ground_indices);
+    Mesh<Vertex> obstacles_mesh=obstacle_grid.get_occupied_geom(10.f);
 
 
     system("notify-send \"Done Building Tree\"");
 
-    gr.calc_data();
+    grid.calc_data();
     // Render loop
     while ((interactive && !glfwWindowShouldClose(window))||
             (!interactive && !done_screenshots)) {
@@ -211,7 +217,7 @@ int main(int argc, char *argv[]) {
         if (gen_geom){
           if (!geom_generated){
             STOPWATCH("Polygonizing Isosurface", 
-                tree_geom=gr.get_occupied_geom(surface_val);
+                tree_geom=grid.get_occupied_geom(surface_val);
             );
           }
           gen_geom=false;
@@ -248,7 +254,10 @@ int main(int argc, char *argv[]) {
           keypoint_vis.draw(flat_shader, CAMERA, GL_POINTS);
         }
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
-        if (view_ground) ground.draw(shader, CAMERA, GL_TRIANGLES);
+        if (view_ground) {
+          obstacles_mesh.draw(shader, CAMERA, GL_TRIANGLES);
+          //ground.draw(shader, CAMERA, GL_TRIANGLES);
+        }
         if (view_bound) bound_geom.draw(flat_shader, CAMERA, GL_LINES);
 
         glfwSwapBuffers(window);

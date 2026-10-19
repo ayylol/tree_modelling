@@ -10,6 +10,8 @@ public:
   MetaBalls(float a, float b) : a(a), b(b){};
   // LineSegment
   float eval(const glm::vec3 p1, const glm::vec3 l1, const glm::vec3 l2) const;
+  // Sphere
+  float eval(const glm::vec3 p1, const glm::vec3 c) const;
 
   inline float get_a() const {return a;}
   inline float get_b() const {return b;}

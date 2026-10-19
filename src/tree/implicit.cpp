@@ -19,6 +19,13 @@ float MetaBalls::eval(const glm::vec3 p1, const glm::vec3 l1, const glm::vec3 l2
   return potential(glm::fastSqrt(d));
 }
 
+float MetaBalls::eval(const glm::vec3 p1, const glm::vec3 c) const{
+  float d = glm::distance2(p1, c);
+  if (d >= b*b)
+    return 0.f;
+  return potential(glm::fastSqrt(d));
+}
+
 float MetaBalls::potential(float distance) const {
   if (distance <= b / 3) {
     return a * (1 - 3 * pow(distance / b, 2));

@@ -21,7 +21,17 @@ void Grid::calc_data(){
   std::cout<<"ACTUAL STATS"<<std::endl;
   int occupied_chunks=0;
   for (auto i : chunk_map){
-    if (i!=0) occupied_chunks++;
+    if (i>0) {
+      occupied_chunks++;
+      bool fully_filled=true;
+      for (int j=0;j<chunk_sz*chunk_sz*chunk_sz;j++){
+        if (scalar_field[i+j]<10.f){
+          fully_filled=false;
+          break;
+        }
+      }
+      if (fully_filled) occupied_chunks--;
+    }
   }
   std::cout<<"occupied_chunks: "<<occupied_chunks<<"/"<<chunk_map.size()<<" (" << (occupied_chunks/(float)chunk_map.size())*100.f << ")"<<std::endl;
   float scalar_field_sz = scalar_field.size()*sizeof(float)/MB;
@@ -69,6 +79,17 @@ void Grid::allocate_chunk(int32_t chunk_idx){
   chunk_map[chunk_idx]=free_chunk_mem.back();
   free_chunk_mem.pop_back();
 }
+
+// TODO: How to account for parallelism?
+void Grid::deallocate_chunk(int32_t chunk_idx){
+  assert(chunk_map[chunk_idx]!=0);
+  for (int i=0; i<chunk_sz*chunk_sz*chunk_sz; i++){
+    scalar_field[chunk_map[chunk_idx]+i]=0.f;
+  }
+  chunk_map[chunk_idx]=-2;
+  free_chunk_mem.push_back(chunk_map[chunk_idx]);
+}
+
 int32_t Grid::get_chunk_map_idx_from_slot(const glm::ivec3 p) const {
   const glm::ivec3 chunk = p/chunk_sz;
   return chunk.x + chunk_d.x*chunk.y + chunk_d.x*chunk_d.y*chunk.z;
@@ -109,9 +130,8 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
 }
 
 float Grid::eval_pos(glm::vec3 pos) const {
-  //return lazy_eval(pos_to_grid(pos));
   glm::ivec3 bbl_cell = pos_to_grid(pos);
-  const static ivec3 cell_order[8] = {
+  const ivec3 cell_order[8] = {
     ivec3(0, 0, 0), ivec3(0, 0, 1), ivec3(0, 1, 0), ivec3(0, 1, 1),
     ivec3(1, 0, 0), ivec3(1, 0, 1), ivec3(1, 1, 0), ivec3(1, 1, 1),
   };
@@ -171,6 +191,47 @@ glm::vec3 Grid::eval_gradient(vec3 pos, float step_size) const {
     assert(z==z);
     return glm::vec3(x,y,z);
 }
+void Grid::fill_sphere(glm::vec3 center, float max_val, float support){
+  MetaBalls implicit(max_val, support);
+  ivec3 low_chunk = pos_to_grid(center - glm::vec3(1,1,1)*implicit.get_cutoff())/chunk_sz;
+  ivec3 high_chunk = pos_to_grid(center + glm::vec3(1,1,1)*implicit.get_cutoff())/chunk_sz;
+  for (int chunk_z=low_chunk.z; chunk_z<=high_chunk.z; chunk_z++){
+    for (int chunk_y=low_chunk.y; chunk_y<=high_chunk.y; chunk_y++){
+      for (int chunk_x=low_chunk.x; chunk_x<=high_chunk.x; chunk_x++){
+        glm::ivec3 chunk(chunk_x,chunk_y,chunk_z);
+        glm::ivec3 chunk_first_slot = chunk*chunk_sz;
+        for(int idx=0;idx<chunk_sz*chunk_sz*chunk_sz; idx++){
+          ivec3 offset(
+              (idx%(chunk_sz*chunk_sz))%chunk_sz,
+              (idx%(chunk_sz*chunk_sz))/chunk_sz,
+              idx/(chunk_sz*chunk_sz));
+          ivec3 slot=chunk_first_slot+offset;
+
+          //// Set the slot!
+          int32_t s_idx=get_idx(slot);
+          if (s_idx != -1) { // Chunk Within Boundaries
+            glm::vec3 grid_pos=grid_to_pos(slot);
+            float res=implicit.eval(grid_pos, center);
+            if (res == 0.f) continue;
+            if (s_idx == 0){ // CHUNK NOT ALLOCATED
+              omp_set_lock(&chunk_map_lock); 
+              // double check to avoid data race
+              if (get_chunk_mem_idx_from_slot(slot)==0){
+                allocate_chunk(get_chunk_map_idx_from_slot(slot));
+              }
+              omp_unset_lock(&chunk_map_lock);
+              s_idx = get_idx(slot);
+            }
+            assert(s_idx>0);
+            #pragma omp atomic update
+            scalar_field[s_idx]+=res;
+          } else {
+          }
+        }
+      }
+    }
+  }
+}
 
 void Grid::fill_line_avx512(int32_t segment_index, 
     const std::vector<glm::vec3> &path, 
@@ -211,9 +272,9 @@ void Grid::fill_line_avx512(int32_t segment_index,
                 implicit_before.eval(grid_pos, path[segment_index-1], path[segment_index]);
               float res_aft= segment_index >= path.size()-2 ? 0.f : 
                 implicit_after.eval(grid_pos, path[segment_index+1], path[segment_index+2]);
-              if (res<res_bef || res<res_aft) continue;
+              if (res==0.f || res<res_bef || res<res_aft) continue;
 
-              if (s_idx == 0){ // CHUNK NOT ALLOCATED
+              if (s_idx == 0){ // CHUNK NOT ALLOCATED, BUT NEEDS TO BE
                 omp_set_lock(&chunk_map_lock); 
                 // double check to avoid data race
                 if (get_chunk_mem_idx_from_slot(slot)==0){

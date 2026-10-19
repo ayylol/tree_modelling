@@ -34,6 +34,7 @@ public:
     glm::vec3 get_backbottomleft() { return back_bottom_left; }
 
     // Implicit Filling
+    void fill_sphere(glm::vec3 center, float max_val, float support);
     void fill_path(uint32_t strand_id, const std::vector<glm::vec3> &path, 
         float max_val, float max_b, float shoot_b, float root_b, 
         size_t inflection_point);
@@ -66,24 +67,15 @@ public:
     Mesh<Vertex> get_occupied_geom(float threshold);
     Mesh<VertFlat> get_normals_geom(float threshold);
     void calc_data();
-private:
-    struct Eval {
-        float val   = 0.0;
-        size_t checked = 0;
-        std::unordered_map<uint32_t, float> strands_checked;
-    };
-
-    // Returns a slot's index in the scalar field, -1 if it is not in bounds, and -2 if the chunk is not allocated.
+//private:
+    // Returns a slot's index in the scalar field, -1 if it is not in bounds, and 0 if the chunk is not allocated, -2 if the chunk is no longer allocated (all vals past a threshol).
     int32_t get_idx(glm::ivec3 v) const;
     std::vector<float> scalar_field;
+    float high_value=20.f;
 
     // Take the chunk map index and allocate that chunk in the scalar field.
     void allocate_chunk(int32_t chunk_idx);
-
-    //// Given a chunk, returns the chunk map index of the chunk containing it.
-    //int32_t get_chunk_map_idx_from_chunk(const glm::ivec3 chunk) const;
-    //// Given a chunk, returns the first index of its chunk in the scalar field vector.
-    //int32_t get_chunk_mem_idx_from_chunk(const glm::ivec3 chunk) const;
+    void deallocate_chunk(int32_t chunk_idx);
 
     // Given a slot, returns the chunk map index of the chunk containing it.
     int32_t get_chunk_map_idx_from_slot(const glm::ivec3 p) const;

@@ -23,7 +23,7 @@
 
 class Strands {
 public:
-    Strands(const Skeleton &tree, Grid &grid, nlohmann::json options);
+    Strands(const Skeleton &tree, Grid &grid, Grid &obstacle_grid, nlohmann::json options);
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
     Mesh<Vertex> visualize_searchpoint(float strand) const;
@@ -63,6 +63,8 @@ private:
     std::vector<Keypoints> keypoints;
 
     Grid &grid;
+    Grid &obstacle_grid;
+
     KDTree root_kdtree;
     std::vector<std::vector<std::pair<int32_t, int32_t>>> root_2d_map;
     std::vector<glm::vec2> root_2d;
