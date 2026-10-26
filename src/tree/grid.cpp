@@ -129,6 +129,17 @@ bool Grid::is_in_grid(ivec3 grid_cell) const {
           grid_cell.z >= 0 && grid_cell.z < dimensions.z;
 }
 
+bool Grid::is_line_occupied(glm::vec3 start, glm::vec3 end) const{
+    std::vector<glm::ivec3> voxels = get_voxels_line(start, end);
+    if (voxels.size() == 0)
+        return false;
+    for (auto voxel : voxels) {
+        if (lazy_eval(voxel) == 0.f)
+            return false;
+    }
+    return true;
+}
+
 float Grid::eval_pos(glm::vec3 pos) const {
   glm::ivec3 bbl_cell = pos_to_grid(pos);
   const ivec3 cell_order[8] = {
@@ -398,6 +409,30 @@ void Grid::fill_line(int32_t segment_index,
         last_axis1 = voxels[i][axis1];
         last_axis2 = voxels[i][axis2];
     }
+}
+void Grid::fill_path_voxels(const std::vector<glm::vec3> &path) {
+  // Iterate through strand segments
+  for (int i = 0; i<path.size()-1; i++){
+    // Set voxels passed through to 1
+    vector<ivec3> voxels = get_voxels_line(path[i], path[i+1]);
+    for (auto slot : voxels){
+      int32_t s_idx=get_idx(slot);
+      if (s_idx != -1) { // Chunk Within Boundaries
+        if (s_idx == 0){ // CHUNK NOT ALLOCATED, BUT NEEDS TO BE
+          omp_set_lock(&chunk_map_lock); 
+          // double check to avoid data race
+          if (get_chunk_mem_idx_from_slot(slot)==0){
+            allocate_chunk(get_chunk_map_idx_from_slot(slot));
+          }
+          omp_unset_lock(&chunk_map_lock);
+          s_idx = get_idx(slot);
+        }
+        assert(s_idx>0);
+        #pragma omp atomic write
+        scalar_field[s_idx]=1.f;
+      }
+    }
+  }
 }
 
 void Grid::fill_path(

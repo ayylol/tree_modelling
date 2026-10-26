@@ -405,11 +405,16 @@ void Strands::add_strand(size_t shoot_index, int age) {
     float current_bias = !(target_on_root || on_root) ?
       1.0 : (1 - _interp_bias) + bias_amount * _interp_bias;
     //sw.start();
-    std::optional<glm::vec3> ext = find_extension(
-        strand.back(), last_closest, target.frame, current_bias);
+    int ext_count=0;
+    std::optional<glm::vec3> ext = find_extension( strand.back(), last_closest, target.frame, current_bias);
     //sw.stop();
+    //if (!ext) {
+    //  ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
+    //}
     if (!ext) {
+      break;
       ext = find_extension_canoniso(strand.back(), last_closest, target.frame);
+      done = true;
     }
     strand.push_back(ext.value());
     node_info.back().push_back({});
@@ -513,9 +518,11 @@ void Strands::add_strand(size_t shoot_index, int age) {
   if (strand.size() <= 2)
     return;
   float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+  /*
   strand = smooth(strand, sm_iter, sm_peak, sm_min, inflection * sm_start,
                   inflection,
                   inflection + ((strand.size() - inflection - 1) * sm_end));
+                  */
   strands.push_back(strand);
   assert(strand.size() == node_info.back().size());
   assert(strands.size() == node_info.size());
@@ -537,8 +544,11 @@ void Strands::add_strand(size_t shoot_index, int age) {
   //sw.stop();
   //sw.start();
   // Add the strand for real now
+  /*
   grid.fill_path(strands.size(), strand, max_val, 
       base_max_range, leaf_min_range, root_min_range, inflection);
+      */
+  grid.fill_path_voxels(strand);
   //sw.stop();
 }
 
@@ -602,9 +612,12 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     assert(!glm::any(glm::isnan(r_vec)));
     assert(!glm::any(glm::isnan(trial_head)));
 
+    if (grid.is_line_occupied(from, trial_head)) continue;
+    /*
     float val = grid.eval_pos(trial_head);
     float obstacle_val = obstacle_grid.eval_pos(trial_head);
     if (val>=reject_iso || obstacle_val != 0.f) continue;
+    */
 
     glm::vec3 biased_head = trial_head;
     biased_head.y /= bias;

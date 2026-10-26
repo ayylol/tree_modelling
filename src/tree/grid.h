@@ -38,6 +38,7 @@ public:
     void fill_path(uint32_t strand_id, const std::vector<glm::vec3> &path, 
         float max_val, float max_b, float shoot_b, float root_b, 
         size_t inflection_point);
+    void fill_path_voxels(const std::vector<glm::vec3> &path);
     void fill_line_avx512(int32_t segment_index, 
         const std::vector<glm::vec3> &path, 
         const MetaBalls& implicit,
@@ -55,6 +56,8 @@ public:
     glm::vec3 lazy_norm(glm::ivec3 slot);
     glm::vec3 eval_norm(glm::vec3 pos, float step_size=0.0005f) const;
     glm::vec3 eval_gradient(glm::vec3 pos, float step_size=0.0005f) const;
+
+    bool is_line_occupied(glm::vec3 a, glm::vec3 b) const;
 
     std::vector<glm::ivec3> get_voxels_line(glm::vec3 start, glm::vec3 end) const;
 
