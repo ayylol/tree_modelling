@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
     //// Obstacle Grid
     STOPWATCH("Initializing Obstacle Grid",
             Grid obstacle_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
-            //obstacle_grid.fill_sphere(glm::vec3(0,0.18,0.13), 1000.f, 0.065f);
+            obstacle_grid.fill_sphere(glm::vec3(0,0.18,0.13), 1000.f, 0.065f);
             );
     // Make camera according to grid
     cameras.push_back(Camera(grid.get_center(), 2.5f*(grid.get_center()-grid.get_backbottomleft()).z, width, height));
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
         Vertex{glm::vec3(-50, 0, -50), ground_color}};
     std::vector<GLuint> ground_indices{0, 1, 3, 0, 3, 2};
     Mesh ground(ground_verts, ground_indices);
-    Mesh<Vertex> obstacles_mesh=obstacle_grid.get_occupied_geom(10.f);
+    Mesh<Vertex> obstacles_mesh=obstacle_grid.get_occupied_geom(0.01f);
 
 
     system("notify-send \"Done Building Tree\"");

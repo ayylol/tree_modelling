@@ -602,8 +602,9 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     assert(!glm::any(glm::isnan(r_vec)));
     assert(!glm::any(glm::isnan(trial_head)));
 
-    float val = std::max(grid.eval_pos(trial_head), obstacle_grid.eval_pos(trial_head));
-    if (val>=reject_iso) continue;
+    float val = grid.eval_pos(trial_head);
+    float obstacle_val = obstacle_grid.eval_pos(trial_head);
+    if (val>=reject_iso || obstacle_val != 0.f) continue;
 
     glm::vec3 biased_head = trial_head;
     biased_head.y /= bias;
