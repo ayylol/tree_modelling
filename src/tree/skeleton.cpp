@@ -3,6 +3,7 @@
 #include "glm/gtx/quaternion.hpp"
 #include "glm/gtx/transform.hpp"
 #include "glm/gtx/vector_angle.hpp"
+#include "rendering/VBO.h"
 #include <glm/gtx/io.hpp>
 #include <iostream>
 #include <utility>
@@ -42,6 +43,7 @@ Skeleton::Skeleton(json& options){
     std::cout<<"Max Extent: "<<bounds.first<<" "<<bounds.second<<std::endl;
     std::cout<<"------------------------"<<std::endl;
 }
+
 
 Mesh<VertFlat> Skeleton::get_mesh(){
   //return get_mesh_frames();
@@ -188,7 +190,7 @@ Mesh<VertFlat> Skeleton::get_mesh_lines(){
     return Mesh(vertices, indices);
 }
 
-std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const
+std::vector<glm::mat4> Skeleton::get_path(size_t index, path_type type) const
 {
     auto &paths = type == LEAF ? leafs : root_tips;
     if ( index >= paths.size() || index < 0) {
@@ -202,6 +204,11 @@ std::vector<glm::mat4> Skeleton::get_strand(size_t index, path_type type) const
         current = current->parent;
     }
     return strand;
+}
+
+// TODO: IMPLEMENT THIS!
+std::vector<size_t> Skeleton::get_related_paths(size_t leaf_tip, size_t distance_from_leaf, path_type) const{
+  return {2,3,4};
 }
 
 void Skeleton::transform_dfs(Node& node, glm::mat4 t, glm::mat4 s, glm::mat4 r){

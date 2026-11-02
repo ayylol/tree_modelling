@@ -24,10 +24,17 @@
 class Strands {
 public:
     Strands(const Skeleton &tree, Grid &grid, Grid &obstacle_grid, nlohmann::json options);
+
+    // TODO: THESE SHOULD BE VERTFLAT!
     Mesh<Vertex> get_mesh(float start = 0.0f, float end = 1.0f) const;
     Mesh<Vertex> visualize_node(float strand, float node) const;
     Mesh<Vertex> visualize_searchpoint(float strand) const;
     Mesh<Vertex> visualize_keypoints(float strand) const;
+
+    Mesh<VertFlat> get_mesh_paths();
+    Mesh<VertFlat> get_path_node();
+    void move_visualization(int paths_moved, int nodes_moved);
+
     void add_strands(unsigned int amount);
     int add_stage();
 
@@ -52,6 +59,9 @@ private:
       bool transition=false;
     };
     std::vector<std::vector<NodeInfo>> node_info;
+
+    int node_visualized=0;
+    int path_visualized=0;
 
     struct Keypoints {
       glm::vec3 la_start;

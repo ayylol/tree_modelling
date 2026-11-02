@@ -63,9 +63,9 @@ std::string image_prefix = "tree";
 // Toggles
 bool view_mesh = true, 
      view_volume = false, 
-     view_strands = true,
-     view_normals = false,
-     view_skeleton = false,
+     view_strands = false,
+     view_normals = true,
+     view_skeleton = true,
      view_ground = false,
      view_bound = false,
      interactive = true,
@@ -79,6 +79,9 @@ bool reset_strands = false;
 float strands_start = 0.0f,
       strands_end = 1.0f,
       node_vis_f = 0.5f;
+
+int move_path=0;
+int move_node=0;
 
 int main(int argc, char *argv[]) {
     // Validating input
@@ -117,7 +120,7 @@ int main(int argc, char *argv[]) {
     //// Obstacle Grid
     STOPWATCH("Initializing Obstacle Grid",
             Grid obstacle_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
-            obstacle_grid.fill_sphere(glm::vec3(0,0.18,0.13), 1000.f, 0.065f);
+            //obstacle_grid.fill_sphere(glm::vec3(0,0.18,0.13), 1000.f, 0.065f);
             );
     // Make camera according to grid
     cameras.push_back(Camera(grid.get_center(), 2.5f*(grid.get_center()-grid.get_backbottomleft()).z, width, height));
@@ -160,21 +163,31 @@ int main(int argc, char *argv[]) {
         );
 
     // Creating Meshes
-    STOPWATCH("Creating Skeleton Mesh", Mesh skeleton_geom = tree.get_mesh(););
+    STOPWATCH("Creating Skeleton Mesh", 
+        Mesh skeleton_geom = tree.get_mesh();
+        );
     //STOPWATCH("Getting Occupied Volume", Mesh volume_geom = gr.get_occupied_geom_points(0.0f););
     STOPWATCH("Getting Strand", 
         Mesh strands_geom = detail.get_mesh();
         Mesh node_vis = detail.visualize_node(0,0);
         Mesh searchpoint_vis = detail.visualize_searchpoint(0);
         Mesh keypoint_vis = detail.visualize_keypoints(0);
+
+        Mesh paths_geom = detail.get_mesh_paths();
+        Mesh node_geom = detail.get_path_node();
     );
     STOPWATCH("Getting Bounds", Mesh bound_geom = grid.get_bound_geom(););
 
     float surface_val = opt_data.at("mesh_iso");
     Mesh<Vertex> tree_geom = Mesh(std::vector<Vertex>(), std::vector<GLuint>());
+
+    /*
+    // NOTE: Uncomment to Polygonize isosurface by default
+
     STOPWATCH("Polygonizing Isosurface", 
         tree_geom=grid.get_occupied_geom(surface_val);
     );
+    */
     if (!interactive){
       STOPWATCH("Polygonizing Isosurface", 
           tree_geom=grid.get_occupied_geom(surface_val);
@@ -196,7 +209,8 @@ int main(int argc, char *argv[]) {
         Vertex{glm::vec3(-50, 0, -50), ground_color}};
     std::vector<GLuint> ground_indices{0, 1, 3, 0, 3, 2};
     Mesh ground(ground_verts, ground_indices);
-    Mesh<Vertex> obstacles_mesh=obstacle_grid.get_occupied_geom(0.01f);
+    Mesh<Vertex> obstacles_mesh{std::vector<Vertex>(), std::vector<GLuint>()};
+    //obstacles_mesh = obstacle_grid.get_occupied_geom(0.01f);
 
 
     system("notify-send \"Done Building Tree\"");
@@ -234,6 +248,14 @@ int main(int argc, char *argv[]) {
         if (SHOW_CAM_POS) std::cout<<CAMERA.to_string()<<"\n"<<std::endl;
         if(interactive) processInput(window);
 
+        if (move_node != 0 || move_path != 0){
+          detail.move_visualization(move_path, move_node);
+          move_node=0;
+          move_path=0;
+          paths_geom = detail.get_mesh_paths();
+          node_geom = detail.get_path_node();
+        }
+
         // Render here
         glClearColor(SKY_COLOR[0], SKY_COLOR[1], SKY_COLOR[2], SKY_COLOR[3]);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -248,10 +270,16 @@ int main(int argc, char *argv[]) {
         if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_normals) {
           //normals_geom.draw(flat_shader, CAMERA, GL_LINES);
-          node_vis.draw(flat_shader, CAMERA, GL_POINTS);
-          node_vis.draw(flat_shader, CAMERA, GL_LINES);
-          searchpoint_vis.draw(flat_shader, CAMERA, GL_LINES);
-          keypoint_vis.draw(flat_shader, CAMERA, GL_POINTS);
+          
+          // Paths viz
+          paths_geom.draw(flat_shader, CAMERA, GL_LINES);
+          node_geom.draw(flat_shader, CAMERA, GL_POINTS);
+          
+          // Lookahead Visualization
+          //node_vis.draw(flat_shader, CAMERA, GL_POINTS);
+          //node_vis.draw(flat_shader, CAMERA, GL_LINES);
+          //searchpoint_vis.draw(flat_shader, CAMERA, GL_LINES);
+          //keypoint_vis.draw(flat_shader, CAMERA, GL_POINTS);
         }
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) {
@@ -597,12 +625,20 @@ void processInput(GLFWwindow *window) {
     }
     // Affect node vis
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-        node_vis_f= std::max(node_vis_f-0.002f, 0.f);
-        reset_strands = true;
+        move_node-=1;
+        //node_vis_f= std::max(node_vis_f-0.002f, 0.f);
+        //reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-        node_vis_f= std::min(node_vis_f+0.002f, 1.f);
-        reset_strands = true;
+        move_node+=1;
+        //node_vis_f= std::min(node_vis_f+0.002f, 1.f);
+        //reset_strands = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        move_path+=1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+        move_path-=1;
     }
 }
 

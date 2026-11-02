@@ -23,7 +23,6 @@ class Skeleton{
         Skeleton(nlohmann::json& options); 
 
         Mesh<VertFlat> get_mesh();
-
         size_t leafs_size() const;
         size_t roots_size() const;
         std::pair<glm::vec3,glm::vec3> get_bounds() const;
@@ -36,12 +35,14 @@ class Skeleton{
           LEAF,
           ROOT
         };
-        std::vector<glm::mat4> get_strand(size_t index, path_type type=LEAF) const;
+        std::vector<glm::mat4> get_path(size_t index, path_type type=LEAF) const;
+        std::vector<size_t> get_related_paths(size_t leaf_tip, size_t distance_from_leaf, path_type=LEAF) const;
 
         struct Node{
             glm::mat4 frame;
             std::shared_ptr<Node> parent;
             std::vector<std::shared_ptr<Node>>children;
+            std::vector<short> paths_containing;
         }; 
         std::shared_ptr<Node> shoot_root;
         std::vector<std::shared_ptr<Node>> leafs;

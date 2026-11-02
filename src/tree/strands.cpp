@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include "glm/gtx/io.hpp"
+#include "rendering/VBO.h"
 #include "util/geometry.h"
 #include "util/stopwatch.h"
 #include <memory>
@@ -72,12 +73,12 @@ Strands::Strands(const Skeleton &tree, Grid &grid_in, Grid &obstacle_grid_in, nl
   int root_prune_size = strand_options.at("root_prune_size");
   // Set up root & shoot paths
   for (size_t i = 0; i < tree.leafs_size(); i++) {
-    std::vector<glm::mat4> shoot_path = tree.get_strand(i, Skeleton::LEAF);
+    std::vector<glm::mat4> shoot_path = tree.get_path(i, Skeleton::LEAF);
     shoot_frames.push_back(shoot_path);
     longest_shoot_length = std::max(longest_shoot_length, (int)shoot_frames.size());
   }
   for (size_t i = 0; i < tree.roots_size(); i++) {
-    std::vector<glm::mat4> root_frame = tree.get_strand(i, Skeleton::ROOT);
+    std::vector<glm::mat4> root_frame = tree.get_path(i, Skeleton::ROOT);
     // Reverse the path
     for (size_t i = 0; i < root_frame.size() / 2; i++) {
       size_t j = root_frame.size() - 1 - i;
@@ -224,6 +225,44 @@ Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
   }
   return Mesh(vertices, indices);
 }
+
+void Strands::move_visualization(int paths_moved, int nodes_moved){
+  path_visualized=(path_visualized+paths_moved)%shoot_frames.size();
+  node_visualized=std::clamp(node_visualized+nodes_moved, 0, (int)shoot_frames[path_visualized].size()-1);
+}
+
+Mesh<VertFlat> Strands::get_mesh_paths(){
+  std::vector<VertFlat> verts;
+  std::vector<GLuint> indices;
+  std::vector<glm::mat4> &target_path = shoot_frames[path_visualized];
+  for (int i=0; i<target_path.size(); i++) {
+    verts.push_back(VertFlat{frame_position(target_path[i]), glm::vec3(0,1,0)});
+    if (i!=target_path.size()-1){
+      indices.push_back(i);
+      indices.push_back(i+1);
+    }
+  }
+  std::vector<size_t> related_paths = tree.get_related_paths(path_visualized,target_path.size()-1-node_visualized);
+  for (int p=0; p<related_paths.size(); p++){
+    std::vector<glm::mat4> &shoot_path = shoot_frames[p];
+    size_t curr_verts_size = verts.size();
+    for (int i=0; i<shoot_path.size(); i++) {
+      verts.push_back(VertFlat{frame_position(shoot_path[i]), glm::vec3(1,0,1)});
+      if (i!=shoot_path.size()-1){
+        indices.push_back(curr_verts_size+i);
+        indices.push_back(curr_verts_size+i+1);
+      }
+    }
+  }
+  return Mesh(verts,indices); 
+}
+Mesh<VertFlat> Strands::get_path_node(){
+  std::vector<glm::mat4> &shoot_path = shoot_frames[path_visualized%shoot_frames.size()];
+  std::vector<VertFlat> verts = std::vector<VertFlat>{VertFlat{frame_position(shoot_path[shoot_path.size()-1-node_visualized]),glm::vec3(1,0,0)}};
+  std::vector<GLuint> indices = std::vector<GLuint>{0};
+  return Mesh(verts, indices); 
+}
+
 Mesh<Vertex> Strands::get_mesh(float start, float end) const {
   start = std::max(0.0f, start);
   end = std::clamp(end, start, 1.f);
@@ -594,7 +633,7 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
   if (-x_axis==canonical_direction) canonical_direction = glm::normalize(glm::vec3(-.096f,0.14f,0.f));
   const glm::quat rotation=glm::angleAxis(glm::angle(canonical_direction, x_axis),
                                       glm::normalize(glm::cross(x_axis, canonical_direction)));
-//#pragma omp parallel for
+  #pragma omp parallel for
   for (int i = 0; i < num_trials; i++) {
     glm::vec3 r_vec = random_vector(rotation);
     glm::vec3 trial_head = from + segment_length * r_vec;
@@ -603,7 +642,8 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     assert(!glm::any(glm::isnan(trial_head)));
 
     float val = grid.eval_pos(trial_head);
-    float obstacle_val = obstacle_grid.eval_pos(trial_head);
+    //float obstacle_val = obstacle_grid.eval_pos(trial_head);
+    float obstacle_val = 0.f;
     if (val>=reject_iso || obstacle_val != 0.f) continue;
 
     glm::vec3 biased_head = trial_head;

@@ -12,7 +12,8 @@
 "grid_scale":0.8,
 "mesh_iso":0.3,
 "strands":{
-    "num_abs": 2200,
+    "_num_abs": 2200,
+    "num_abs": 1,
     "intermediate_stages": 1,
     "max_val": 3.0,
     "leaf_min_range":0.006,

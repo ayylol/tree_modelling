@@ -18,6 +18,6 @@ vec4 fog(vec4 color){
 in vec3 color;
 void main()
 {
-  //FragColor = vec4(color, 1.0f);
-  FragColor = fog(vec4(color, 1.0f));
+  FragColor = vec4(color, 1.0f);
+  //FragColor = fog(vec4(color, 1.0f));
 }
