@@ -63,7 +63,7 @@ std::string image_prefix = "tree";
 // Toggles
 bool view_mesh = true, 
      view_volume = false, 
-     view_strands = false,
+     view_strands = true,
      view_normals = true,
      view_skeleton = false,
      view_ground = false,
@@ -175,6 +175,7 @@ int main(int argc, char *argv[]) {
 
         Mesh paths_geom = detail.get_mesh_paths();
         Mesh node_geom = detail.get_path_node();
+        Mesh related_strands_geom = detail.get_mesh_related_strands();
     );
     STOPWATCH("Getting Bounds", Mesh bound_geom = grid.get_bound_geom(););
 
@@ -254,6 +255,7 @@ int main(int argc, char *argv[]) {
           move_path=0;
           paths_geom = detail.get_mesh_paths();
           node_geom = detail.get_path_node();
+          related_strands_geom = detail.get_mesh_related_strands();
         }
 
         // Render here
@@ -267,7 +269,10 @@ int main(int argc, char *argv[]) {
         if (view_volume) {
             //volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         }
-        if (view_strands) strands_geom.draw(flat_shader, CAMERA, GL_LINES);
+        if (view_strands) {
+          related_strands_geom.draw(flat_shader, CAMERA, GL_LINES);
+          //strands_geom.draw(flat_shader, CAMERA, GL_LINES);
+        }
         if (view_normals) {
           //normals_geom.draw(flat_shader, CAMERA, GL_LINES);
           

@@ -19,46 +19,7 @@
 #include <ostream>
 #include <utility>
 
-std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3> &in,
-                                       int times, float peak_influence,
-                                       float min_influence, int start, int peak,
-                                       int end) {
-  size_t n = in.size();
-  start = std::max(1, start);
-  end = std::min((int)n - 2, end);
-  peak = std::clamp(peak, start, end);
-  std::vector<glm::vec3> old = in;
-  std::vector<glm::vec3> smoothed = in;
-  while (times--) {
-    float influence = min_influence;
-    float i_inc = (peak_influence - min_influence) / (peak - start);
-    float i_dec = (peak_influence - min_influence) / (peak - end);
-    for (int i = 1; i < n - 2; ++i) {
-      if (i >= start && i < peak) {
-        influence += i_inc;
-      } else if (i >= peak && i < end) {
-        influence += i_dec;
-      }
-      smoothed[i] = influence * old[i - 1] + (1.f - 2 * influence) * old[i] +
-                    influence * old[i + 1];
-    }
-    /*
-     * TODO: REENABLE
-    for (auto it=smoothed.begin()+1; it!=(smoothed.end()-1);++it){
-        float d = glm::distance(*it,*(it-1))+glm::distance(*it,*(it+1));
-        if (d<segment_length*1){
-            smoothed.erase(it);
-            it--;
-        }
-    }
-    */
-    old = smoothed;
-  }
-  return smoothed;
-}
-
-std::default_random_engine
-    rng(0);
+std::default_random_engine rng(0);
 /*
 std::default_random_engine
     rng(std::chrono::system_clock::now().time_since_epoch().count());
@@ -89,6 +50,8 @@ Strands::Strands(const Skeleton &tree, Grid &grid_in, Grid &obstacle_grid_in, nl
       root_frames.push_back(root_frame);
     }
   }
+  associated_strands = std::vector<std::vector<size_t>>(shoot_frames.size());
+
   std::unordered_map<glm::vec2, int32_t> temp_root_map;
   root_2d_map = std::vector<std::vector<std::pair<int32_t, int32_t>>>();
   for (size_t i = 0; i < root_frames.size(); i++) {
@@ -231,6 +194,26 @@ void Strands::move_visualization(int paths_moved, int nodes_moved){
   node_visualized=std::clamp((node_visualized+nodes_moved), 0, (int)shoot_frames[path_visualized].size()-1);
 }
 
+Mesh<VertFlat> Strands::get_mesh_related_strands(){
+  std::vector<VertFlat> verts;
+  std::vector<GLuint> indices;
+  std::vector<size_t> related_paths = tree.get_related_paths(path_visualized, node_visualized);
+  for (size_t path_idx : related_paths){
+    for (size_t strand_idx : associated_strands[path_idx]) {
+      std::vector<glm::vec3> &strand = strands[strand_idx];
+      size_t curr_verts_size = verts.size();
+      for (int i=0; i<strand.size(); i++) {
+        verts.push_back(VertFlat{strand[i], glm::vec3(1,0,1)});
+        if (i!=strand.size()-1){
+          indices.push_back(curr_verts_size+i);
+          indices.push_back(curr_verts_size+i+1);
+        }
+      }
+    }
+  }
+  return Mesh(verts,indices); 
+}
+
 Mesh<VertFlat> Strands::get_mesh_paths(){
   std::vector<VertFlat> verts;
   std::vector<GLuint> indices;
@@ -247,7 +230,7 @@ Mesh<VertFlat> Strands::get_mesh_paths(){
     std::vector<glm::mat4> &shoot_path = shoot_frames[related_paths[p]];
     size_t curr_verts_size = verts.size();
     for (int i=0; i<shoot_path.size(); i++) {
-      verts.push_back(VertFlat{frame_position(shoot_path[i]), glm::vec3(1,0,1)});
+      verts.push_back(VertFlat{frame_position(shoot_path[i]), glm::vec3(1,0,0)});
       if (i!=shoot_path.size()-1){
         indices.push_back(curr_verts_size+i);
         indices.push_back(curr_verts_size+i+1);
@@ -341,6 +324,9 @@ void Strands::add_strand(size_t shoot_index, int age) {
   const std::vector<glm::mat4> *shoot_path = &(shoot_frames[shoot_index]);
   const std::vector<glm::mat4> *root_path = nullptr;
   const std::vector<glm::mat4> *path = shoot_path;
+  
+  //
+  associated_strands[shoot_index].push_back(age);
 
   // Binary search for start index
   // use int so it can go negative (will be clamped)
@@ -549,8 +535,11 @@ void Strands::add_strand(size_t shoot_index, int age) {
   // TODO: This certainly makes the asserts checking node_info size break!!!
   // Guessing that this is the case becuase it broke with the is_floating check, 
   // but this one triggers a lot more infrequently
-  if (strand.size() <= 2)
+  if (strand.size() <= 2) {
+    std::cout<<"FATAL ERROR, STRAND WAS 2 NODES OR LESS!"<<std::endl;
+    assert(false);
     return;
+  }
   float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
   strand = smooth(strand, sm_iter, sm_peak, sm_min, inflection * sm_start,
                   inflection,
@@ -832,3 +821,42 @@ glm::vec3 Strands::random_vector(glm::quat rotation) {
   return v;
   // CODE CITED
 }
+
+std::vector<glm::vec3> Strands::smooth(const std::vector<glm::vec3> &in,
+                                       int times, float peak_influence,
+                                       float min_influence, int start, int peak,
+                                       int end) {
+  size_t n = in.size();
+  start = std::max(1, start);
+  end = std::min((int)n - 2, end);
+  peak = std::clamp(peak, start, end);
+  std::vector<glm::vec3> old = in;
+  std::vector<glm::vec3> smoothed = in;
+  while (times--) {
+    float influence = min_influence;
+    float i_inc = (peak_influence - min_influence) / (peak - start);
+    float i_dec = (peak_influence - min_influence) / (peak - end);
+    for (int i = 1; i < n - 2; ++i) {
+      if (i >= start && i < peak) {
+        influence += i_inc;
+      } else if (i >= peak && i < end) {
+        influence += i_dec;
+      }
+      smoothed[i] = influence * old[i - 1] + (1.f - 2 * influence) * old[i] +
+                    influence * old[i + 1];
+    }
+    /*
+     * TODO: REENABLE
+    for (auto it=smoothed.begin()+1; it!=(smoothed.end()-1);++it){
+        float d = glm::distance(*it,*(it-1))+glm::distance(*it,*(it+1));
+        if (d<segment_length*1){
+            smoothed.erase(it);
+            it--;
+        }
+    }
+    */
+    old = smoothed;
+  }
+  return smoothed;
+}
+

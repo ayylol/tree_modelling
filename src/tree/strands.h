@@ -31,6 +31,7 @@ public:
     Mesh<Vertex> visualize_searchpoint(float strand) const;
     Mesh<Vertex> visualize_keypoints(float strand) const;
 
+    Mesh<VertFlat> get_mesh_related_strands();
     Mesh<VertFlat> get_mesh_paths();
     Mesh<VertFlat> get_path_node();
     void move_visualization(int paths_moved, int nodes_moved);
@@ -50,6 +51,10 @@ private:
     std::vector<std::vector<glm::vec3>> strands;
     std::vector<std::pair<size_t,size_t>> inflection_points;
     std::vector<std::vector<glm::vec3>> texture_strands;
+    // --- Only for shoot section! -----------------
+    std::vector<std::vector<size_t>> associated_strands;
+    std::vector<std::vector<size_t>> closest_points;
+    //----------------------------------------------
 
     struct NodeInfo{
       glm::vec3 closest;
