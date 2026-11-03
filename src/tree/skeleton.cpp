@@ -6,6 +6,7 @@
 #include "rendering/VBO.h"
 #include <glm/gtx/io.hpp>
 #include <iostream>
+#include <memory>
 #include <utility>
 #include <util/geometry.h>
 
@@ -32,6 +33,10 @@ Skeleton::Skeleton(json& options){
     float average_shoot_length = (shoot_stats.total_length)/(shoot_stats.num_nodes);
     float average_root_length = (root_stats.total_length)/(root_stats.num_nodes);
     //
+    
+    // Set leaf indices
+    for (int i=0; i<leafs.size(); i++){ leafs[i]->leaf_index=i; }
+    for (int i=0; i<root_tips.size(); i++){ root_tips[i]->leaf_index=i; }
 
     std::cout<<"---- Skeleton Stats ----"<<std::endl;
     std::cout<<"Root Position: "<<frame_position(shoot_root->frame)<<std::endl;
@@ -208,7 +213,23 @@ std::vector<glm::mat4> Skeleton::get_path(size_t index, path_type type) const
 
 // TODO: IMPLEMENT THIS!
 std::vector<size_t> Skeleton::get_related_paths(size_t leaf_tip, size_t distance_from_leaf, path_type) const{
-  return {2,3,4};
+  std::vector<size_t> related_paths{};
+  // Travel from leaf tip down to node
+  std::shared_ptr<Node> current_node = leafs[leaf_tip];
+  for (int i=0; i<distance_from_leaf; i++){ current_node = current_node->parent; }
+  // Travel up to each other leaf tip
+  std::vector<std::shared_ptr<Node>> stack = {current_node};
+  while (!stack.empty()){
+    current_node = stack.back();
+    stack.pop_back();
+    for (auto child : current_node->children){
+      stack.push_back(child);
+    }
+    if (current_node->children.empty()){
+      related_paths.push_back(current_node->leaf_index);
+    }
+  }
+  return related_paths;
 }
 
 void Skeleton::transform_dfs(Node& node, glm::mat4 t, glm::mat4 s, glm::mat4 r){

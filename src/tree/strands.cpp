@@ -228,7 +228,7 @@ Mesh<Vertex> Strands::visualize_node(float strand, float node) const {
 
 void Strands::move_visualization(int paths_moved, int nodes_moved){
   path_visualized=(path_visualized+paths_moved)%shoot_frames.size();
-  node_visualized=std::clamp(node_visualized+nodes_moved, 0, (int)shoot_frames[path_visualized].size()-1);
+  node_visualized=std::clamp((node_visualized+nodes_moved), 0, (int)shoot_frames[path_visualized].size()-1);
 }
 
 Mesh<VertFlat> Strands::get_mesh_paths(){
@@ -242,9 +242,9 @@ Mesh<VertFlat> Strands::get_mesh_paths(){
       indices.push_back(i+1);
     }
   }
-  std::vector<size_t> related_paths = tree.get_related_paths(path_visualized,target_path.size()-1-node_visualized);
+  std::vector<size_t> related_paths = tree.get_related_paths(path_visualized, node_visualized);
   for (int p=0; p<related_paths.size(); p++){
-    std::vector<glm::mat4> &shoot_path = shoot_frames[p];
+    std::vector<glm::mat4> &shoot_path = shoot_frames[related_paths[p]];
     size_t curr_verts_size = verts.size();
     for (int i=0; i<shoot_path.size(); i++) {
       verts.push_back(VertFlat{frame_position(shoot_path[i]), glm::vec3(1,0,1)});
@@ -258,7 +258,7 @@ Mesh<VertFlat> Strands::get_mesh_paths(){
 }
 Mesh<VertFlat> Strands::get_path_node(){
   std::vector<glm::mat4> &shoot_path = shoot_frames[path_visualized%shoot_frames.size()];
-  std::vector<VertFlat> verts = std::vector<VertFlat>{VertFlat{frame_position(shoot_path[shoot_path.size()-1-node_visualized]),glm::vec3(1,0,0)}};
+  std::vector<VertFlat> verts = std::vector<VertFlat>{VertFlat{frame_position(shoot_path[node_visualized]),glm::vec3(1,0,0)}};
   std::vector<GLuint> indices = std::vector<GLuint>{0};
   return Mesh(verts, indices); 
 }

@@ -65,7 +65,7 @@ bool view_mesh = true,
      view_volume = false, 
      view_strands = false,
      view_normals = true,
-     view_skeleton = true,
+     view_skeleton = false,
      view_ground = false,
      view_bound = false,
      interactive = true,
@@ -635,10 +635,10 @@ void processInput(GLFWwindow *window) {
         //reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-        move_path+=1;
+        move_path+=5;
     }
     if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
-        move_path-=1;
+        move_path-=5;
     }
 }
 

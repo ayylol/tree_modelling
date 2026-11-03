@@ -42,7 +42,7 @@ class Skeleton{
             glm::mat4 frame;
             std::shared_ptr<Node> parent;
             std::vector<std::shared_ptr<Node>>children;
-            std::vector<short> paths_containing;
+            int32_t leaf_index; // only for leaf nodes
         }; 
         std::shared_ptr<Node> shoot_root;
         std::vector<std::shared_ptr<Node>> leafs;
