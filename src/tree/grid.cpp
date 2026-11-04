@@ -272,7 +272,20 @@ void Grid::fill_line_avx512(int32_t segment_index,
                 implicit_before.eval(grid_pos, path[segment_index-1], path[segment_index]);
               float res_aft= segment_index >= path.size()-2 ? 0.f : 
                 implicit_after.eval(grid_pos, path[segment_index+1], path[segment_index+2]);
+              // Account for negative
+              bool negative = false;
+              if (res<0.f) {
+                negative = true;
+                res*=-1.f;
+                res_bef*=-1.f;
+                res_aft*=-1.f;
+              }
               if (res==0.f || res<res_bef || res<res_aft) continue;
+              if (negative) {
+                res*=-1.f;
+                res_bef*=-1.f;
+                res_aft*=-1.f;
+              }
 
               if (s_idx == 0){ // CHUNK NOT ALLOCATED, BUT NEEDS TO BE
                 omp_set_lock(&chunk_map_lock); 
@@ -404,7 +417,7 @@ void Grid::fill_path(
     uint32_t strand_id, const std::vector<glm::vec3> &path, 
     float max_val, 
     float max_b, float shoot_b, float root_b, 
-    size_t inflection_point){
+    size_t inflection_point, int partial_end){
   std::vector<MetaBalls> potential_funcs;
   potential_funcs.reserve(path.size()-1);
   // initialize potential functions
@@ -426,7 +439,9 @@ void Grid::fill_path(
     if (i!=0) potential_before = potential_funcs[i-1];
     MetaBalls potential_after = zero_potential_func;
     if (i!=potential_funcs.size()-1) potential_after = potential_funcs[i+1];
-    fill_line_avx512(i, path, potential_funcs[i], potential_before, potential_after);
+    if (partial_end<0 || i<=partial_end){
+      fill_line_avx512(i, path, potential_funcs[i], potential_before, potential_after);
+    }
     //fill_line(i, path, potential_funcs[i], potential_before, potential_after);
   }
   // 0th slot should always be emptg

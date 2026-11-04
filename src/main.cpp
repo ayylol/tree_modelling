@@ -70,6 +70,7 @@ bool view_mesh = true,
      view_bound = false,
      interactive = true,
      next_stage = false,
+     shed_branch = false,
      gen_geom = false,
      geom_generated = false;
 
@@ -223,11 +224,17 @@ int main(int argc, char *argv[]) {
         if (next_stage){
           STOPWATCH("Adding Strands",
               if (detail.add_stage()>=0){
-              strands_geom=detail.get_mesh();
-              geom_generated=false;
+                strands_geom=detail.get_mesh();
+                geom_generated=false;
               }
           );
           next_stage=false;
+        }
+        if (shed_branch){
+          detail.shed_branch();
+          strands_geom=detail.get_mesh();
+          geom_generated=false;
+          shed_branch=false;
         }
         if (gen_geom){
           if (!geom_generated){
@@ -467,7 +474,7 @@ bool pressed1 = false, pressed2 = false, pressed3 = false, pressed4 = false,
      pressed5 = false, pressed6 = false, pressed7 = false,
      pressedperiod = false, pressedenter = false, pressedga = false,
      pressedn = false, pressedt = false, pressedg = false, pressedbs = false,
-     pressedp = false;
+     pressedp = false, pressed_space = false;
 void processInput(GLFWwindow *window) {
     // Mouse input
     double mouse_current_x, mouse_current_y;
@@ -645,6 +652,11 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
         move_path-=5;
     }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !pressed_space){ // Toggle
+        shed_branch=true;
+        pressed_space = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE && pressed_space) pressed_space = false;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){

@@ -39,6 +39,8 @@ public:
     void add_strands(unsigned int amount);
     int add_stage();
 
+    void shed_branch();
+
 private:
     void add_strand(size_t shoot_index, int age);
     size_t match_root(glm::vec3 pos, glm::mat4 frame);

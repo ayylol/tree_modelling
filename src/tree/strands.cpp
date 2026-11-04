@@ -201,12 +201,26 @@ Mesh<VertFlat> Strands::get_mesh_related_strands(){
   for (size_t path_idx : related_paths){
     for (size_t strand_idx : associated_strands[path_idx]) {
       std::vector<glm::vec3> &strand = strands[strand_idx];
-      size_t curr_verts_size = verts.size();
+      std::vector<size_t> &strand_closest_points = closest_points[strand_idx];
+      size_t before_verts_size = verts.size();
       for (int i=0; i<strand.size(); i++) {
+        // FIXME: CLOSEST POINT ISN'T AS TIGHT AS IT SHOULD BE
+        if (strand_closest_points[i] >= node_visualized ||
+            i >= inflection_points[strand_idx].second) break; // Past node_visualized
         verts.push_back(VertFlat{strand[i], glm::vec3(1,0,1)});
+        /*
         if (i!=strand.size()-1){
-          indices.push_back(curr_verts_size+i);
-          indices.push_back(curr_verts_size+i+1);
+          indices.push_back(before_verts_size+i);
+          indices.push_back(before_verts_size+i+1);
+        }
+        */
+      }
+      size_t curr_verts_size = verts.size();
+      size_t verts_added = curr_verts_size-before_verts_size;
+      for (int i=0; i<verts_added; i++){
+        if (i!=verts_added-1){
+          indices.push_back(before_verts_size+i);
+          indices.push_back(before_verts_size+i+1);
         }
       }
     }
@@ -241,7 +255,7 @@ Mesh<VertFlat> Strands::get_mesh_paths(){
 }
 Mesh<VertFlat> Strands::get_path_node(){
   std::vector<glm::mat4> &shoot_path = shoot_frames[path_visualized%shoot_frames.size()];
-  std::vector<VertFlat> verts = std::vector<VertFlat>{VertFlat{frame_position(shoot_path[node_visualized]),glm::vec3(1,0,0)}};
+  std::vector<VertFlat> verts = std::vector<VertFlat>{VertFlat{frame_position(shoot_path[node_visualized]),glm::vec3(0,0,1)}};
   std::vector<GLuint> indices = std::vector<GLuint>{0};
   return Mesh(verts, indices); 
 }
@@ -287,6 +301,25 @@ Mesh<Vertex> Strands::get_mesh(float start, float end) const {
   return Mesh(vertices, indices);
 }
 
+void Strands::shed_branch(){
+  std::cout<<"SHEDDING BRANCH!"<<std::endl;
+  std::vector<size_t> related_paths = tree.get_related_paths(path_visualized, node_visualized);
+  for (size_t path_idx : related_paths){
+    for (size_t strand_idx : associated_strands[path_idx]) {
+      // FIXME: using nth node is wrong but easy to get up and running
+      grid.fill_path(strand_idx,
+          strands[strand_idx],
+          -max_val,
+          base_max_range,
+          leaf_min_range,
+          root_min_range,
+          inflection_points[strand_idx].first,
+          node_visualized 
+          );
+    }
+  }
+}
+
 int Strands::add_stage(){
   if (stages_left == 0) return -1;
   if (stages_left == 1) {
@@ -327,6 +360,7 @@ void Strands::add_strand(size_t shoot_index, int age) {
   
   //
   associated_strands[shoot_index].push_back(age);
+  closest_points.push_back({});
 
   // Binary search for start index
   // use int so it can go negative (will be clamped)
@@ -385,6 +419,8 @@ void Strands::add_strand(size_t shoot_index, int age) {
       if (num_extensions == 0)
         done = true;
     }
+    closest_points.back().push_back(closest_index);
+
     // Calculate lookahead factor
     float la_interp = on_root                          ? 0.0f
                       : closest_index <= la_start_node ? 0.0f
