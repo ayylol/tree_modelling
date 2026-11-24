@@ -123,11 +123,14 @@ private:
     int num_trials;
     float max_angle;
     float reject_iso;
+    float root_reject_iso;
+    float actual_reject_iso;
     // Experimental
     int start_offset=20;
     float bsearch_iso;
     float _interp;
     float _interp_bias;
+    float _interp_reject_iso;
     // Lookahead Vars
     float strand_lookahead_max;
     float lookahead_factor_min = 1.0f;
@@ -142,6 +145,7 @@ private:
     //transition zone
     float searchpoint_step = 0.1f;
     float bias_step = 0.1f;
+    float reject_iso_step = 0.01f;
     float root_searchpoint_delta = 1.0f;
     // Biasing
     float bias_amount = 1.0f;

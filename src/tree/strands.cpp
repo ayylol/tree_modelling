@@ -14,6 +14,7 @@
 #include "rendering/VBO.h"
 #include "util/geometry.h"
 #include "util/stopwatch.h"
+#include <experimental/filesystem>
 #include <memory>
 #include <omp.h>
 #include <ostream>
@@ -26,9 +27,9 @@ std::default_random_engine
     */
 
 Strands::Strands(const Skeleton &tree, Grid &grid_in, Grid &obstacle_grid_in, nlohmann::json options) :
-  grid(grid_in), 
-  obstacle_grid(obstacle_grid_in), 
-  tree(tree) 
+  grid(grid_in),
+  obstacle_grid(obstacle_grid_in),
+  tree(tree)
 {
   auto strand_options = options.at("strands");
   int root_prune_size = strand_options.at("root_prune_size");
@@ -110,6 +111,11 @@ Strands::Strands(const Skeleton &tree, Grid &grid_in, Grid &obstacle_grid_in, nl
   sm_end = std::clamp((float)strand_options.at("sm_end"), 0.f, 1.f);
   //
   reject_iso = strand_options.at("reject_iso");
+  if (strand_options.contains("root_reject_iso")) {
+    root_reject_iso = strand_options.at("root_reject_iso");
+  } else {
+    root_reject_iso = reject_iso;
+  }
   bias_amount = strand_options.at("bias_amount");
   // Implicit Vals
   base_max_range = strand_options.at("base_max_range");
@@ -198,22 +204,17 @@ Mesh<VertFlat> Strands::get_mesh_related_strands(){
   std::vector<VertFlat> verts;
   std::vector<GLuint> indices;
   std::vector<size_t> related_paths = tree.get_related_paths(path_visualized, node_visualized);
+  int cut_node_from_base = shoot_frames[path_visualized].size()-1-node_visualized;
   for (size_t path_idx : related_paths){
+    int cut_node = shoot_frames[path_idx].size()-1-cut_node_from_base;
     for (size_t strand_idx : associated_strands[path_idx]) {
       std::vector<glm::vec3> &strand = strands[strand_idx];
       std::vector<size_t> &strand_closest_points = closest_points[strand_idx];
       size_t before_verts_size = verts.size();
       for (int i=0; i<strand.size(); i++) {
-        // FIXME: CLOSEST POINT ISN'T AS TIGHT AS IT SHOULD BE
-        if (strand_closest_points[i] >= node_visualized ||
+        if (strand_closest_points[i] >= cut_node ||
             i >= inflection_points[strand_idx].second) break; // Past node_visualized
         verts.push_back(VertFlat{strand[i], glm::vec3(1,0,1)});
-        /*
-        if (i!=strand.size()-1){
-          indices.push_back(before_verts_size+i);
-          indices.push_back(before_verts_size+i+1);
-        }
-        */
       }
       size_t curr_verts_size = verts.size();
       size_t verts_added = curr_verts_size-before_verts_size;
@@ -225,7 +226,7 @@ Mesh<VertFlat> Strands::get_mesh_related_strands(){
       }
     }
   }
-  return Mesh(verts,indices); 
+  return Mesh(verts,indices);
 }
 
 Mesh<VertFlat> Strands::get_mesh_paths(){
@@ -251,13 +252,13 @@ Mesh<VertFlat> Strands::get_mesh_paths(){
       }
     }
   }
-  return Mesh(verts,indices); 
+  return Mesh(verts,indices);
 }
 Mesh<VertFlat> Strands::get_path_node(){
   std::vector<glm::mat4> &shoot_path = shoot_frames[path_visualized%shoot_frames.size()];
   std::vector<VertFlat> verts = std::vector<VertFlat>{VertFlat{frame_position(shoot_path[node_visualized]),glm::vec3(0,0,1)}};
   std::vector<GLuint> indices = std::vector<GLuint>{0};
-  return Mesh(verts, indices); 
+  return Mesh(verts, indices);
 }
 
 Mesh<Vertex> Strands::get_mesh(float start, float end) const {
@@ -304,9 +305,17 @@ Mesh<Vertex> Strands::get_mesh(float start, float end) const {
 void Strands::shed_branch(){
   std::cout<<"SHEDDING BRANCH!"<<std::endl;
   std::vector<size_t> related_paths = tree.get_related_paths(path_visualized, node_visualized);
+  int cut_node_from_base = shoot_frames[path_visualized].size()-1-node_visualized;
   for (size_t path_idx : related_paths){
+    int cut_node = shoot_frames[path_idx].size()-1-cut_node_from_base;
     for (size_t strand_idx : associated_strands[path_idx]) {
-      // FIXME: using nth node is wrong but easy to get up and running
+      int strand_segment=0;
+      int current_closest_node=0;
+      do {
+        current_closest_node = closest_points[strand_idx][strand_segment++];
+      } while (current_closest_node < cut_node);
+      strand_segment-=2;
+      if (strand_segment<0) strand_segment=0;
       grid.fill_path(strand_idx,
           strands[strand_idx],
           -max_val,
@@ -314,7 +323,7 @@ void Strands::shed_branch(){
           leaf_min_range,
           root_min_range,
           inflection_points[strand_idx].first,
-          node_visualized 
+          strand_segment
           );
     }
   }
@@ -357,7 +366,7 @@ void Strands::add_strand(size_t shoot_index, int age) {
   const std::vector<glm::mat4> *shoot_path = &(shoot_frames[shoot_index]);
   const std::vector<glm::mat4> *root_path = nullptr;
   const std::vector<glm::mat4> *path = shoot_path;
-  
+
   //
   associated_strands[shoot_index].push_back(age);
   closest_points.push_back({});
@@ -380,7 +389,7 @@ void Strands::add_strand(size_t shoot_index, int age) {
   size_t closest_index = std::clamp(
       i_closest_index-start_offset, 0, (int)shoot_path->size());
   //
-  
+
   glm::mat4 last_closest = (*path)[closest_index];
   std::vector<glm::vec3> strand{frame_position(last_closest)};
 
@@ -400,6 +409,8 @@ void Strands::add_strand(size_t shoot_index, int age) {
   keypoints.back().la_start=frame_position((*shoot_path)[la_start_node]);
   keypoints.back().la_peak=frame_position((*shoot_path)[la_peak_node]);
   keypoints.back().base_node=frame_position((*shoot_path)[shoot_path->size()-1]);
+
+  actual_reject_iso = reject_iso;
   //  Loop until on root, and target node is the end
   bool on_root = false;
   bool target_on_root = false;
@@ -408,7 +419,7 @@ void Strands::add_strand(size_t shoot_index, int age) {
   int transition_node = 0;
   int num_extensions;
   // difference between root closest and target when in transition zone
-  float idx_diff=0.f; 
+  float idx_diff=0.f;
 
   //Stopwatch sw;
   //std::cout<<"=========================="<<std::endl;
@@ -507,11 +518,15 @@ void Strands::add_strand(size_t shoot_index, int age) {
     // Binary search for final extension
     if (target_on_root) {
       _interp = std::min(_interp+searchpoint_step,1.f);
-      _interp_bias = std::min(_interp_bias+bias_step,1.f); 
+      _interp_bias = std::min(_interp_bias+bias_step,1.f);
+      _interp_reject_iso = std::min(_interp_reject_iso+reject_iso_step,1.f);
     } else {
       _interp = 0.f;
       _interp_bias = 0.f;
+      _interp_reject_iso = 0.f;
     }
+    // Interpolate reject iso 
+    actual_reject_iso = (1.f-_interp_reject_iso)*reject_iso + _interp_reject_iso*root_reject_iso;
     node_info.back().back().closest=frame_position(next.frame);
     node_info.back().back().searchpoint=frame_position(next.frame);
     if (target_on_root && !on_root) { // transition zone
@@ -522,27 +537,32 @@ void Strands::add_strand(size_t shoot_index, int age) {
       glm::vec3 bin_point = frame_position(target.frame) * alpha +
                             frame_position(next.frame) * (1.f - alpha);
       strand[strand.size() - 1] =
-        move_extension(strand.back(), bin_point, reject_iso);
+        move_extension(strand.back(), bin_point, actual_reject_iso);
       // fallback
       node_info.back().back().searchpoint=bin_point;
       node_info.back().back().closest2=frame_position(root_closest.frame);
       node_info.back().back().transition=true;
     } else if (!on_root) { // shoot
       strand[strand.size() - 1] = move_extension(
-          strand.back(), frame_position(next.frame), reject_iso);
+          strand.back(), frame_position(next.frame), actual_reject_iso);
     } else { // root
       int bin_point_idx=std::min(next.index+(int)(idx_diff), root_path->size()-1);
       assert(bin_point_idx>=next.index && bin_point_idx <=root_path->size()-1);
       glm::vec3 bin_point=frame_position((*root_path)[bin_point_idx]);
+      /*
       strand[strand.size() - 1] = move_extension(
-          strand.back(), bin_point, reject_iso);
+          strand.back(), bin_point, actual_reject_iso);
+          */
+      // TODO: Make it so that the reject_iso is interpolated
+      strand[strand.size() - 1] = move_extension(
+          strand.back(), bin_point, actual_reject_iso);
 
       node_info.back().back().searchpoint=bin_point;
       idx_diff=idx_diff-root_searchpoint_delta;
       if (idx_diff <= 0.f) idx_diff=0.f;
     }
     // end of binary search
-    
+
     // Normalize extension
     strand[strand.size()-1] = strand[strand.size()-2]+
       glm::normalize(strand[strand.size()-1]-strand[strand.size() - 2])*segment_length;
@@ -569,7 +589,7 @@ void Strands::add_strand(size_t shoot_index, int age) {
 
   // Occupy strand path
   // TODO: This certainly makes the asserts checking node_info size break!!!
-  // Guessing that this is the case becuase it broke with the is_floating check, 
+  // Guessing that this is the case becuase it broke with the is_floating check,
   // but this one triggers a lot more infrequently
   if (strand.size() <= 2) {
     std::cout<<"FATAL ERROR, STRAND WAS 2 NODES OR LESS!"<<std::endl;
@@ -597,11 +617,18 @@ void Strands::add_strand(size_t shoot_index, int age) {
       }
     }
   }
+  // FIXME: AWFUL AWFUL THING TO DO!
+  bool obstacle_collission_pruning = true;
+  if (obstacle_collission_pruning){
+    for (int i = 0; i<strand.size(); i++){
+      if (obstacle_grid.eval_pos(strand[i]) > 0.1f){ return; }
+    }
+  }
   //std::cout<<strand.size()<<std::endl;
   //sw.stop();
   //sw.start();
   // Add the strand for real now
-  grid.fill_path(strands.size(), strand, max_val, 
+  grid.fill_path(strands.size(), strand, max_val,
       base_max_range, leaf_min_range, root_min_range, inflection);
   //sw.stop();
 }
@@ -615,7 +642,12 @@ Strands::TargetResult Strands::find_target(const std::vector<glm::mat4> &path,
   glm::vec3 target_point = frame_position(path[result.index]);
   while (result.travelled < travel_dist && result.index != path.size() - 1) {
     float travelled = glm::distance(frame_position(path[result.index]), frame_position(path[result.index + 1]));
-    if (reduce) travelled = travelled * std::pow(2,(((float)result.index * std::log2(reduction_at_length))/(float)reduction_length));
+    if (reduce) {
+      // NOTE: Capped by path.size/3 so that super short paths are less likely to have floating strands.
+      // path.size/3 is arbitrary, may be worth experimenting where to place this!
+      float actual_reduction_length = std::min(reduction_length, (float)(path.size()-1)/3);
+      travelled = travelled * std::pow(2,(((float)result.index * std::log2(reduction_at_length))/actual_reduction_length));
+    }
     result.travelled += travelled;
     result.index++;
     result.frame = path[result.index];
@@ -667,9 +699,9 @@ std::optional<glm::vec3> Strands::find_extension(glm::vec3 from,
     assert(!glm::any(glm::isnan(trial_head)));
 
     float val = grid.eval_pos(trial_head);
-    //float obstacle_val = obstacle_grid.eval_pos(trial_head);
-    float obstacle_val = 0.f;
-    if (val>=reject_iso || obstacle_val != 0.f) continue;
+    float obstacle_val = obstacle_grid.eval_pos(trial_head);
+    //float obstacle_val = 0.f;
+    if (val>=actual_reject_iso || obstacle_val != 0.f) continue;
 
     glm::vec3 biased_head = trial_head;
     biased_head.y /= bias;
@@ -718,9 +750,9 @@ glm::vec3 Strands::find_extension_canoniso(glm::vec3 from, glm::mat4 frame_from,
   num_steps = 0;
   max_steps = 100;
   while (!glm::all(glm::isnan(grid.eval_gradient(extension))) &&
-         std::abs(grid.eval_pos(extension) - reject_iso) >= 0.1 &&
+         std::abs(grid.eval_pos(extension) - actual_reject_iso) >= 0.1 &&
          num_steps <= max_steps) {
-    glm::vec3 step = 0.001f * (grid.eval_pos(extension) - reject_iso) *
+    glm::vec3 step = 0.001f * (grid.eval_pos(extension) - actual_reject_iso) *
                      grid.eval_gradient(extension);
     extension += step;
     // extension = from+segment_length*glm::normalize(extension-from);

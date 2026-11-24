@@ -38,11 +38,15 @@ public:
     void fill_path(uint32_t strand_id, const std::vector<glm::vec3> &path, 
         float max_val, float max_b, float shoot_b, float root_b, 
         size_t inflection_point, int partial_end=-1);
-    void fill_line_avx512(int32_t segment_index, 
+
+    void fill_line_chunked(int32_t segment_index, 
         const std::vector<glm::vec3> &path, 
         const MetaBalls& implicit,
-        const MetaBalls& implicit_before,
-        const MetaBalls& implicit_after);
+        const MetaBalls& implicit_before = MetaBalls(),
+        const MetaBalls& implicit_after = MetaBalls()
+
+        );
+
     void fill_line(int32_t segment_index, 
         const std::vector<glm::vec3> &path, 
         const MetaBalls& implicit,

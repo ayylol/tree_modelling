@@ -8,6 +8,7 @@ class MetaBalls {
 public:
   //float cutoff = 0.f;
   MetaBalls(float a, float b) : a(a), b(b){};
+  MetaBalls() : a(0.f), b(0.f){};
   // LineSegment
   float eval(const glm::vec3 p1, const glm::vec3 l1, const glm::vec3 l2) const;
   // Sphere

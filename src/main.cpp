@@ -21,6 +21,7 @@
 #include "rendering/shader.h"
 
 #include "tree/grid.h"
+#include "tree/implicit.h"
 #include "tree/skeleton.h"
 #include "tree/strands.h"
 
@@ -121,7 +122,37 @@ int main(int argc, char *argv[]) {
     //// Obstacle Grid
     STOPWATCH("Initializing Obstacle Grid",
             Grid obstacle_grid = Grid(tree, 0.01f, opt_data.at("grid_scale"));
-            //obstacle_grid.fill_sphere(glm::vec3(0,0.18,0.13), 1000.f, 0.065f);
+            bool head = false;
+            bool fence = false;
+            bool rod = false;
+            if (rod){
+            std::vector<glm::vec3> rod_points = {
+              glm::vec3(0., 0.18, -0.6),
+              glm::vec3(0., 0.18, 0.6),
+            };
+            MetaBalls rod_implicit(1,0.03);
+            obstacle_grid.fill_line_chunked(0, rod_points, rod_implicit);
+            }
+            if (head){
+              obstacle_grid.fill_sphere(glm::vec3(0,0.18,0.13), 1000.f, 0.065f);
+            }
+            if (fence){
+            std::vector<glm::vec3> fence_points = {
+              glm::vec3(-0.1, 0,    0.11),
+              glm::vec3(-0.1, 0.12, 0.11),
+              glm::vec3(0.1,  0.12, 0.11),
+              glm::vec3(0.1,  0,    0.11)
+            };
+            std::vector<MetaBalls> fence_implicits = {
+              MetaBalls(1,0.03),
+              MetaBalls(1,0.03),
+              MetaBalls(1,0.03),
+            };
+            obstacle_grid.fill_line_chunked(0, fence_points, fence_implicits[0]);
+            obstacle_grid.fill_line_chunked(1, fence_points, fence_implicits[1]);
+            obstacle_grid.fill_line_chunked(2, fence_points, fence_implicits[2]);
+            }
+            //obstacle_grid.fill_path(0,);
             );
     // Make camera according to grid
     cameras.push_back(Camera(grid.get_center(), 2.5f*(grid.get_center()-grid.get_backbottomleft()).z, width, height));
@@ -211,8 +242,8 @@ int main(int argc, char *argv[]) {
         Vertex{glm::vec3(-50, 0, -50), ground_color}};
     std::vector<GLuint> ground_indices{0, 1, 3, 0, 3, 2};
     Mesh ground(ground_verts, ground_indices);
-    Mesh<Vertex> obstacles_mesh{std::vector<Vertex>(), std::vector<GLuint>()};
-    //obstacles_mesh = obstacle_grid.get_occupied_geom(0.01f);
+    Mesh<Vertex> obstacle_mesh{std::vector<Vertex>(), std::vector<GLuint>()};
+    //obstacle_mesh = obstacle_grid.get_occupied_geom(0.01f);
 
 
     system("notify-send \"Done Building Tree\"");
@@ -277,8 +308,8 @@ int main(int argc, char *argv[]) {
             //volume_geom.draw(flat_shader, CAMERA, GL_POINTS);
         }
         if (view_strands) {
-          related_strands_geom.draw(flat_shader, CAMERA, GL_LINES);
-          //strands_geom.draw(flat_shader, CAMERA, GL_LINES);
+          //related_strands_geom.draw(flat_shader, CAMERA, GL_LINES);
+          strands_geom.draw(flat_shader, CAMERA, GL_LINES);
         }
         if (view_normals) {
           //normals_geom.draw(flat_shader, CAMERA, GL_LINES);
@@ -295,7 +326,7 @@ int main(int argc, char *argv[]) {
         }
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) {
-          obstacles_mesh.draw(shader, CAMERA, GL_TRIANGLES);
+          obstacle_mesh.draw(shader, CAMERA, GL_TRIANGLES);
           //ground.draw(shader, CAMERA, GL_TRIANGLES);
         }
         if (view_bound) bound_geom.draw(flat_shader, CAMERA, GL_LINES);

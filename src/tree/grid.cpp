@@ -233,12 +233,12 @@ void Grid::fill_sphere(glm::vec3 center, float max_val, float support){
   }
 }
 
-void Grid::fill_line_avx512(int32_t segment_index, 
+// TODO: SIMD THIS!!!
+void Grid::fill_line_chunked(int32_t segment_index, 
     const std::vector<glm::vec3> &path, 
     const MetaBalls& implicit,
     const MetaBalls& implicit_before,
     const MetaBalls& implicit_after) {
-  // TODO: MAKE THIS THING FIRST WITHOUT SIMD, THEN WITH.
     glm::vec3 p1 = path[segment_index];
     glm::vec3 p2 = path[segment_index+1];
     ivec3 low_chunk = pos_to_grid(vec3(
@@ -432,17 +432,18 @@ void Grid::fill_path(
     potential_funcs.push_back(MetaBalls(max_val, b));
   }
 
-  MetaBalls zero_potential_func(0,0);
   #pragma omp parallel for
   for (int i = 0; i<path.size()-1; i++){
-    MetaBalls potential_before = zero_potential_func;
+    MetaBalls potential_before;
     if (i!=0) potential_before = potential_funcs[i-1];
-    MetaBalls potential_after = zero_potential_func;
+    MetaBalls potential_after;
     if (i!=potential_funcs.size()-1) potential_after = potential_funcs[i+1];
     if (partial_end<0 || i<=partial_end){
-      fill_line_avx512(i, path, potential_funcs[i], potential_before, potential_after);
+      fill_line_chunked(i, path, potential_funcs[i], potential_before, potential_after);
+
+      // FIXME: Currently Failing Due to following assert.
+      // fill_line(i, path, potential_funcs[i], potential_before, potential_after);
     }
-    //fill_line(i, path, potential_funcs[i], potential_before, potential_after);
   }
   // 0th slot should always be emptg
   assert(scalar_field[0]==0.f);
