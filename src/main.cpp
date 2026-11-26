@@ -288,12 +288,12 @@ int main(int argc, char *argv[]) {
         if(interactive) processInput(window);
 
         if (move_node != 0 || move_path != 0){
-          detail.move_visualization(move_path, move_node);
+          //detail.move_visualization(move_path, move_node);
+          //paths_geom = detail.get_mesh_paths();
+          //node_geom = detail.get_path_node();
+          //related_strands_geom = detail.get_mesh_related_strands();
           move_node=0;
           move_path=0;
-          paths_geom = detail.get_mesh_paths();
-          node_geom = detail.get_path_node();
-          related_strands_geom = detail.get_mesh_related_strands();
         }
 
         // Render here
@@ -315,14 +315,14 @@ int main(int argc, char *argv[]) {
           //normals_geom.draw(flat_shader, CAMERA, GL_LINES);
           
           // Paths viz
-          paths_geom.draw(flat_shader, CAMERA, GL_LINES);
-          node_geom.draw(flat_shader, CAMERA, GL_POINTS);
+          //paths_geom.draw(flat_shader, CAMERA, GL_LINES);
+          //node_geom.draw(flat_shader, CAMERA, GL_POINTS);
           
           // Lookahead Visualization
-          //node_vis.draw(flat_shader, CAMERA, GL_POINTS);
-          //node_vis.draw(flat_shader, CAMERA, GL_LINES);
+          node_vis.draw(flat_shader, CAMERA, GL_POINTS);
+          node_vis.draw(flat_shader, CAMERA, GL_LINES);
           //searchpoint_vis.draw(flat_shader, CAMERA, GL_LINES);
-          //keypoint_vis.draw(flat_shader, CAMERA, GL_POINTS);
+          keypoint_vis.draw(flat_shader, CAMERA, GL_POINTS);
         }
         if (view_skeleton) skeleton_geom.draw(flat_shader, CAMERA, GL_LINES);
         if (view_ground) {
@@ -668,14 +668,14 @@ void processInput(GLFWwindow *window) {
     }
     // Affect node vis
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-        move_node-=1;
-        //node_vis_f= std::max(node_vis_f-0.002f, 0.f);
-        //reset_strands = true;
+        //move_node-=1;
+        node_vis_f= std::max(node_vis_f-0.002f, 0.f);
+        reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-        move_node+=1;
-        //node_vis_f= std::min(node_vis_f+0.002f, 1.f);
-        //reset_strands = true;
+        //move_node+=1;
+        node_vis_f= std::min(node_vis_f+0.002f, 1.f);
+        reset_strands = true;
     }
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
         move_path+=5;
