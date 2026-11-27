@@ -1,0 +1,49 @@
+{
+"cameras":[
+  {"dist":2.989288330078125,"focus":[-0.023968759924173355,0.39274081587791443,-0.023696716874837875],"phi":0.17500025033950806,"theta":4.126597881317139}
+],
+"grid_scale":1.5,
+"mesh_iso":0.3,
+"tree_file":"shoot.txt",
+"root_file":"root.txt",
+"strands":{
+    "num_abs": 1200,
+    "intermediate_stages":1,
+    "max_val": 3.0,
+    "leaf_min_range":0.008,
+    "root_min_range": 0.01,
+    "base_max_range": 0.025,
+    "lookahead_min":1.5,
+    "lookahead_max":7.0,
+    "la_interp_start":220,
+    "la_interp_peak":100,
+    "max_lookahead_dist":100.0,
+    "reduction_at_length":10.0,
+    "reduction_length":70,
+    "searchpoint_step":0.1,
+    "sm_iter": 20,
+    "sm_min": 0.0001,
+    "sm_peak": 0.15,
+    "sm_start": 0.8,
+    "sm_end": 0.3,
+    "max_angle":160,
+    "num_trials":500,
+    "reject_iso":8.0,
+    "segment_length":0.02,
+    "root_angle_node": 0.5,
+    "bias_amount": 2.0,
+    "bias_step": 0.1,
+    "root_prune_size": 40,
+    "root_searchpoint_delta":3.0,
+    "start_offset":10,
+    "texture":{
+        "max_val": 10.0,
+        "base_max_range": 0.026,
+        "leaf_min_range":0.0000,
+        "root_min_range": 0.0000,
+        "chance_start":0.4,
+        "chance_max":0.70
+    }
+},
+"image_path":"./images/tree7_"
+}
